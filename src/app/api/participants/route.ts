@@ -9,7 +9,7 @@ export async function GET() {
       name: p.name,
       entryFeePaid: p.entryFeePaid,
       joinedAt: p.joinedAt,
-      predictionsCount: Object.keys(p.matches).length,
+      predictionsCount: Object.keys(p.matches ?? {}).length,
       hasSpecial: !!p.special,
     })),
     tournament: {

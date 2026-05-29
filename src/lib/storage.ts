@@ -23,35 +23,67 @@ export interface ExtendedAppData extends AppData {
 
 function defaultData(): ExtendedAppData {
   return {
-    tournament: TOURNAMENT_CONFIG,
+    tournament: {
+      ...TOURNAMENT_CONFIG,
+      groups: TOURNAMENT_CONFIG.groups.map((g) => ({
+        ...g,
+        teams: g.teams.map((t) => ({ ...t })),
+      })),
+      matches: ALL_MATCHES.map((m) => ({ ...m })),
+      knockoutBracket: TOURNAMENT_CONFIG.knockoutBracket.map((r) => ({
+        ...r,
+        matchIds: [...r.matchIds],
+      })),
+    },
     participants: [],
     adminPin: process.env.ADMIN_PIN || "mundial2026",
   };
 }
 
+function ensureTournament(data: ExtendedAppData): ExtendedAppData {
+  const base = defaultData();
+  if (!data.tournament || typeof data.tournament !== "object") {
+    data.tournament = base.tournament;
+  }
+  if (!Array.isArray(data.tournament.groups)) {
+    data.tournament.groups = base.tournament.groups;
+  }
+  if (!Array.isArray(data.tournament.matches)) {
+    data.tournament.matches = [];
+  }
+  if (!Array.isArray(data.participants)) {
+    data.participants = [];
+  }
+  return data;
+}
+
 function normalizeAppData(stored: unknown): ExtendedAppData {
   const base = defaultData();
-  if (!stored || typeof stored !== "object") return base;
+  if (stored == null || typeof stored !== "object" || Array.isArray(stored)) {
+    return base;
+  }
 
   const parsed = stored as Partial<ExtendedAppData>;
 
-  return mergeMatches({
-    ...base,
-    ...parsed,
-    tournament: {
-      ...base.tournament,
-      ...(parsed.tournament ?? {}),
-      groups: parsed.tournament?.groups ?? base.tournament.groups,
-      matches: parsed.tournament?.matches ?? [],
-    },
-    participants: Array.isArray(parsed.participants) ? parsed.participants : [],
-    adminPin: parsed.adminPin || base.adminPin,
-    specialActuals: parsed.specialActuals,
-  });
+  return mergeMatches(
+    ensureTournament({
+      ...base,
+      adminPin: parsed.adminPin || base.adminPin,
+      participants: Array.isArray(parsed.participants) ? parsed.participants : [],
+      specialActuals: parsed.specialActuals,
+      tournament: {
+        ...base.tournament,
+        ...(parsed.tournament && typeof parsed.tournament === "object" ? parsed.tournament : {}),
+        groups: parsed.tournament?.groups ?? base.tournament.groups,
+        matches: Array.isArray(parsed.tournament?.matches) ? parsed.tournament.matches : [],
+      },
+    })
+  );
 }
 
 function mergeMatches(parsed: ExtendedAppData): ExtendedAppData {
-  const existingMatches = parsed.tournament?.matches ?? [];
+  ensureTournament(parsed);
+  const existingMatches = parsed.tournament.matches;
   parsed.tournament.matches = ALL_MATCHES.map((m) => {
     const existing = existingMatches.find((x) => x.id === m.id);
     return existing
