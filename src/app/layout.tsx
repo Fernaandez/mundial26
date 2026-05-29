@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Bebas_Neue } from "next/font/google";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
@@ -10,6 +10,13 @@ const bebas = Bebas_Neue({ weight: "400", subsets: ["latin"], variable: "--font-
 export const metadata: Metadata = {
   title: "Quiniela Mundial 2026",
   description: "Quiniela entre amics — Copa del Món FIFA 2026",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#052e16",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

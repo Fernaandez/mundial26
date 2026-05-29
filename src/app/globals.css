@@ -11,15 +11,30 @@
   --gold: #eab308;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
   min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }
 
@@ -33,18 +48,23 @@ body {
   border: 1px solid rgba(34, 197, 94, 0.15);
 }
 
+.input-field {
+  @apply w-full px-4 py-3 min-h-[48px] text-base bg-pitch-950 border border-pitch-700 rounded-xl
+    focus:outline-none focus:ring-2 focus:ring-pitch-500 focus:border-pitch-500;
+}
+
 .score-input {
-  @apply w-14 h-10 text-center text-lg font-bold bg-pitch-950 border border-pitch-700 rounded-lg
+  @apply w-12 h-12 sm:w-14 sm:h-10 text-center text-lg font-bold bg-pitch-950 border border-pitch-700 rounded-lg
     focus:outline-none focus:ring-2 focus:ring-pitch-500 focus:border-pitch-500;
 }
 
 .btn-primary {
-  @apply px-6 py-3 bg-pitch-600 hover:bg-pitch-500 text-white font-semibold rounded-xl
+  @apply px-6 py-3 min-h-[48px] bg-pitch-600 hover:bg-pitch-500 active:bg-pitch-700 text-white font-semibold rounded-xl
     transition-all duration-200 shadow-lg shadow-pitch-900/50 hover:shadow-pitch-700/50;
 }
 
 .btn-secondary {
-  @apply px-6 py-3 bg-pitch-900 hover:bg-pitch-800 text-pitch-100 font-semibold rounded-xl
+  @apply px-6 py-3 min-h-[48px] bg-pitch-900 hover:bg-pitch-800 active:bg-pitch-950 text-pitch-100 font-semibold rounded-xl
     border border-pitch-700 transition-all duration-200;
 }
 
@@ -54,4 +74,24 @@ body {
 
 .tab-inactive {
   @apply bg-pitch-950 text-pitch-300 hover:bg-pitch-900 border border-pitch-800;
+}
+
+.phase-tabs-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.phase-tabs-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-save-bar {
+  @apply fixed bottom-0 left-0 right-0 z-40 md:hidden
+    bg-pitch-950/95 backdrop-blur-md border-t border-pitch-800
+    px-4 py-3 safe-bottom;
+}
+
+.page-with-mobile-bar {
+  @apply pb-24 md:pb-16;
 }

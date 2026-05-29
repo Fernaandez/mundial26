@@ -96,14 +96,14 @@ export default function PredictionsPage() {
   const totalMatches = matches.filter((m) => !m.locked).length;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <div>
-          <Link href="/perfil" className="text-sm text-pitch-400 hover:text-pitch-200">← Tornar al perfil</Link>
-          <h1 className="font-display text-4xl text-pitch-400 mt-1">PREDICCIONS</h1>
-          <p className="text-pitch-300">{user.name}</p>
+    <div className="max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-28 md:pb-8">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div className="min-w-0">
+          <Link href="/perfil" className="text-sm text-pitch-400 hover:text-pitch-200">← Perfil</Link>
+          <h1 className="font-display text-3xl sm:text-4xl text-pitch-400 mt-1">PREDICCIONS</h1>
+          <p className="text-pitch-300 truncate">{user.name}</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-3">
           <span className="text-sm text-pitch-400">
             {predictedCount}/{totalMatches} partits
           </span>
@@ -162,6 +162,22 @@ export default function PredictionsPage() {
           )}
         </div>
       )}
+
+      {/* Mobile sticky save bar */}
+      <div className="mobile-save-bar">
+        <div className="flex items-center justify-between gap-3 max-w-4xl mx-auto">
+          <span className="text-sm text-pitch-400 shrink-0">
+            {predictedCount}/{totalMatches}
+          </span>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="btn-primary flex-1 max-w-xs disabled:opacity-50"
+          >
+            {saving ? "Desant..." : saved ? "Desat ✓" : "Desar prediccions"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

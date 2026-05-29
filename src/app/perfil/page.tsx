@@ -52,13 +52,13 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-10">
-        <div>
+    <div className="max-w-4xl mx-auto px-3 sm:px-4 py-8 sm:py-12">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8 sm:mb-10">
+        <div className="min-w-0">
           <p className="text-pitch-400 text-sm uppercase tracking-wider">El teu perfil</p>
-          <h1 className="font-display text-5xl text-white mt-1">Hola, {user.name}!</h1>
+          <h1 className="font-display text-4xl sm:text-5xl text-white mt-1 truncate">Hola, {user.name}!</h1>
         </div>
-        <button onClick={() => { logout(); router.push("/"); }} className="btn-secondary text-sm">
+        <button onClick={() => { logout(); router.push("/"); }} className="btn-secondary text-sm w-full sm:w-auto">
           Tancar sessió
         </button>
       </div>

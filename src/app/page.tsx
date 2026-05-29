@@ -21,12 +21,12 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-12">
-      <section className="text-center mb-16">
-        <h1 className="font-display text-6xl sm:text-8xl text-pitch-400 tracking-wider mb-4">
+    <div className="max-w-6xl mx-auto px-3 sm:px-4 py-8 sm:py-12">
+      <section className="text-center mb-10 sm:mb-16">
+        <h1 className="font-display text-5xl sm:text-6xl md:text-8xl text-pitch-400 tracking-wider mb-4">
           MUNDIAL 2026
         </h1>
-        <p className="text-xl text-pitch-200 max-w-2xl mx-auto">
+        <p className="text-base sm:text-xl text-pitch-200 max-w-2xl mx-auto px-2">
           Quiniela entre amics — prediu resultats, guanya punts i emporta&apos;t el premi
         </p>
       </section>
@@ -86,17 +86,17 @@ export default function HomePage() {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-4 justify-center">
-        <Link href="/registre" className="btn-primary text-lg">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 justify-center px-2">
+        <Link href="/registre" className="btn-primary text-base sm:text-lg text-center">
           Crear compte
         </Link>
-        <Link href="/login" className="btn-secondary text-lg">
+        <Link href="/login" className="btn-secondary text-base sm:text-lg text-center">
           Iniciar sessió
         </Link>
-        <Link href="/classificacio" className="btn-secondary text-lg">
+        <Link href="/classificacio" className="btn-secondary text-base sm:text-lg text-center">
           Veure classificació
         </Link>
-        <Link href="/regles" className="btn-secondary text-lg">
+        <Link href="/regles" className="btn-secondary text-base sm:text-lg text-center">
           Regles completes
         </Link>
       </div>

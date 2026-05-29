@@ -6,11 +6,11 @@ export default function RulesPage() {
   const s = SCORING_RULES.special;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      <h1 className="font-display text-5xl text-pitch-400 text-center mb-8">REGLAMENT</h1>
+    <div className="max-w-4xl mx-auto px-3 sm:px-4 py-8 sm:py-12">
+      <h1 className="font-display text-4xl sm:text-5xl text-pitch-400 text-center mb-6 sm:mb-8">REGLAMENT</h1>
 
-      <section className="card-glass rounded-2xl p-8 mb-8">
-        <h2 className="font-display text-3xl text-gold-500 mb-4">GENERAL</h2>
+      <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+        <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">GENERAL</h2>
         <ul className="space-y-2 text-pitch-200">
           <li>• Entre <strong className="text-white">8 i 12 participants</strong></li>
           <li>• Quota d&apos;entrada: <strong className="text-white">15€</strong> per persona</li>
@@ -21,10 +21,11 @@ export default function RulesPage() {
         </ul>
       </section>
 
-      <section className="card-glass rounded-2xl p-8 mb-8">
-        <h2 className="font-display text-3xl text-gold-500 mb-4">FASE DE GRUPS — PARTITS</h2>
-        <p className="text-pitch-300 mb-4">72 partits · 12 grups de 4 equips</p>
-        <table className="w-full text-left">
+      <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+        <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">FASE DE GRUPS — PARTITS</h2>
+        <p className="text-pitch-300 mb-4 text-sm sm:text-base">72 partits · 12 grups de 4 equips</p>
+        <div className="overflow-x-auto -mx-2 px-2">
+        <table className="w-full text-left min-w-[280px]">
           <thead>
             <tr className="border-b border-pitch-700 text-pitch-400">
               <th className="py-2">Encert</th>
@@ -37,13 +38,15 @@ export default function RulesPage() {
             <tr><td className="py-3">Resultat correcte (1/X/2) només</td><td className="py-3 text-right font-bold text-pitch-400">{g.resultOnly} pt</td></tr>
           </tbody>
         </table>
+        </div>
         <p className="text-sm text-pitch-500 mt-4">Màxim teòric fase grups: 72 × 4 = 288 punts</p>
       </section>
 
-      <section className="card-glass rounded-2xl p-8 mb-8">
-        <h2 className="font-display text-3xl text-gold-500 mb-4">ELIMINATÒRIES</h2>
-        <p className="text-pitch-300 mb-4">32ens → 8ens → Quarts → Semis → 3r lloc → Final (32 partits)</p>
-        <table className="w-full text-left">
+      <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+        <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">ELIMINATÒRIES</h2>
+        <p className="text-pitch-300 mb-4 text-sm sm:text-base">32ens → 8ens → Quarts → Semis → 3r lloc → Final (32 partits)</p>
+        <div className="overflow-x-auto -mx-2 px-2">
+        <table className="w-full text-left min-w-[280px]">
           <thead>
             <tr className="border-b border-pitch-700 text-pitch-400">
               <th className="py-2">Encert</th>
@@ -56,13 +59,15 @@ export default function RulesPage() {
             <tr><td className="py-3">Guanyador correcte</td><td className="py-3 text-right font-bold text-pitch-400">{k.winnerOnly} pts</td></tr>
           </tbody>
         </table>
+        </div>
         <p className="text-sm text-pitch-500 mt-4">Màxim teòric eliminatòries: 32 × 8 = 256 punts</p>
       </section>
 
-      <section className="card-glass rounded-2xl p-8 mb-8">
-        <h2 className="font-display text-3xl text-gold-500 mb-4">PREDICCIONS ESPECIALS</h2>
-        <p className="text-pitch-300 mb-4">Cal omplir abans del primer partit del torneig</p>
-        <table className="w-full text-left">
+      <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+        <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">PREDICCIONS ESPECIALS</h2>
+        <p className="text-pitch-300 mb-4 text-sm sm:text-base">Cal omplir abans del primer partit del torneig</p>
+        <div className="overflow-x-auto -mx-2 px-2">
+        <table className="w-full text-left min-w-[280px]">
           <thead>
             <tr className="border-b border-pitch-700 text-pitch-400">
               <th className="py-2">Predicció</th>
@@ -81,10 +86,11 @@ export default function RulesPage() {
             <tr><td className="py-3">3r classificat del grup passa d&apos;eliminatoria</td><td className="py-3 text-right font-bold text-gold-400">{s.groupThirdQualifies} pts/grup</td></tr>
           </tbody>
         </table>
+        </div>
       </section>
 
-      <section className="card-glass rounded-2xl p-8">
-        <h2 className="font-display text-3xl text-gold-500 mb-4">PREMIS — EXEMPLES</h2>
+      <section className="card-glass rounded-2xl p-4 sm:p-8">
+        <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">PREMIS — EXEMPLES</h2>
         <div className="grid sm:grid-cols-3 gap-4 text-center">
           <PrizeExample n={8} />
           <PrizeExample n={10} />

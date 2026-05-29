@@ -43,11 +43,11 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="max-w-md mx-auto px-4 py-12">
-      <h1 className="font-display text-5xl text-pitch-400 text-center mb-2">CREAR COMPTE</h1>
+    <div className="max-w-md mx-auto px-3 sm:px-4 py-8 sm:py-12">
+      <h1 className="font-display text-4xl sm:text-5xl text-pitch-400 text-center mb-2">CREAR COMPTE</h1>
       <p className="text-pitch-300 text-center mb-8">Registra&apos;t a la quiniela del Mundial 2026</p>
 
-      <form onSubmit={handleSubmit} className="card-glass rounded-2xl p-8 space-y-6">
+      <form onSubmit={handleSubmit} className="card-glass rounded-2xl p-5 sm:p-8 space-y-6">
         <div>
           <label className="block text-sm text-pitch-300 mb-2">El teu nom</label>
           <input
@@ -58,7 +58,7 @@ export default function RegisterPage() {
             maxLength={30}
             autoComplete="username"
             placeholder="Ex: Joan"
-            className="w-full px-4 py-3 bg-pitch-950 border border-pitch-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-pitch-500"
+            className="input-field"
           />
         </div>
 
@@ -72,7 +72,7 @@ export default function RegisterPage() {
             minLength={4}
             autoComplete="new-password"
             placeholder="••••"
-            className="w-full px-4 py-3 bg-pitch-950 border border-pitch-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-pitch-500"
+            className="input-field"
           />
           <p className="text-xs text-pitch-500 mt-1">El faràs servir per entrar cada vegada</p>
         </div>
@@ -87,7 +87,7 @@ export default function RegisterPage() {
             minLength={4}
             autoComplete="new-password"
             placeholder="••••"
-            className="w-full px-4 py-3 bg-pitch-950 border border-pitch-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-pitch-500"
+            className="input-field"
           />
         </div>
 
