@@ -88,10 +88,10 @@ export default function HomePage() {
 
       <div className="flex flex-wrap gap-4 justify-center">
         <Link href="/registre" className="btn-primary text-lg">
-          Unir-me a la quiniela
+          Crear compte
         </Link>
-        <Link href="/prediccions" className="btn-secondary text-lg">
-          Fer prediccions
+        <Link href="/login" className="btn-secondary text-lg">
+          Iniciar sessió
         </Link>
         <Link href="/classificacio" className="btn-secondary text-lg">
           Veure classificació

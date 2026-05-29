@@ -1,24 +1,18 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Match, Group, SpecialPredictions, Phase } from "@/types";
 import { MatchCard, GroupSection, PhaseTabs, SpecialForm } from "@/components/PredictionForms";
 import { getAllTeams, PHASE_LABELS } from "@/data/world-cup-2026";
+import { useAuth } from "@/context/AuthContext";
 
 const PHASES: Phase[] = ["special", "groups", "round32", "round16", "quarter", "semi", "third", "final"];
 
-interface UserSession {
-  id: string;
-  name: string;
-  pin: string;
-}
-
 export default function PredictionsPage() {
-  const [user, setUser] = useState<UserSession | null>(null);
-  const [loginId, setLoginId] = useState("");
-  const [loginPin, setLoginPin] = useState("");
-  const [loginError, setLoginError] = useState("");
+  const router = useRouter();
+  const { user, loading } = useAuth();
 
   const [matches, setMatches] = useState<Match[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
@@ -27,50 +21,33 @@ export default function PredictionsPage() {
   const [activePhase, setActivePhase] = useState<Phase>("special");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [participants, setParticipants] = useState<{ id: string; name: string }[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem("quiniela_user");
-    if (stored) {
-      try {
-        setUser(JSON.parse(stored));
-      } catch {
-        localStorage.removeItem("quiniela_user");
-      }
+    if (!loading && !user) {
+      router.replace("/login");
     }
-    fetch("/api/participants")
-      .then((r) => r.json())
-      .then((d) => setParticipants(d.participants ?? []))
-      .catch(() => {});
-  }, []);
+  }, [user, loading, router]);
 
-  const loadPredictions = useCallback(async (u: UserSession) => {
-    const res = await fetch(`/api/predictions?id=${u.id}&pin=${u.pin}`);
-    if (!res.ok) return;
-    const data = await res.json();
-    setMatches(data.matches ?? []);
-    setGroups(data.groups ?? []);
-    setPredictions(data.participant?.matches ?? {});
-    setSpecial(data.participant?.special);
-  }, []);
+  const loadPredictions = useCallback(async () => {
+    if (!user) return;
+    setDataLoading(true);
+    try {
+      const res = await fetch(`/api/predictions?id=${user.id}&pin=${user.pin}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setMatches(data.matches ?? []);
+      setGroups(data.groups ?? []);
+      setPredictions(data.participant?.matches ?? {});
+      setSpecial(data.participant?.special);
+    } finally {
+      setDataLoading(false);
+    }
+  }, [user]);
 
   useEffect(() => {
-    if (user) loadPredictions(user);
+    if (user) loadPredictions();
   }, [user, loadPredictions]);
-
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
-    setLoginError("");
-    const res = await fetch(`/api/predictions?id=${loginId}&pin=${loginPin}`);
-    if (!res.ok) {
-      setLoginError("ID o PIN incorrecte");
-      return;
-    }
-    const data = await res.json();
-    const session = { id: loginId, name: data.participant.name, pin: loginPin };
-    localStorage.setItem("quiniela_user", JSON.stringify(session));
-    setUser(session);
-  }
 
   async function handleSave() {
     if (!user) return;
@@ -98,42 +75,18 @@ export default function PredictionsPage() {
     setSaved(false);
   }
 
-  if (!user) {
+  if (loading || !user) {
     return (
-      <div className="max-w-md mx-auto px-4 py-12">
-        <h1 className="font-display text-5xl text-pitch-400 text-center mb-8">PREDICCIONS</h1>
-        <form onSubmit={handleLogin} className="card-glass rounded-2xl p-8 space-y-6">
-          <div>
-            <label className="block text-sm text-pitch-300 mb-2">Participant</label>
-            <select
-              value={loginId}
-              onChange={(e) => setLoginId(e.target.value)}
-              required
-              className="w-full px-4 py-3 bg-pitch-950 border border-pitch-700 rounded-xl"
-            >
-              <option value="">— Selecciona —</option>
-              {participants.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm text-pitch-300 mb-2">PIN</label>
-            <input
-              type="password"
-              value={loginPin}
-              onChange={(e) => setLoginPin(e.target.value)}
-              required
-              className="w-full px-4 py-3 bg-pitch-950 border border-pitch-700 rounded-xl"
-            />
-          </div>
-          {loginError && <div className="text-red-400 text-sm">{loginError}</div>}
-          <button type="submit" className="btn-primary w-full">Entrar</button>
-          <p className="text-center text-sm text-pitch-400">
-            Encara no estàs registrat?{" "}
-            <Link href="/registre" className="text-pitch-400 underline">Registra&apos;t</Link>
-          </p>
-        </form>
+      <div className="max-w-4xl mx-auto px-4 py-20 text-center text-pitch-400">
+        Carregant...
+      </div>
+    );
+  }
+
+  if (dataLoading) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-20 text-center text-pitch-400">
+        Carregant prediccions...
       </div>
     );
   }
@@ -146,8 +99,9 @@ export default function PredictionsPage() {
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="font-display text-4xl text-pitch-400">PREDICCIONS</h1>
-          <p className="text-pitch-300">Hola, <strong className="text-white">{user.name}</strong></p>
+          <Link href="/perfil" className="text-sm text-pitch-400 hover:text-pitch-200">← Tornar al perfil</Link>
+          <h1 className="font-display text-4xl text-pitch-400 mt-1">PREDICCIONS</h1>
+          <p className="text-pitch-300">{user.name}</p>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-sm text-pitch-400">

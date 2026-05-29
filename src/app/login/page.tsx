@@ -5,27 +5,21 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 
-export default function RegisterPage() {
+export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
   const [name, setName] = useState("");
   const [pin, setPin] = useState("");
-  const [confirmPin, setConfirmPin] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-
-    if (pin !== confirmPin) {
-      setError("Els PINs no coincideixen");
-      return;
-    }
-
     setLoading(true);
+
     try {
-      const res = await fetch("/api/participants", {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, pin }),
@@ -36,7 +30,7 @@ export default function RegisterPage() {
       login({ id: data.id, name: data.name, pin });
       router.push("/perfil");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al registrar-se");
+      setError(err instanceof Error ? err.message : "Error en iniciar sessió");
     } finally {
       setLoading(false);
     }
@@ -44,48 +38,31 @@ export default function RegisterPage() {
 
   return (
     <div className="max-w-md mx-auto px-4 py-12">
-      <h1 className="font-display text-5xl text-pitch-400 text-center mb-2">CREAR COMPTE</h1>
-      <p className="text-pitch-300 text-center mb-8">Registra&apos;t a la quiniela del Mundial 2026</p>
+      <h1 className="font-display text-5xl text-pitch-400 text-center mb-2">INICIAR SESSIÓ</h1>
+      <p className="text-pitch-300 text-center mb-8">Entra amb el teu nom i PIN</p>
 
       <form onSubmit={handleSubmit} className="card-glass rounded-2xl p-8 space-y-6">
         <div>
-          <label className="block text-sm text-pitch-300 mb-2">El teu nom</label>
+          <label className="block text-sm text-pitch-300 mb-2">Nom</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            maxLength={30}
             autoComplete="username"
-            placeholder="Ex: Joan"
+            placeholder="El teu nom"
             className="w-full px-4 py-3 bg-pitch-950 border border-pitch-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-pitch-500"
           />
         </div>
 
         <div>
-          <label className="block text-sm text-pitch-300 mb-2">PIN personal (mín. 4 caràcters)</label>
+          <label className="block text-sm text-pitch-300 mb-2">PIN</label>
           <input
             type="password"
             value={pin}
             onChange={(e) => setPin(e.target.value)}
             required
-            minLength={4}
-            autoComplete="new-password"
-            placeholder="••••"
-            className="w-full px-4 py-3 bg-pitch-950 border border-pitch-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-pitch-500"
-          />
-          <p className="text-xs text-pitch-500 mt-1">El faràs servir per entrar cada vegada</p>
-        </div>
-
-        <div>
-          <label className="block text-sm text-pitch-300 mb-2">Confirma el PIN</label>
-          <input
-            type="password"
-            value={confirmPin}
-            onChange={(e) => setConfirmPin(e.target.value)}
-            required
-            minLength={4}
-            autoComplete="new-password"
+            autoComplete="current-password"
             placeholder="••••"
             className="w-full px-4 py-3 bg-pitch-950 border border-pitch-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-pitch-500"
           />
@@ -97,20 +74,14 @@ export default function RegisterPage() {
           </div>
         )}
 
-        <div className="bg-pitch-900/50 rounded-xl p-4 text-sm text-pitch-300">
-          <strong className="text-pitch-200">Quota:</strong> 15€ per persona
-          <br />
-          L&apos;admin marcarà quan hagis pagat. Premis: 50% · 30% · 20% per als 3 primers.
-        </div>
-
         <button type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-50">
-          {loading ? "Creant compte..." : "Crear compte"}
+          {loading ? "Entrant..." : "Entrar"}
         </button>
 
         <p className="text-center text-sm text-pitch-400">
-          Ja tens compte?{" "}
-          <Link href="/login" className="text-pitch-300 underline hover:text-white">
-            Inicia sessió
+          No tens compte?{" "}
+          <Link href="/registre" className="text-pitch-300 underline hover:text-white">
+            Registra&apos;t
           </Link>
         </p>
       </form>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Bebas_Neue } from "next/font/google";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
+import { AuthProvider } from "@/context/AuthContext";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-body" });
 const bebas = Bebas_Neue({ weight: "400", subsets: ["latin"], variable: "--font-display" });
@@ -15,8 +16,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ca">
       <body className={`${inter.variable} ${bebas.variable} font-body antialiased gradient-pitch`}>
-        <Nav />
-        <main className="min-h-screen pb-16">{children}</main>
+        <AuthProvider>
+          <Nav />
+          <main className="min-h-screen pb-16">{children}</main>
+        </AuthProvider>
       </body>
     </html>
   );
