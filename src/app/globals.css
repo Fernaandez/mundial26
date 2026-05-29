@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0a0f0d;
+  --foreground: #f0fdf4;
+  --card: #111916;
+  --border: #1e3a2f;
+  --accent: #22c55e;
+  --gold: #eab308;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  min-height: 100vh;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+.gradient-pitch {
+  background: linear-gradient(135deg, #052e16 0%, #0a0f0d 50%, #14532d 100%);
+}
+
+.card-glass {
+  background: rgba(17, 25, 22, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(34, 197, 94, 0.15);
+}
+
+.score-input {
+  @apply w-14 h-10 text-center text-lg font-bold bg-pitch-950 border border-pitch-700 rounded-lg
+    focus:outline-none focus:ring-2 focus:ring-pitch-500 focus:border-pitch-500;
+}
+
+.btn-primary {
+  @apply px-6 py-3 bg-pitch-600 hover:bg-pitch-500 text-white font-semibold rounded-xl
+    transition-all duration-200 shadow-lg shadow-pitch-900/50 hover:shadow-pitch-700/50;
+}
+
+.btn-secondary {
+  @apply px-6 py-3 bg-pitch-900 hover:bg-pitch-800 text-pitch-100 font-semibold rounded-xl
+    border border-pitch-700 transition-all duration-200;
+}
+
+.tab-active {
+  @apply bg-pitch-600 text-white shadow-lg;
+}
+
+.tab-inactive {
+  @apply bg-pitch-950 text-pitch-300 hover:bg-pitch-900 border border-pitch-800;
+}

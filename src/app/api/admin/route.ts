@@ -1,0 +1,64 @@
+import { NextResponse } from "next/server";
+import {
+  readData,
+  updateMatchResult,
+  markEntryPaid,
+  saveSpecialActuals,
+  updateKnockoutTeams,
+  adminAddParticipant,
+} from "@/lib/storage";
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const pin = searchParams.get("pin");
+  const data = await readData();
+
+  if (pin !== data.adminPin) {
+    return NextResponse.json({ error: "PIN incorrecte" }, { status: 403 });
+  }
+
+  return NextResponse.json({
+    matches: data.tournament.matches,
+    participants: data.participants,
+    groups: data.tournament.groups,
+  });
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { action, adminPin } = body;
+
+    if (action === "result") {
+      const match = await updateMatchResult(body.matchId, body.homeScore, body.awayScore, body.locked ?? true);
+      return NextResponse.json({ success: true, match });
+    }
+
+    if (action === "markPaid") {
+      await markEntryPaid(body.participantId, adminPin);
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === "addParticipant") {
+      const participant = await adminAddParticipant(adminPin, body.name, body.pin);
+      return NextResponse.json({ success: true, participant: { id: participant.id, name: participant.name } });
+    }
+
+    if (action === "specialActuals") {
+      await saveSpecialActuals(adminPin, body.actuals);
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === "knockoutTeams") {
+      await updateKnockoutTeams(body.matchId, body.homeTeam, body.awayTeam, adminPin);
+      return NextResponse.json({ success: true });
+    }
+
+    return NextResponse.json({ error: "Acció desconeguda" }, { status: 400 });
+  } catch (e) {
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "Error desconegut" },
+      { status: 400 }
+    );
+  }
+}
