@@ -1,10 +1,10 @@
 import fs from "fs";
 import path from "path";
-import { kv } from "@vercel/kv";
 import { AppData, Participant, Match, SpecialPredictions } from "@/types";
 import { TOURNAMENT_CONFIG, ALL_MATCHES } from "@/data/world-cup-2026";
+import { getSupabase, useSupabase } from "@/lib/supabase";
 
-const KV_KEY = "quiniela:data";
+const ROW_ID = 1;
 const DATA_DIR = path.join(process.cwd(), "data");
 const DATA_FILE = path.join(DATA_DIR, "quiniela.json");
 
@@ -21,10 +21,6 @@ export interface ExtendedAppData extends AppData {
   specialActuals?: SpecialActuals;
 }
 
-function useKv(): boolean {
-  return !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
-}
-
 function defaultData(): ExtendedAppData {
   return {
     tournament: TOURNAMENT_CONFIG,
@@ -37,7 +33,14 @@ function mergeMatches(parsed: ExtendedAppData): ExtendedAppData {
   parsed.tournament.matches = ALL_MATCHES.map((m) => {
     const existing = parsed.tournament.matches.find((x) => x.id === m.id);
     return existing
-      ? { ...m, homeScore: existing.homeScore, awayScore: existing.awayScore, locked: existing.locked, homeTeam: existing.homeTeam !== "TBD" ? existing.homeTeam : m.homeTeam, awayTeam: existing.awayTeam !== "TBD" ? existing.awayTeam : m.awayTeam }
+      ? {
+          ...m,
+          homeScore: existing.homeScore,
+          awayScore: existing.awayScore,
+          locked: existing.locked,
+          homeTeam: existing.homeTeam !== "TBD" ? existing.homeTeam : m.homeTeam,
+          awayTeam: existing.awayTeam !== "TBD" ? existing.awayTeam : m.awayTeam,
+        }
       : m;
   });
   return parsed;
@@ -64,16 +67,42 @@ function writeFileData(data: ExtendedAppData): void {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), "utf-8");
 }
 
+async function readSupabaseData(): Promise<ExtendedAppData> {
+  const supabase = getSupabase();
+  if (!supabase) return defaultData();
+
+  const { data, error } = await supabase
+    .from("quiniela")
+    .select("data")
+    .eq("id", ROW_ID)
+    .maybeSingle();
+
+  if (error) throw new Error(`Supabase: ${error.message}`);
+
+  if (!data) {
+    const initial = defaultData();
+    await writeSupabaseData(initial);
+    return initial;
+  }
+
+  return mergeMatches(data.data as ExtendedAppData);
+}
+
+async function writeSupabaseData(appData: ExtendedAppData): Promise<void> {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Supabase no configurat");
+
+  const { error } = await supabase
+    .from("quiniela")
+    .upsert({ id: ROW_ID, data: appData, updated_at: new Date().toISOString() });
+
+  if (error) throw new Error(`Supabase: ${error.message}`);
+}
+
 export async function readData(): Promise<ExtendedAppData> {
-  if (useKv()) {
+  if (useSupabase()) {
     try {
-      const stored = await kv.get<ExtendedAppData>(KV_KEY);
-      if (!stored) {
-        const data = defaultData();
-        await kv.set(KV_KEY, data);
-        return data;
-      }
-      return mergeMatches(stored);
+      return await readSupabaseData();
     } catch {
       return defaultData();
     }
@@ -82,8 +111,8 @@ export async function readData(): Promise<ExtendedAppData> {
 }
 
 export async function writeData(data: ExtendedAppData): Promise<void> {
-  if (useKv()) {
-    await kv.set(KV_KEY, data);
+  if (useSupabase()) {
+    await writeSupabaseData(data);
     return;
   }
   writeFileData(data);
