@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { AppData, Participant, Match, SpecialPredictions } from "@/types";
 import { TOURNAMENT_CONFIG, ALL_MATCHES } from "@/data/world-cup-2026";
-import { getSupabase, useSupabase } from "@/lib/supabase";
+import { getSupabase, useSupabase, isCloudDeploy, getStorageConfigError } from "@/lib/supabase";
 
 const ROW_ID = 1;
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -101,11 +101,10 @@ async function writeSupabaseData(appData: ExtendedAppData): Promise<void> {
 
 export async function readData(): Promise<ExtendedAppData> {
   if (useSupabase()) {
-    try {
-      return await readSupabaseData();
-    } catch {
-      return defaultData();
-    }
+    return await readSupabaseData();
+  }
+  if (isCloudDeploy()) {
+    throw new Error(getStorageConfigError());
   }
   return readFileData();
 }
@@ -114,6 +113,9 @@ export async function writeData(data: ExtendedAppData): Promise<void> {
   if (useSupabase()) {
     await writeSupabaseData(data);
     return;
+  }
+  if (isCloudDeploy()) {
+    throw new Error(getStorageConfigError());
   }
   writeFileData(data);
 }
