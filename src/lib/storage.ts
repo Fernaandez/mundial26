@@ -29,9 +29,31 @@ function defaultData(): ExtendedAppData {
   };
 }
 
+function normalizeAppData(stored: unknown): ExtendedAppData {
+  const base = defaultData();
+  if (!stored || typeof stored !== "object") return base;
+
+  const parsed = stored as Partial<ExtendedAppData>;
+
+  return mergeMatches({
+    ...base,
+    ...parsed,
+    tournament: {
+      ...base.tournament,
+      ...(parsed.tournament ?? {}),
+      groups: parsed.tournament?.groups ?? base.tournament.groups,
+      matches: parsed.tournament?.matches ?? [],
+    },
+    participants: Array.isArray(parsed.participants) ? parsed.participants : [],
+    adminPin: parsed.adminPin || base.adminPin,
+    specialActuals: parsed.specialActuals,
+  });
+}
+
 function mergeMatches(parsed: ExtendedAppData): ExtendedAppData {
+  const existingMatches = parsed.tournament?.matches ?? [];
   parsed.tournament.matches = ALL_MATCHES.map((m) => {
-    const existing = parsed.tournament.matches.find((x) => x.id === m.id);
+    const existing = existingMatches.find((x) => x.id === m.id);
     return existing
       ? {
           ...m,
@@ -54,7 +76,7 @@ function readFileData(): ExtendedAppData {
       return data;
     }
     const raw = fs.readFileSync(DATA_FILE, "utf-8");
-    return mergeMatches(JSON.parse(raw) as ExtendedAppData);
+    return normalizeAppData(JSON.parse(raw));
   } catch {
     return defaultData();
   }
@@ -85,7 +107,11 @@ async function readSupabaseData(): Promise<ExtendedAppData> {
     return initial;
   }
 
-  return mergeMatches(data.data as ExtendedAppData);
+  const normalized = normalizeAppData(data.data);
+  if (!data.data || !(data.data as Partial<ExtendedAppData>).tournament) {
+    await writeSupabaseData(normalized);
+  }
+  return normalized;
 }
 
 async function writeSupabaseData(appData: ExtendedAppData): Promise<void> {
@@ -122,10 +148,12 @@ export async function writeData(data: ExtendedAppData): Promise<void> {
 
 export async function addParticipant(name: string, pin: string): Promise<Participant> {
   const data = await readData();
-  if (data.participants.length >= data.tournament.maxParticipants) {
+  const participants = data.participants ?? [];
+
+  if (participants.length >= data.tournament.maxParticipants) {
     throw new Error("S'ha assolit el màxim de participants");
   }
-  if (data.participants.some((p) => p.name.toLowerCase() === name.toLowerCase())) {
+  if (participants.some((p) => p.name.toLowerCase() === name.toLowerCase())) {
     throw new Error("Ja existeix un participant amb aquest nom");
   }
 
@@ -138,7 +166,7 @@ export async function addParticipant(name: string, pin: string): Promise<Partici
     matches: {},
   };
 
-  data.participants.push(participant);
+  data.participants = [...participants, participant];
   await writeData(data);
   return participant;
 }
