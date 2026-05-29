@@ -11,7 +11,7 @@ export type Phase =
 export interface Team {
   code: string;
   name: string;
-  flag: string;
+  iso: string;
 }
 
 export interface Group {

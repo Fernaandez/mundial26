@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Match, Group, Participant } from "@/types";
 import { getTeamInfo, getAllTeams } from "@/data/world-cup-2026";
+import { PredictionWindows } from "@/lib/phases";
+import { TeamFlag } from "@/components/TeamFlag";
 
 export default function AdminPage() {
   const [pin, setPin] = useState("");
@@ -10,7 +12,11 @@ export default function AdminPage() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [groups] = useState<Group[]>([]);
-  const [tab, setTab] = useState<"results" | "participants" | "knockout" | "special">("results");
+  const [predictionWindows, setPredictionWindows] = useState<PredictionWindows>({
+    groupsLocked: false,
+    knockoutOpen: false,
+  });
+  const [tab, setTab] = useState<"fases" | "results" | "participants" | "knockout">("fases");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -25,6 +31,7 @@ export default function AdminPage() {
     const data = await res.json();
     setMatches(data.matches);
     setParticipants(data.participants);
+    setPredictionWindows(data.predictionWindows ?? { groupsLocked: false, knockoutOpen: false });
     setAuthenticated(true);
   }
 
@@ -77,6 +84,23 @@ export default function AdminPage() {
     return false;
   }
 
+  async function updateWindows(updates: Partial<PredictionWindows>) {
+    setSuccess("");
+    setError("");
+    const res = await fetch("/api/admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "predictionWindows", adminPin: pin, windows: updates }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setPredictionWindows(data.predictionWindows);
+      setSuccess("Fase actualitzada!");
+    } else {
+      setError(data.error || "Error");
+    }
+  }
+
   async function updateKnockoutMatch(matchId: string, homeTeam: string, awayTeam: string) {
     const res = await fetch("/api/admin", {
       method: "POST",
@@ -116,31 +140,116 @@ export default function AdminPage() {
 
   const groupMatches = matches.filter((m) => m.phase === "groups");
   const knockoutMatches = matches.filter((m) => m.phase !== "groups");
+  const groupResultsCount = groupMatches.filter((m) => m.homeScore !== undefined).length;
   const allTeams = getAllTeams();
 
+  const tabLabels: Record<typeof tab, string> = {
+    fases: "Fases prediccions",
+    results: "Resultats grups",
+    participants: "Participants",
+    knockout: "Eliminatòries",
+  };
+
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="font-display text-4xl text-pitch-400 mb-6">PANEL ADMIN</h1>
+    <div className="max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+      <h1 className="font-display text-3xl sm:text-4xl text-pitch-400 mb-6">PANEL ADMIN</h1>
 
       {success && (
         <div className="bg-pitch-700/30 border border-pitch-500 text-pitch-200 px-4 py-3 rounded-xl mb-6 text-sm">
           {success}
         </div>
       )}
+      {error && (
+        <div className="bg-red-900/30 border border-red-700 text-red-300 px-4 py-3 rounded-xl mb-6 text-sm">
+          {error}
+        </div>
+      )}
 
-      <div className="flex flex-wrap gap-2 mb-8">
-        {(["results", "participants", "knockout"] as const).map((t) => (
+      <div className="phase-tabs-scroll -mx-3 px-3 sm:mx-0 sm:px-0 mb-8">
+        <div className="flex gap-2 min-w-max sm:min-w-0 sm:flex-wrap">
+        {(["fases", "results", "participants", "knockout"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium ${
+            className={`px-3 sm:px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap ${
               tab === t ? "tab-active" : "tab-inactive"
             }`}
           >
-            {t === "results" ? "Resultats grups" : t === "participants" ? "Participants" : "Eliminatòries"}
+            {tabLabels[t]}
           </button>
         ))}
+        </div>
       </div>
+
+      {tab === "fases" && (
+        <div className="space-y-6">
+          <div className="card-glass rounded-2xl p-5 sm:p-6">
+            <h2 className="font-display text-xl text-gold-500 mb-4">1. Fase de grups</h2>
+            <p className="text-pitch-400 text-sm mb-4">
+              Els jugadors omplen prediccions especials + 72 partits de grups.
+              Resultats introduïts: <strong className="text-white">{groupResultsCount}/{groupMatches.length}</strong>
+            </p>
+            <div className="flex flex-wrap gap-3">
+              {!predictionWindows.groupsLocked ? (
+                <button
+                  type="button"
+                  onClick={() => updateWindows({ groupsLocked: true })}
+                  className="btn-primary text-sm"
+                >
+                  Tancar prediccions de grups
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => updateWindows({ groupsLocked: false })}
+                  className="btn-secondary text-sm"
+                >
+                  Reobrir prediccions de grups
+                </button>
+              )}
+            </div>
+            <p className={`text-sm mt-3 ${predictionWindows.groupsLocked ? "text-gold-400" : "text-pitch-500"}`}>
+              Estat: {predictionWindows.groupsLocked ? "🔒 Tancada — només lectura" : "✅ Oberta — es poden editar"}
+            </p>
+          </div>
+
+          <div className="card-glass rounded-2xl p-5 sm:p-6">
+            <h2 className="font-display text-xl text-gold-500 mb-4">2. Eliminatòries</h2>
+            <p className="text-pitch-400 text-sm mb-4">
+              Obre aquesta fase quan la fase de grups hagi acabat i estigui puntuada.
+              Els jugadors podran predir 32ens, 8ens, quarts, semis i final.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              {!predictionWindows.knockoutOpen ? (
+                <button
+                  type="button"
+                  onClick={() => updateWindows({ knockoutOpen: true })}
+                  className="btn-primary text-sm"
+                  disabled={!predictionWindows.groupsLocked}
+                >
+                  Obrir prediccions eliminatòries
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => updateWindows({ knockoutOpen: false })}
+                  className="btn-secondary text-sm"
+                >
+                  Tancar prediccions eliminatòries
+                </button>
+              )}
+            </div>
+            {!predictionWindows.groupsLocked && !predictionWindows.knockoutOpen && (
+              <p className="text-pitch-500 text-xs mt-3">
+                Primer tanca la fase de grups abans d&apos;obrir eliminatòries (recomanat).
+              </p>
+            )}
+            <p className={`text-sm mt-3 ${predictionWindows.knockoutOpen ? "text-gold-400" : "text-pitch-500"}`}>
+              Estat: {predictionWindows.knockoutOpen ? "✅ Oberta" : "🔒 Tancada"}
+            </p>
+          </div>
+        </div>
+      )}
 
       {tab === "results" && (
         <div className="space-y-3">
@@ -262,13 +371,19 @@ function ResultRow({ match, onSave }: { match: Match; onSave: (id: string, h: nu
   return (
     <div className="card-glass rounded-xl p-4 flex flex-wrap items-center gap-4">
       <span className="text-sm text-pitch-500 w-16">{match.groupId}</span>
-      <span className="flex-1 text-sm">{homeTeam.flag} {homeTeam.name}</span>
+      <span className="flex-1 text-sm flex items-center gap-2">
+        <TeamFlag code={homeTeam.code} size={20} />
+        {homeTeam.name}
+      </span>
       <div className="flex items-center gap-2">
         <input type="number" min={0} max={20} value={home} onChange={(e) => setHome(+e.target.value)} className="score-input w-12" disabled={match.locked} />
         <span>:</span>
         <input type="number" min={0} max={20} value={away} onChange={(e) => setAway(+e.target.value)} className="score-input w-12" disabled={match.locked} />
       </div>
-      <span className="flex-1 text-sm text-right">{awayTeam.name} {awayTeam.flag}</span>
+      <span className="flex-1 text-sm text-right flex items-center justify-end gap-2">
+        {awayTeam.name}
+        <TeamFlag code={awayTeam.code} size={20} />
+      </span>
       {!match.locked && (
         <button onClick={() => onSave(match.id, home, away)} className="btn-primary text-sm py-2 px-4">
           Desar
@@ -286,7 +401,7 @@ function KnockoutRow({
   onSaveResult,
 }: {
   match: Match;
-  teams: { code: string; name: string; flag: string }[];
+  teams: { code: string; name: string; iso: string }[];
   onUpdateTeams: (id: string, home: string, away: string) => void;
   onSaveResult: (id: string, h: number, a: number) => void;
 }) {
@@ -300,12 +415,12 @@ function KnockoutRow({
       <div className="text-xs text-pitch-500 uppercase">{match.label}</div>
       <div className="flex flex-wrap items-center gap-3">
         <select value={homeTeam} onChange={(e) => setHomeTeam(e.target.value)} className="px-3 py-2 bg-pitch-950 border border-pitch-700 rounded-lg text-sm">
-          {teams.map((t) => <option key={t.code} value={t.code}>{t.flag} {t.name}</option>)}
+          {teams.map((t) => <option key={t.code} value={t.code}>{t.name}</option>)}
           <option value="TBD">❓ Per definir</option>
         </select>
         <span className="text-pitch-500">vs</span>
         <select value={awayTeam} onChange={(e) => setAwayTeam(e.target.value)} className="px-3 py-2 bg-pitch-950 border border-pitch-700 rounded-lg text-sm">
-          {teams.map((t) => <option key={t.code} value={t.code}>{t.flag} {t.name}</option>)}
+          {teams.map((t) => <option key={t.code} value={t.code}>{t.name}</option>)}
           <option value="TBD">❓ Per definir</option>
         </select>
         <button onClick={() => onUpdateTeams(match.id, homeTeam, awayTeam)} className="btn-secondary text-sm py-2 px-3">

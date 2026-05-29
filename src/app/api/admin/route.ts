@@ -6,6 +6,8 @@ import {
   saveSpecialActuals,
   updateKnockoutTeams,
   adminAddParticipant,
+  updatePredictionWindows,
+  getPredictionWindows,
 } from "@/lib/storage";
 
 export async function GET(request: Request) {
@@ -21,6 +23,7 @@ export async function GET(request: Request) {
     matches: data.tournament.matches,
     participants: data.participants,
     groups: data.tournament.groups,
+    predictionWindows: getPredictionWindows(data),
   });
 }
 
@@ -52,6 +55,11 @@ export async function POST(request: Request) {
     if (action === "knockoutTeams") {
       await updateKnockoutTeams(body.matchId, body.homeTeam, body.awayTeam, adminPin);
       return NextResponse.json({ success: true });
+    }
+
+    if (action === "predictionWindows") {
+      const windows = await updatePredictionWindows(adminPin, body.windows);
+      return NextResponse.json({ success: true, predictionWindows: windows });
     }
 
     return NextResponse.json({ error: "Acció desconeguda" }, { status: 400 });

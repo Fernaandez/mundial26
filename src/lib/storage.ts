@@ -3,6 +3,14 @@ import path from "path";
 import { AppData, Participant, Match, SpecialPredictions } from "@/types";
 import { TOURNAMENT_CONFIG, ALL_MATCHES } from "@/data/world-cup-2026";
 import { getSupabase, useSupabase, isCloudDeploy, getStorageConfigError } from "@/lib/supabase";
+import {
+  PredictionWindows,
+  DEFAULT_PREDICTION_WINDOWS,
+  mergePredictionWindows,
+  canEditGroupPredictions,
+  canEditKnockoutPredictions,
+  isKnockoutPhase,
+} from "@/lib/phases";
 
 const ROW_ID = 1;
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -19,6 +27,7 @@ export interface SpecialActuals {
 
 export interface ExtendedAppData extends AppData {
   specialActuals?: SpecialActuals;
+  predictionWindows?: PredictionWindows;
 }
 
 function defaultData(): ExtendedAppData {
@@ -37,6 +46,7 @@ function defaultData(): ExtendedAppData {
     },
     participants: [],
     adminPin: process.env.ADMIN_PIN || "mundial2026",
+    predictionWindows: { ...DEFAULT_PREDICTION_WINDOWS },
   };
 }
 
@@ -71,6 +81,7 @@ function normalizeAppData(stored: unknown): ExtendedAppData {
       adminPin: parsed.adminPin || base.adminPin,
       participants: Array.isArray(parsed.participants) ? parsed.participants : [],
       specialActuals: parsed.specialActuals,
+      predictionWindows: mergePredictionWindows(parsed.predictionWindows),
       tournament: {
         ...base.tournament,
         ...(parsed.tournament && typeof parsed.tournament === "object" ? parsed.tournament : {}),
@@ -236,6 +247,24 @@ export async function updateMatchResult(
   return match;
 }
 
+export function getPredictionWindows(data: ExtendedAppData): PredictionWindows {
+  return mergePredictionWindows(data.predictionWindows);
+}
+
+export async function updatePredictionWindows(
+  adminPin: string,
+  updates: Partial<PredictionWindows>
+): Promise<PredictionWindows> {
+  const data = await readData();
+  if (data.adminPin !== adminPin) throw new Error("PIN d'admin incorrecte");
+  data.predictionWindows = mergePredictionWindows({
+    ...getPredictionWindows(data),
+    ...updates,
+  });
+  await writeData(data);
+  return data.predictionWindows;
+}
+
 export async function savePredictions(
   participantId: string,
   pin: string,
@@ -246,14 +275,18 @@ export async function savePredictions(
   const p = data.participants.find((x) => x.id === participantId);
   if (!p || p.pin !== pin) throw new Error("Accés denegat");
 
+  const windows = getPredictionWindows(data);
+
   for (const [matchId, pred] of Object.entries(matches)) {
     const match = data.tournament.matches.find((m) => m.id === matchId);
     if (!match) continue;
     if (match.locked) continue;
+    if (match.phase === "groups" && !canEditGroupPredictions(windows)) continue;
+    if (isKnockoutPhase(match.phase) && !canEditKnockoutPredictions(windows)) continue;
     p.matches[matchId] = pred;
   }
 
-  if (special) {
+  if (special && canEditGroupPredictions(windows)) {
     p.special = special;
   }
 

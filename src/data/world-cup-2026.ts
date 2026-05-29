@@ -1,60 +1,61 @@
 import { Group, Match, Phase } from "@/types";
+import { getTeamIso } from "@/lib/flags";
 
-const TEAMS: Record<string, { name: string; flag: string }> = {
-  MEX: { name: "Mèxic", flag: "🇲🇽" },
-  RSA: { name: "Sud-àfrica", flag: "🇿🇦" },
-  KOR: { name: "Corea del Sud", flag: "🇰🇷" },
-  CZE: { name: "Txèquia", flag: "🇨🇿" },
-  CAN: { name: "Canadà", flag: "🇨🇦" },
-  BIH: { name: "Bòsnia", flag: "🇧🇦" },
-  QAT: { name: "Qatar", flag: "🇶🇦" },
-  SUI: { name: "Suïssa", flag: "🇨🇭" },
-  BRA: { name: "Brasil", flag: "🇧🇷" },
-  MAR: { name: "Marroc", flag: "🇲🇦" },
-  HAI: { name: "Haití", flag: "🇭🇹" },
-  SCO: { name: "Escòcia", flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
-  USA: { name: "Estats Units", flag: "🇺🇸" },
-  PAR: { name: "Paraguai", flag: "🇵🇾" },
-  AUS: { name: "Austràlia", flag: "🇦🇺" },
-  TUR: { name: "Turquia", flag: "🇹🇷" },
-  GER: { name: "Alemanya", flag: "🇩🇪" },
-  CUW: { name: "Curaçao", flag: "🇨🇼" },
-  CIV: { name: "Costa d'Ivori", flag: "🇨🇮" },
-  ECU: { name: "Equador", flag: "🇪🇨" },
-  NED: { name: "Països Baixos", flag: "🇳🇱" },
-  JPN: { name: "Japó", flag: "🇯🇵" },
-  SWE: { name: "Suècia", flag: "🇸🇪" },
-  TUN: { name: "Tunísia", flag: "🇹🇳" },
-  BEL: { name: "Bèlgica", flag: "🇧🇪" },
-  EGY: { name: "Egipte", flag: "🇪🇬" },
-  IRN: { name: "Iran", flag: "🇮🇷" },
-  NZL: { name: "Nova Zelanda", flag: "🇳🇿" },
-  ESP: { name: "Espanya", flag: "🇪🇸" },
-  CPV: { name: "Cap Verd", flag: "🇨🇻" },
-  KSA: { name: "Aràbia Saudita", flag: "🇸🇦" },
-  URU: { name: "Uruguai", flag: "🇺🇾" },
-  FRA: { name: "França", flag: "🇫🇷" },
-  SEN: { name: "Senegal", flag: "🇸🇳" },
-  IRQ: { name: "Iraq", flag: "🇮🇶" },
-  NOR: { name: "Noruega", flag: "🇳🇴" },
-  ARG: { name: "Argentina", flag: "🇦🇷" },
-  ALG: { name: "Algèria", flag: "🇩🇿" },
-  AUT: { name: "Àustria", flag: "🇦🇹" },
-  JOR: { name: "Jordània", flag: "🇯🇴" },
-  POR: { name: "Portugal", flag: "🇵🇹" },
-  COD: { name: "Congo DR", flag: "🇨🇩" },
-  UZB: { name: "Uzbekistan", flag: "🇺🇿" },
-  COL: { name: "Colòmbia", flag: "🇨🇴" },
-  ENG: { name: "Anglaterra", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
-  CRO: { name: "Croàcia", flag: "🇭🇷" },
-  GHA: { name: "Ghana", flag: "🇬🇭" },
-  PAN: { name: "Panamà", flag: "🇵🇦" },
-  TBD: { name: "Per definir", flag: "❓" },
+const TEAMS: Record<string, { name: string }> = {
+  MEX: { name: "Mèxic" },
+  RSA: { name: "Sud-àfrica" },
+  KOR: { name: "Corea del Sud" },
+  CZE: { name: "Txèquia" },
+  CAN: { name: "Canadà" },
+  BIH: { name: "Bòsnia" },
+  QAT: { name: "Qatar" },
+  SUI: { name: "Suïssa" },
+  BRA: { name: "Brasil" },
+  MAR: { name: "Marroc" },
+  HAI: { name: "Haití" },
+  SCO: { name: "Escòcia" },
+  USA: { name: "Estats Units" },
+  PAR: { name: "Paraguai" },
+  AUS: { name: "Austràlia" },
+  TUR: { name: "Turquia" },
+  GER: { name: "Alemanya" },
+  CUW: { name: "Curaçao" },
+  CIV: { name: "Costa d'Ivori" },
+  ECU: { name: "Equador" },
+  NED: { name: "Països Baixos" },
+  JPN: { name: "Japó" },
+  SWE: { name: "Suècia" },
+  TUN: { name: "Tunísia" },
+  BEL: { name: "Bèlgica" },
+  EGY: { name: "Egipte" },
+  IRN: { name: "Iran" },
+  NZL: { name: "Nova Zelanda" },
+  ESP: { name: "Espanya" },
+  CPV: { name: "Cap Verd" },
+  KSA: { name: "Aràbia Saudita" },
+  URU: { name: "Uruguai" },
+  FRA: { name: "França" },
+  SEN: { name: "Senegal" },
+  IRQ: { name: "Iraq" },
+  NOR: { name: "Noruega" },
+  ARG: { name: "Argentina" },
+  ALG: { name: "Algèria" },
+  AUT: { name: "Àustria" },
+  JOR: { name: "Jordània" },
+  POR: { name: "Portugal" },
+  COD: { name: "Congo DR" },
+  UZB: { name: "Uzbekistan" },
+  COL: { name: "Colòmbia" },
+  ENG: { name: "Anglaterra" },
+  CRO: { name: "Croàcia" },
+  GHA: { name: "Ghana" },
+  PAN: { name: "Panamà" },
+  TBD: { name: "Per definir" },
 };
 
 function team(code: string) {
-  const t = TEAMS[code] ?? { name: code, flag: "🏳️" };
-  return { code, name: t.name, flag: t.flag };
+  const t = TEAMS[code] ?? { name: code };
+  return { code, name: t.name, iso: getTeamIso(code) ?? "" };
 }
 
 function groupMatches(groupId: string, teams: string[]): Match[] {
@@ -139,7 +140,7 @@ export function getTeamInfo(code: string) {
 export function getAllTeams() {
   return Object.entries(TEAMS)
     .filter(([code]) => code !== "TBD")
-    .map(([code, t]) => ({ code, ...t }));
+    .map(([code, t]) => ({ code, name: t.name, iso: getTeamIso(code) ?? "" }));
 }
 
 export const TOURNAMENT_CONFIG = {

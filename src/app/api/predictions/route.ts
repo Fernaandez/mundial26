@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readData, savePredictions, getParticipant, verifyPin } from "@/lib/storage";
+import { readData, savePredictions, getParticipant, verifyPin, getPredictionWindows } from "@/lib/storage";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -21,6 +21,7 @@ export async function GET(request: Request) {
     participant,
     matches: data.tournament.matches,
     groups: data.tournament.groups,
+    predictionWindows: getPredictionWindows(data),
   });
 }
 

@@ -3,6 +3,7 @@
 import { Match, Group, SpecialPredictions, Phase } from "@/types";
 import { getTeamInfo } from "@/data/world-cup-2026";
 import { PHASE_LABELS } from "@/data/world-cup-2026";
+import { TeamFlag } from "@/components/TeamFlag";
 
 interface MatchCardProps {
   match: Match;
@@ -25,7 +26,7 @@ export function MatchCard({ match, prediction, onChange, disabled }: MatchCardPr
       {/* Mobile layout */}
       <div className="sm:hidden space-y-2">
         <TeamScoreRow
-          flag={home.flag}
+          code={home.code}
           name={home.name}
           score={prediction?.home ?? ""}
           onScoreChange={(v) => onChange(v, prediction?.away ?? 0)}
@@ -33,7 +34,7 @@ export function MatchCard({ match, prediction, onChange, disabled }: MatchCardPr
         />
         <div className="text-center text-pitch-600 font-bold text-sm">VS</div>
         <TeamScoreRow
-          flag={away.flag}
+          code={away.code}
           name={away.name}
           score={prediction?.away ?? ""}
           onScoreChange={(v) => onChange(prediction?.home ?? 0, v)}
@@ -43,8 +44,8 @@ export function MatchCard({ match, prediction, onChange, disabled }: MatchCardPr
 
       {/* Desktop layout */}
       <div className="hidden sm:flex items-center justify-between gap-2">
-        <div className="flex-1 min-w-0 text-right">
-          <span className="text-2xl mr-2">{home.flag}</span>
+        <div className="flex-1 min-w-0 text-right flex items-center justify-end gap-2">
+          <TeamFlag code={home.code} size={28} />
           <span className="font-medium text-base">{home.name}</span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -74,9 +75,9 @@ export function MatchCard({ match, prediction, onChange, disabled }: MatchCardPr
             aria-label={`Gols ${away.name}`}
           />
         </div>
-        <div className="flex-1 min-w-0 text-left">
+        <div className="flex-1 min-w-0 text-left flex items-center gap-2">
           <span className="font-medium text-base">{away.name}</span>
-          <span className="text-2xl ml-2">{away.flag}</span>
+          <TeamFlag code={away.code} size={28} />
         </div>
       </div>
 
@@ -90,13 +91,13 @@ export function MatchCard({ match, prediction, onChange, disabled }: MatchCardPr
 }
 
 function TeamScoreRow({
-  flag,
+  code,
   name,
   score,
   onScoreChange,
   locked,
 }: {
-  flag: string;
+  code: string;
   name: string;
   score: number | string;
   onScoreChange: (v: number) => void;
@@ -104,7 +105,7 @@ function TeamScoreRow({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xl shrink-0">{flag}</span>
+      <TeamFlag code={code} size={24} />
       <span className="font-medium text-sm flex-1 min-w-0 truncate">{name}</span>
       <input
         type="number"
@@ -193,7 +194,7 @@ export function PhaseTabs({ phases, active, onChange }: PhaseTabsProps) {
 interface SpecialFormProps {
   groups: Group[];
   special?: SpecialPredictions;
-  allTeams: { code: string; name: string; flag: string }[];
+  allTeams: { code: string; name: string; iso: string }[];
   onChange: (special: SpecialPredictions) => void;
   disabled?: boolean;
 }
@@ -293,7 +294,7 @@ export function SpecialForm({ groups, special, allTeams, onChange, disabled }: S
                       className="flex-1 min-w-0 px-3 py-2.5 bg-pitch-900 border border-pitch-700 rounded-lg text-sm"
                     >
                       {group.teams.map((t) => (
-                        <option key={t.code} value={t.code}>{t.flag} {t.name}</option>
+                        <option key={t.code} value={t.code}>{t.name}</option>
                       ))}
                     </select>
                   </div>
@@ -326,7 +327,7 @@ function SelectTeam({
 }: {
   label: string;
   value: string;
-  teams: { code: string; name: string; flag: string }[];
+  teams: { code: string; name: string; iso: string }[];
   onChange: (v: string) => void;
   disabled?: boolean;
 }) {
@@ -341,7 +342,7 @@ function SelectTeam({
       >
         <option value="">— Selecciona —</option>
         {teams.map((t) => (
-          <option key={t.code} value={t.code}>{t.flag} {t.name}</option>
+          <option key={t.code} value={t.code}>{t.name}</option>
         ))}
       </select>
     </div>
