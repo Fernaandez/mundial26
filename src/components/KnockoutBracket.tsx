@@ -6,7 +6,7 @@ import { MatchKickoff } from "@/components/MatchKickoff";
 import { BracketLayout } from "@/components/BracketLayout";
 import { BracketRoundMatches } from "@/components/BracketRoundMatches";
 import { getBracketRounds, isMatchFinished, matchesByIdMap } from "@/lib/knockout";
-import { PHASE_SHORT } from "@/data/phase-labels";
+import { PHASE_SHORT, BRACKET_ROUND_HINTS } from "@/data/phase-labels";
 
 interface KnockoutBracketProps {
   matches: Match[];
@@ -27,7 +27,14 @@ export function KnockoutBracket({ matches }: KnockoutBracketProps) {
     >
       {rounds.map((round) => (
         <div key={round.phase} className="bracket-round">
-          <div className="bracket-round-title">{PHASE_SHORT[round.phase] ?? round.name}</div>
+          <div className="bracket-round-title flex-col gap-0.5">
+            <span className="leading-tight">{PHASE_SHORT[round.phase] ?? round.name}</span>
+            {BRACKET_ROUND_HINTS[round.phase] && (
+              <span className="text-[9px] sm:text-[10px] font-normal text-pitch-500 normal-case tracking-normal leading-tight">
+                {BRACKET_ROUND_HINTS[round.phase]}
+              </span>
+            )}
+          </div>
           <BracketRoundMatches
             phase={round.phase}
             matchIds={round.matchIds}

@@ -168,7 +168,7 @@ body {
 }
 
 .bracket-scroll {
-  --bracket-col-min: 9.5rem;
+  --bracket-col-min: 5.75rem;
   display: grid;
   grid-template-columns: repeat(6, minmax(var(--bracket-col-min), 1fr));
   gap: 0.35rem;
@@ -190,7 +190,7 @@ body {
   @apply font-display text-xs sm:text-sm text-gold-500 text-center mb-1.5 px-1 leading-tight;
   white-space: normal;
   word-break: keep-all;
-  min-height: 2.25rem;
+  min-height: 2.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -212,25 +212,6 @@ body {
   justify-content: center;
   gap: 0.35rem;
   min-height: 0;
-  min-width: 0;
-}
-
-/* Setzens: dues meitats del quadre (8+8 partits, 4 tercers per costat) */
-.bracket-r32-halves {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 0.35rem;
-  width: 100%;
-  min-width: 0;
-  flex: 1;
-  align-content: center;
-}
-
-.bracket-r32-side {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.35rem;
   min-width: 0;
 }
 

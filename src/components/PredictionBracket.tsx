@@ -6,7 +6,7 @@ import { TeamFlag } from "@/components/TeamFlag";
 import { getBracketRounds, matchesByIdMap } from "@/lib/knockout";
 import { countExpectedBracketPicks } from "@/lib/knockout-advancement";
 import { getRealKnockoutMatchesForBracket } from "@/lib/predicted-bracket";
-import { PHASE_SHORT } from "@/data/phase-labels";
+import { PHASE_SHORT, BRACKET_ROUND_HINTS } from "@/data/phase-labels";
 import { BracketLayout } from "@/components/BracketLayout";
 import { BracketRoundMatches } from "@/components/BracketRoundMatches";
 
@@ -40,9 +40,11 @@ export function PredictionBracket({
           <>
             {!readOnly && (
               <p className="text-sm text-pitch-400 mb-4">
-                Equips i marcadors oficials del torneig. Tu només tries qui passa de ronda (punts
-                d&apos;avancament). Marcadors els prediueu a la pestanya Marcadors.{" "}
-                {pickCount > 0 && `${pickCount}/${expectedPicks} tries.`}
+                Equips i marcadors oficials del torneig. Tria qui passa cada partit: a{" "}
+                <strong className="text-pitch-200">Setzens</strong> tries els 16 classificats a
+                vuitens (1 pt/equip); a <strong className="text-pitch-200">Vuitens</strong> tries
+                els 8 guanyadors cap a quarts (5 pts/equip). Marcadors es prediuen a Marcadors.{" "}
+                {pickCount > 0 && `${pickCount}/${expectedPicks} tries al quadre.`}
               </p>
             )}
             {incomplete && !readOnly && (
@@ -57,8 +59,13 @@ export function PredictionBracket({
           const roundOpen = readOnly || (isPickEnabled?.(round.phase) ?? true);
           return (
             <div key={round.phase} className="bracket-round">
-              <div className="bracket-round-title gap-1">
+              <div className="bracket-round-title flex-col gap-0.5">
                 <span className="leading-tight">{PHASE_SHORT[round.phase] ?? round.name}</span>
+                {BRACKET_ROUND_HINTS[round.phase] && (
+                  <span className="text-[9px] sm:text-[10px] font-normal text-pitch-500 normal-case tracking-normal leading-tight">
+                    {BRACKET_ROUND_HINTS[round.phase]}
+                  </span>
+                )}
                 {!roundOpen && !readOnly && <span className="text-xs opacity-70">🔒</span>}
               </div>
               <BracketRoundMatches

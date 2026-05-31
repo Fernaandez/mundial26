@@ -21,6 +21,16 @@ export const PHASE_SHORT: Partial<Record<Phase, string>> = {
   final: "Final",
 };
 
+/** Subtítol al quadre: tries per ronda i destinació */
+export const BRACKET_ROUND_HINTS: Partial<Record<Phase, string>> = {
+  round32: "16 tries · classifiquen a vuitens",
+  round16: "8 tries · passen a quarts",
+  quarter: "4 tries · passen a semis",
+  semi: "2 tries · passen a la final",
+  third: "Guanyador 3r lloc",
+  final: "Campió",
+};
+
 export const BREAKDOWN_LABELS: Record<keyof ScoreBreakdown, string> = {
   special: "Mundial (jugadors, seleccions, podi)",
   groups: "Grups (partits + extras)",
