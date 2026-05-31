@@ -315,7 +315,7 @@ export function PredictionsPanel({
       )}
 
       {mainSection === "bracket" && (
-        <>
+        <div className="min-w-0">
           {!showKnockout ? (
             <div className="card-glass rounded-2xl p-8 text-center">
               <div className="text-4xl mb-4">🔒</div>
@@ -333,15 +333,15 @@ export function PredictionsPanel({
                 </p>
               )}
               <PredictionBracket
-              matches={matches}
-              bracketPicks={bracketPicks}
-              onPick={handleBracketPick}
-              isPickEnabled={() => bracketEditable}
-              readOnly={readOnly}
-            />
+                matches={matches}
+                bracketPicks={bracketPicks}
+                onPick={handleBracketPick}
+                isPickEnabled={() => bracketEditable}
+                readOnly={readOnly}
+              />
             </>
           )}
-        </>
+        </div>
       )}
 
       {mainSection === "mundial" && (

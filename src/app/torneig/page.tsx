@@ -67,7 +67,7 @@ export default function TorneigPage() {
     : 0;
 
   return (
-    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 min-w-0 overflow-x-hidden">
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>
           <h1 className="font-display text-4xl sm:text-5xl text-pitch-400">TORNEIG</h1>
@@ -135,7 +135,7 @@ export default function TorneigPage() {
       )}
 
       {tab === "knockout" && (
-        <section>
+        <section className="min-w-0">
           <div className="flex gap-2 mb-6 max-w-md">
             <button
               type="button"

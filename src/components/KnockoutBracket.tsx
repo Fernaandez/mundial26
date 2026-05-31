@@ -3,6 +3,7 @@
 import { Match } from "@/types";
 import { MatchScoreboard } from "@/components/MatchScoreboard";
 import { MatchKickoff } from "@/components/MatchKickoff";
+import { BracketLayout } from "@/components/BracketLayout";
 import { getBracketRounds, isMatchFinished, matchesByIdMap } from "@/lib/knockout";
 
 interface KnockoutBracketProps {
@@ -12,43 +13,40 @@ interface KnockoutBracketProps {
 export function KnockoutBracket({ matches }: KnockoutBracketProps) {
   const byId = matchesByIdMap(matches);
   const rounds = getBracketRounds();
-
   const finishedCount = matches.filter((m) => isMatchFinished(m)).length;
 
   return (
-    <div>
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <p className="text-sm text-pitch-400">
-          {finishedCount} partits amb resultat · desplaça&apos;t per veure tot el quadre →
+    <BracketLayout
+      header={
+        <p className="text-sm text-pitch-400 mb-4">
+          {finishedCount} partits amb resultat · quadre complet per rondes
         </p>
-      </div>
-
-      <div className="bracket-scroll">
-        {rounds.map((round) => (
-          <div key={round.phase} className="bracket-round">
-            <div className="bracket-round-title">{round.name}</div>
-            <div className="bracket-round-matches">
-              {round.matchIds.map((id) => {
-                const match = byId[id];
-                if (!match) return null;
-                const finished = isMatchFinished(match);
-                return (
-                  <div
-                    key={id}
-                    className={`bracket-match card-glass rounded-xl p-3 ${
-                      finished ? "bracket-match-done" : ""
-                    } ${round.phase === "final" ? "bracket-match-final" : ""}`}
-                  >
-                    <MatchKickoff match={match} className="mb-2" compact />
-                    <MatchScoreboard match={match} variant="bracket" />
-                  </div>
-                );
-              })}
-            </div>
+      }
+    >
+      {rounds.map((round) => (
+        <div key={round.phase} className="bracket-round">
+          <div className="bracket-round-title">{round.name}</div>
+          <div className="bracket-round-matches">
+            {round.matchIds.map((id) => {
+              const match = byId[id];
+              if (!match) return null;
+              const finished = isMatchFinished(match);
+              return (
+                <div
+                  key={id}
+                  className={`bracket-match card-glass rounded-lg sm:rounded-xl ${
+                    finished ? "bracket-match-done" : ""
+                  } ${round.phase === "final" ? "bracket-match-final" : ""}`}
+                >
+                  <MatchKickoff match={match} className="mb-1 hidden md:block" compact />
+                  <MatchScoreboard match={match} variant="bracket" showKickoff={false} />
+                </div>
+              );
+            })}
           </div>
-        ))}
-      </div>
-    </div>
+        </div>
+      ))}
+    </BracketLayout>
   );
 }
 

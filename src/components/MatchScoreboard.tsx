@@ -36,13 +36,13 @@ export function MatchScoreboard({
     (match.etHomeScore !== match.homeScore || match.etAwayScore !== match.awayScore);
 
   const isBracket = variant === "bracket";
-  const isCompact = variant === "compact";
+  const isCompact = variant === "compact" || isBracket;
   const useInline = finished && !isBracket;
 
   return (
     <div className={isBracket ? "bracket-match-inner" : ""}>
       {match.label && isBracket && (
-        <div className="text-[10px] text-pitch-500 uppercase tracking-wider mb-1.5 truncate">
+        <div className="text-[9px] text-pitch-500 uppercase tracking-wider mb-1 truncate hidden md:block">
           {match.label}
         </div>
       )}
@@ -290,11 +290,11 @@ function TeamLine({
   large?: boolean;
 }) {
   const isTbd = code === "TBD";
-  const flagSize = compact ? 18 : large ? 28 : 22;
+  const flagSize = compact ? 16 : large ? 28 : 22;
 
   return (
     <div
-      className={`flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors ${
+      className={`flex items-center gap-1 rounded px-1 py-0.5 transition-colors min-w-0 ${
         isWinner
           ? "bg-gold-500/15 border border-gold-500/40"
           : isLoser
@@ -313,11 +313,11 @@ function TeamLine({
         </span>
       )}
       <span
-        className={`flex-1 min-w-0 truncate font-medium ${
-          compact ? "text-xs" : large ? "text-base" : "text-sm"
+        className={`bracket-team-name flex-1 min-w-0 truncate font-medium ${
+          compact ? "text-[10px] hidden xl:inline" : large ? "text-base" : "text-sm"
         } ${isWinner ? "text-gold-300" : isTbd ? "text-pitch-500 italic" : "text-pitch-100"}`}
       >
-        {isTbd ? "Per definir" : name}
+        {isTbd ? "?" : name}
       </span>
       {score !== undefined && (
         <span

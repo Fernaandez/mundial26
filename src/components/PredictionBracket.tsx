@@ -6,6 +6,7 @@ import { TeamFlag } from "@/components/TeamFlag";
 import { getBracketRounds, matchesByIdMap } from "@/lib/knockout";
 import { countExpectedBracketPicks } from "@/lib/knockout-advancement";
 import { enrichKnockoutDisplayTeams } from "@/lib/predicted-bracket";
+import { BracketLayout } from "@/components/BracketLayout";
 
 interface PredictionBracketProps {
   matches: Match[];
@@ -31,28 +32,31 @@ export function PredictionBracket({
   const allTeams = getAllTeams();
 
   return (
-    <div>
-      {!readOnly && (
-        <p className="text-sm text-pitch-400 mb-4">
-          Clica la bandera de qui passa de ronda. A <strong className="text-pitch-200">Setzens</strong>,
-          tria el guanyador de cada partit (desplaça&apos;t cap a l&apos;esquerra si no el veus).
-          El quadre sencer es pot omplir durant la finestra de Setzens.{" "}
-          {pickCount > 0 && `${pickCount}/${expectedPicks} tries.`}
-        </p>
-      )}
-      {incomplete && !readOnly && (
-        <div className="bg-amber-900/20 border border-amber-700/40 text-amber-100 px-4 py-3 rounded-xl mb-4 text-sm">
-          Quadre incomplet: omple totes les rondes per puntuar bé els classificats.
-        </div>
-      )}
-
-      <div className="bracket-scroll">
+    <div className="min-w-0">
+      <BracketLayout
+        header={
+          <>
+            {!readOnly && (
+              <p className="text-sm text-pitch-400 mb-4">
+                Clica la bandera o tria el guanyador de cada partit. El quadre mostra totes les rondes
+                (Setzens → Final) dins la pantalla.{" "}
+                {pickCount > 0 && `${pickCount}/${expectedPicks} tries.`}
+              </p>
+            )}
+            {incomplete && !readOnly && (
+              <div className="bg-amber-900/20 border border-amber-700/40 text-amber-100 px-4 py-3 rounded-xl mb-4 text-sm">
+                Quadre incomplet: omple totes les rondes per puntuar bé els classificats.
+              </div>
+            )}
+          </>
+        }
+      >
         {rounds.map((round) => {
           const roundOpen = readOnly || (isPickEnabled?.(round.phase) ?? true);
           return (
             <div key={round.phase} className="bracket-round">
-              <div className="bracket-round-title flex items-center justify-center gap-2">
-                {round.name}
+              <div className="bracket-round-title gap-1">
+                <span className="leading-tight">{round.name}</span>
                 {!roundOpen && !readOnly && <span className="text-xs opacity-70">🔒</span>}
               </div>
               <div className="bracket-round-matches">
@@ -75,7 +79,7 @@ export function PredictionBracket({
             </div>
           );
         })}
-      </div>
+      </BracketLayout>
     </div>
   );
 }
@@ -103,51 +107,53 @@ function BracketMatchPick({
 
   return (
     <div
-      className={`bracket-match card-glass rounded-xl p-3 ${
+      className={`bracket-match card-glass rounded-lg sm:rounded-xl p-2 sm:p-2.5 min-w-0 ${
         phase === "final" ? "bracket-match-final" : ""
       } ${picked ? "border border-gold-500/30" : ""}`}
     >
       {match.label && (
-        <div className="text-[10px] text-pitch-500 uppercase tracking-wider mb-2 truncate">
+        <div className="text-[9px] sm:text-[10px] text-pitch-500 uppercase tracking-wider mb-1 truncate hidden sm:block">
           {match.label}
         </div>
       )}
 
       {bothReady ? (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-1 sm:gap-1.5">
           <PickFlag
             code={home.code}
             name={home.name}
             selected={picked === home.code}
             onClick={() => onPick(home.code)}
             disabled={disabled}
+            size={22}
           />
-          <span className="text-pitch-500 text-xs font-bold shrink-0">vs</span>
+          <span className="text-pitch-500 text-[10px] font-bold shrink-0">vs</span>
           <PickFlag
             code={away.code}
             name={away.name}
             selected={picked === away.code}
             onClick={() => onPick(away.code)}
             disabled={disabled}
+            size={22}
           />
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-1 min-w-0">
           {(homeReady || awayReady) && (
-            <div className="flex items-center justify-center gap-2 text-xs text-pitch-400">
-              {homeReady && <TeamFlag code={home.code} size={20} />}
-              {homeReady && awayReady && <span>vs</span>}
-              {awayReady && <TeamFlag code={away.code} size={20} />}
+            <div className="flex items-center justify-center gap-1.5 text-xs text-pitch-400">
+              {homeReady && <TeamFlag code={home.code} size={18} />}
+              {homeReady && awayReady && <span className="text-[10px]">vs</span>}
+              {awayReady && <TeamFlag code={away.code} size={18} />}
             </div>
           )}
-          <label className="block text-[10px] text-pitch-500 text-center">Guanyador</label>
           <select
             value={picked ?? ""}
             onChange={(e) => e.target.value && onPick(e.target.value)}
             disabled={disabled}
-            className="w-full px-2 py-2 bg-pitch-950 border border-pitch-700 rounded-lg text-xs"
+            className="w-full min-w-0 px-1 py-1.5 bg-pitch-950 border border-pitch-700 rounded-lg text-[10px] sm:text-xs truncate"
+            aria-label={`Guanyador ${match.label ?? match.id}`}
           >
-            <option value="">— Tria equip —</option>
+            <option value="">— Tria —</option>
             {allTeams.map((t) => (
               <option key={t.code} value={t.code}>
                 {t.name}
@@ -155,8 +161,8 @@ function BracketMatchPick({
             ))}
           </select>
           {picked && (
-            <div className="flex justify-center pt-1">
-              <TeamFlag code={picked} size={24} />
+            <div className="flex justify-center pt-0.5">
+              <TeamFlag code={picked} size={20} />
             </div>
           )}
         </div>
@@ -171,12 +177,14 @@ function PickFlag({
   selected,
   onClick,
   disabled,
+  size = 28,
 }: {
   code: string;
   name: string;
   selected: boolean;
   onClick: () => void;
   disabled?: boolean;
+  size?: number;
 }) {
   return (
     <button
@@ -184,13 +192,13 @@ function PickFlag({
       onClick={onClick}
       disabled={disabled}
       title={name}
-      className={`rounded-lg p-2 transition-all ${
+      className={`rounded-md p-1 sm:p-1.5 transition-all shrink-0 ${
         selected
-          ? "bg-gold-500/25 ring-2 ring-gold-500 scale-105"
+          ? "bg-gold-500/25 ring-2 ring-gold-500"
           : "bg-pitch-950/50 hover:bg-pitch-800/80 opacity-80 hover:opacity-100"
       } ${disabled ? "cursor-default opacity-60" : "cursor-pointer"}`}
     >
-      <TeamFlag code={code} size={28} />
+      <TeamFlag code={code} size={size} />
     </button>
   );
 }

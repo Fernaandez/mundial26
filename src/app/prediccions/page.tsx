@@ -128,7 +128,7 @@ export default function PredictionsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-28 md:pb-8">
+    <div className="max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-28 md:pb-8 min-w-0 overflow-x-hidden">
       {saveError && (
         <div className="bg-red-900/30 border border-red-700 text-red-200 px-4 py-3 rounded-xl mb-6 text-sm">
           {saveError}
