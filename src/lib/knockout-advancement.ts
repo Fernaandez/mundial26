@@ -31,7 +31,9 @@ export function teamsWinningPhase(
 }
 
 export interface AdvancementSets {
-  /** Guanyadors dels 8ens → classifiquen a quarts */
+  /** Guanyadors dels 16ens → classifiquen a vuitens (8ens) */
+  toRound16: Set<string>;
+  /** Guanyadors dels vuitens → classifiquen a quarts */
   toQuarter: Set<string>;
   /** Guanyadors dels quarts → classifiquen a semis */
   toSemi: Set<string>;
@@ -44,6 +46,7 @@ export function deriveAdvancementSets(
   predictions?: Record<string, ScorePrediction>
 ): AdvancementSets {
   return {
+    toRound16: teamsWinningPhase(matches, "round32", predictions),
     toQuarter: teamsWinningPhase(matches, "round16", predictions),
     toSemi: teamsWinningPhase(matches, "quarter", predictions),
     toFinal: teamsWinningPhase(matches, "semi", predictions),
@@ -84,17 +87,17 @@ export function disappointmentTeamValid(team: string, matches: Match[]): boolean
 export function scoreAdvancementPoints(
   predicted: AdvancementSets,
   actual: AdvancementSets,
-  rules: { quarter: number; semi: number; final: number }
+  rules: { round16: number; quarter: number; semi: number }
 ): number {
   let pts = 0;
+  for (const t of actual.toRound16) {
+    if (predicted.toRound16.has(t)) pts += rules.round16;
+  }
   for (const t of actual.toQuarter) {
     if (predicted.toQuarter.has(t)) pts += rules.quarter;
   }
   for (const t of actual.toSemi) {
     if (predicted.toSemi.has(t)) pts += rules.semi;
-  }
-  for (const t of actual.toFinal) {
-    if (predicted.toFinal.has(t)) pts += rules.final;
   }
   return pts;
 }

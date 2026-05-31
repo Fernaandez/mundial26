@@ -9,6 +9,21 @@ export const FIFA_TOP_10_CODES = [
   "ESP", "FRA", "ENG", "GER", "POR", "ARG", "BRA", "MAR", "BEL", "NED",
 ] as const;
 
+export const SUBMISSION_DEADLINES: { phase: string; limit: string }[] = [
+  {
+    phase: "Grups + prediccions especials",
+    limit: "Dimecres 10 de juny de 2026, 23:59h",
+  },
+  {
+    phase: "Obertura eliminatòries",
+    limit: "Dissabte 28 de juny de 2026, 04:00h (acaba fase de grups)",
+  },
+  {
+    phase: "Eliminatòries",
+    limit: "Dissabte 28 de juny de 2026, 20:59h (comencen els 1/16 de final)",
+  },
+];
+
 export const DEADLINES = {
   groupsSubmit: "Dimecres 10 de juny de 2026, 23:59h",
   groupsEndKnockoutOpen: "Dissabte 28 de juny de 2026, 04:00h (acaba fase de grups)",

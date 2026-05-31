@@ -50,17 +50,36 @@ export default function AdminPage() {
     }
   }
 
-  async function markPaid(participantId: string) {
+  async function markAcknowledged(participantId: string) {
+    setSuccess("");
     const res = await fetch("/api/admin", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "markPaid", adminPin: pin, participantId }),
+      body: JSON.stringify({ action: "markAcknowledged", adminPin: pin, participantId }),
     });
     if (res.ok) {
       setParticipants((prev) =>
         prev.map((p) => (p.id === participantId ? { ...p, entryFeePaid: true } : p))
       );
-      setSuccess("Pagament marcat!");
+      setSuccess("Marcat com a conegut!");
+    }
+  }
+
+  async function removeParticipant(participantId: string, name: string) {
+    if (!window.confirm(`Eliminar ${name}? Es perdran totes les seves prediccions.`)) return;
+    setSuccess("");
+    setError("");
+    const res = await fetch("/api/admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "deleteParticipant", adminPin: pin, participantId }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setParticipants((prev) => prev.filter((p) => p.id !== participantId));
+      setSuccess(`${name} eliminat`);
+    } else {
+      setError(data.error || "Error eliminant participant");
     }
   }
 
@@ -269,8 +288,8 @@ export default function AdminPage() {
                 <th className="py-3 px-4 text-left">Nom</th>
                 <th className="py-3 px-4 text-center">Prediccions</th>
                 <th className="py-3 px-4 text-center">Especials</th>
-                <th className="py-3 px-4 text-center">Pagat</th>
-                <th className="py-3 px-4"></th>
+                <th className="py-3 px-4 text-center">Conegut</th>
+                <th className="py-3 px-4 text-right">Accions</th>
               </tr>
             </thead>
             <tbody>
@@ -280,15 +299,25 @@ export default function AdminPage() {
                   <td className="py-3 px-4 text-center">{Object.keys(p.matches).length}</td>
                   <td className="py-3 px-4 text-center">{p.special ? "✅" : "❌"}</td>
                   <td className="py-3 px-4 text-center">{p.entryFeePaid ? "✅" : "❌"}</td>
-                  <td className="py-3 px-4">
-                    {!p.entryFeePaid && (
+                  <td className="py-3 px-4 text-right">
+                    <div className="flex flex-wrap justify-end gap-x-3 gap-y-1">
+                      {!p.entryFeePaid && (
+                        <button
+                          type="button"
+                          onClick={() => markAcknowledged(p.id)}
+                          className="text-sm text-pitch-400 hover:text-white underline"
+                        >
+                          Marcar com a conegut
+                        </button>
+                      )}
                       <button
-                        onClick={() => markPaid(p.id)}
-                        className="text-sm text-pitch-400 hover:text-white underline"
+                        type="button"
+                        onClick={() => removeParticipant(p.id, p.name)}
+                        className="text-sm text-red-400 hover:text-red-300 underline"
                       >
-                        Marcar pagat
+                        Eliminar
                       </button>
-                    )}
+                    </div>
                   </td>
                 </tr>
               ))}

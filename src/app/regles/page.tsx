@@ -1,10 +1,10 @@
-import { SCORING_RULES, BREAKDOWN_LABELS } from "@/data/world-cup-2026";
+import { SCORING_RULES } from "@/data/world-cup-2026";
 import {
-  DEADLINES,
   ENTRY_FEE,
   FIFA_TOP_10_CODES,
   PRIZE_SPLIT,
   RULES_NOTES,
+  SUBMISSION_DEADLINES,
 } from "@/data/rules-config";
 import { getTeamInfo } from "@/data/world-cup-2026";
 
@@ -22,29 +22,29 @@ export default function RulesPage() {
 
       <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
         <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">GENERAL</h2>
-        <ul className="space-y-2 text-pitch-200 text-sm sm:text-base">
+        <ul className="space-y-2 text-pitch-200 text-sm sm:text-base mb-6">
           <li>• Preu d&apos;entrada: <strong className="text-white">{ENTRY_FEE}€</strong> ({RULES_NOTES.payment})</li>
           <li>• Repartiment de premis: <strong className="text-white">{PRIZE_SPLIT.first}% · {PRIZE_SPLIT.second}% · {PRIZE_SPLIT.third}%</strong> (1r, 2n, 3r)</li>
           <li className="text-pitch-400 text-sm">{RULES_NOTES.prizesNote}</li>
-          <li>• Límit entrega <strong className="text-white">fase de grups + prediccions especials</strong>: {DEADLINES.groupsSubmit}</li>
-          <li>• Límit entrega <strong className="text-white">eliminatòries</strong>: {DEADLINES.knockoutSubmit}</li>
-          <li>• {DEADLINES.groupsEndKnockoutOpen}</li>
           <li>• Cal predir el <strong className="text-white">marcador exacte</strong> de cada partit (90 minuts)</li>
         </ul>
+
+        <h3 className="font-display text-lg text-pitch-300 mb-3">Límits d&apos;entrega</h3>
+        <DeadlineTable rows={SUBMISSION_DEADLINES.map((d) => [d.phase, d.limit])} />
       </section>
 
       <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
-        <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">FASE DE GRUPS — PARTITS</h2>
+        <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">FASE DE GRUPS</h2>
         <p className="text-pitch-300 mb-4 text-sm">72 partits · 12 grups de 4 equips</p>
+
+        <h3 className="font-display text-lg text-pitch-300 mb-3">Partits</h3>
         <RulesTable rows={[
           ["Resultat correcte (1 / X / 2)", `${g.outcome} pt`],
-          ["Marcador exacte (+3 extra)", `${g.exact} pts (${g.outcome}+${g.exactBonus})`],
+          ["Marcador exacte", `${g.exact} pts`],
         ]} />
-      </section>
 
-      <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
-        <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">FASE DE GRUPS — EXTRAS</h2>
-        <p className="text-pitch-300 mb-4 text-sm">
+        <h3 className="font-display text-lg text-pitch-300 mb-3 mt-6">Classificació de grups</h3>
+        <p className="text-pitch-400 text-sm mb-3">
           L&apos;ordre de grups i els millors 3rs es calculen automàticament dels teus marcadors.
         </p>
         <RulesTable rows={[
@@ -52,6 +52,15 @@ export default function RulesPage() {
           ["Encertar un 3r que NO passa (dels 8 millors 3rs)", `${s.nonQualifyingThird} pts`],
           ["Selecció amb més gols (GF) a fase de grups", `${s.mostGroupGoals} pts`],
           ["Selecció amb més gols encaixats (GC) a fase de grups", `${s.mostGroupGoalsConceded} pts`],
+        ]} />
+      </section>
+
+      <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+        <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">PUNTUACIONS ESPECIALS</h2>
+        <p className="text-pitch-300 mb-4 text-sm">
+          Jugadors, seleccions i eliminatòries (tot el que no són partits ni classificació de grups).
+        </p>
+        <RulesTable rows={[
           ["Màxim golejador", `${s.topScorer} pts`],
           ["Màxim assistent", `${s.topAssists} pts`],
           ["Millor porter", `${s.goldenGlove} pts`],
@@ -59,6 +68,9 @@ export default function RulesPage() {
           ["Millor jugador jove", `${s.youngMvp} pts`],
           ["Selecció revelació", `${s.surpriseTeam} pts`],
           ["Selecció decepció", `${s.disappointmentTeam} pts`],
+          ["Per equip encertat que classifica a vuitens (8ens)", `${s.round16Finalist} pt/equip`],
+          ["Per equip encertat que classifica a quarts", `${s.quarterFinalist} pts/equip`],
+          ["Per equip encertat que classifica a semis", `${s.semiFinalist} pts/equip`],
         ]} />
         <div className="mt-4 space-y-2 text-sm text-pitch-400">
           <p>{RULES_NOTES.youngPlayer}</p>
@@ -66,43 +78,28 @@ export default function RulesPage() {
           <p><strong className="text-pitch-300">Top 10 FIFA</strong> (31 maig 2026): {top10Names}</p>
           <p>{RULES_NOTES.surpriseTeam}</p>
           <p>{RULES_NOTES.disappointmentTeam}</p>
+          <p className="text-pitch-500">
+            Els classificats per ronda es calculen de les teves prediccions de marcadors
+            a l&apos;eliminatòria (guanyador per partit).
+          </p>
         </div>
       </section>
 
       <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
-        <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">ELIMINATÒRIES</h2>
+        <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">ELIMINATÒRIES — PARTITS</h2>
         <p className="text-pitch-300 mb-4 text-sm">16ens → 8ens → Quarts → Semis → 3r lloc → Final</p>
         <RulesTable rows={[
           ["Resultat correcte (1 / X / 2)", `${k.outcome} pt`],
-          ["Marcador exacte (+3 extra)", `${k.exact} pts`],
-          ["Per equip encertat que classifica a quarts", `${s.quarterFinalist} pts/equip`],
-          ["Per equip encertat que classifica a semis", `${s.semiFinalist} pts/equip`],
-          ["Per equip encertat que classifica a la final", `${s.finalist} pts/equip`],
-          ["Encertar el 3r classificat (partit 3r/4t)", `${s.thirdPlace} pts`],
-          ["Encertar el campió (final)", `${s.champion} pts`],
+          ["Marcador exacte", `${k.exact} pts`],
         ]} />
-        <p className="text-sm text-pitch-500 mt-4">
-          Campió, 3r i classificats per ronda es calculen de les teves prediccions de marcadors
-          a l&apos;eliminatòria (guanyador per partit).
-        </p>
-      </section>
-
-      <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
-        <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">CLASSIFICACIÓ DE PUNTS</h2>
-        <p className="text-pitch-300 mb-4 text-sm">Com es desglossen els punts al rànquing:</p>
-        <ul className="space-y-1 text-sm text-pitch-300">
-          {(Object.entries(BREAKDOWN_LABELS) as [keyof typeof BREAKDOWN_LABELS, string][]).map(([k, label]) => (
-            <li key={k}>• <strong className="text-pitch-200">{label}</strong></li>
-          ))}
-        </ul>
       </section>
 
       <section className="card-glass rounded-2xl p-4 sm:p-8">
         <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">PREMIS — EXEMPLES</h2>
         <div className="grid sm:grid-cols-3 gap-4 text-center">
-          <PrizeExample n={8} />
           <PrizeExample n={10} />
-          <PrizeExample n={12} />
+          <PrizeExample n={15} />
+          <PrizeExample n={20} />
         </div>
       </section>
     </div>
@@ -124,6 +121,29 @@ function RulesTable({ rows }: { rows: [string, string][] }) {
             <tr key={label} className="border-b border-pitch-800/50">
               <td className="py-3">{label}</td>
               <td className="py-3 text-right font-bold text-gold-400">{pts}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function DeadlineTable({ rows }: { rows: [string, string][] }) {
+  return (
+    <div className="overflow-x-auto -mx-2 px-2">
+      <table className="w-full text-left min-w-[280px]">
+        <thead>
+          <tr className="border-b border-pitch-700 text-pitch-400">
+            <th className="py-2 pr-4">Fase</th>
+            <th className="py-2">Límit d&apos;entrega</th>
+          </tr>
+        </thead>
+        <tbody className="text-pitch-200">
+          {rows.map(([phase, limit]) => (
+            <tr key={phase} className="border-b border-pitch-800/50">
+              <td className="py-3 pr-4 font-medium text-pitch-100 whitespace-nowrap">{phase}</td>
+              <td className="py-3 text-pitch-300">{limit}</td>
             </tr>
           ))}
         </tbody>

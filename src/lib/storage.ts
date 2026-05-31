@@ -318,12 +318,24 @@ export async function savePredictions(
   return p;
 }
 
-export async function markEntryPaid(participantId: string, adminPin: string): Promise<void> {
+export async function markParticipantAcknowledged(participantId: string, adminPin: string): Promise<void> {
   const data = await readData();
   if (data.adminPin !== adminPin) throw new Error("PIN d'admin incorrecte");
   const p = data.participants.find((x) => x.id === participantId);
   if (!p) throw new Error("Participant no trobat");
   p.entryFeePaid = true;
+  await writeData(data);
+}
+
+/** @deprecated usa markParticipantAcknowledged */
+export const markEntryPaid = markParticipantAcknowledged;
+
+export async function deleteParticipant(participantId: string, adminPin: string): Promise<void> {
+  const data = await readData();
+  if (data.adminPin !== adminPin) throw new Error("PIN d'admin incorrecte");
+  const index = data.participants.findIndex((x) => x.id === participantId);
+  if (index === -1) throw new Error("Participant no trobat");
+  data.participants.splice(index, 1);
   await writeData(data);
 }
 

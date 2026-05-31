@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import {
   readData,
   updateMatchResult,
-  markEntryPaid,
+  markParticipantAcknowledged,
+  deleteParticipant,
   saveSpecialActuals,
   updateKnockoutTeams,
   adminAddParticipant,
@@ -37,8 +38,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, match });
     }
 
-    if (action === "markPaid") {
-      await markEntryPaid(body.participantId, adminPin);
+    if (action === "markAcknowledged" || action === "markPaid") {
+      await markParticipantAcknowledged(body.participantId, adminPin);
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === "deleteParticipant") {
+      await deleteParticipant(body.participantId, adminPin);
       return NextResponse.json({ success: true });
     }
 

@@ -6,7 +6,6 @@ import {
   SpecialPredictions,
 } from "@/types";
 import { SCORING_RULES } from "@/data/world-cup-2026";
-import { derivePodiumFromPredictions } from "@/lib/mundial";
 import { isFifaTop10 } from "@/data/rules-config";
 import {
   deriveAdvancementSets,
@@ -21,7 +20,7 @@ function getOutcome(h: number, a: number): "H" | "D" | "A" {
   return "D";
 }
 
-/** 1 pt per 1/X/2; marcador exact = +3 extra (4 total) */
+/** 1 pt per 1/X/2 · 3 pts marcador exacte */
 function scoreMatchPrediction(
   predicted: ScorePrediction,
   actual: ScorePrediction
@@ -137,18 +136,10 @@ function scoreKnockoutAdvancement(
   const actAdv = actuals.advancement ?? deriveAdvancementSets(matches);
 
   pts += scoreAdvancementPoints(predAdv, actAdv, {
+    round16: r.round16Finalist,
     quarter: r.quarterFinalist,
     semi: r.semiFinalist,
-    final: r.finalist,
   });
-
-  const podium = derivePodiumFromPredictions(matches, matchPredictions);
-  if (actuals.champion && podium.champion && podium.champion === actuals.champion) {
-    pts += r.champion;
-  }
-  if (actuals.thirdPlace && podium.thirdPlace && podium.thirdPlace === actuals.thirdPlace) {
-    pts += r.thirdPlace;
-  }
 
   return pts;
 }
@@ -250,4 +241,4 @@ export function calculatePrizes(
   };
 }
 
-export { scoreMatchPrediction, getOutcome, derivePodiumFromPredictions };
+export { scoreMatchPrediction, getOutcome };
