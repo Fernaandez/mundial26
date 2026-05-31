@@ -96,19 +96,19 @@ function mergeMatches(parsed: ExtendedAppData): ExtendedAppData {
   const existingMatches = parsed.tournament.matches;
   parsed.tournament.matches = ALL_MATCHES.map((m) => {
     const existing = existingMatches.find((x) => x.id === m.id);
-    return existing
-      ? {
-          ...m,
-          homeScore: existing.homeScore,
-          awayScore: existing.awayScore,
-          locked: existing.locked,
-          knockoutWinner: existing.knockoutWinner,
-          etHomeScore: existing.etHomeScore,
-          etAwayScore: existing.etAwayScore,
-          homeTeam: existing.homeTeam !== "TBD" ? existing.homeTeam : m.homeTeam,
-          awayTeam: existing.awayTeam !== "TBD" ? existing.awayTeam : m.awayTeam,
-        }
-      : m;
+    if (!existing) return m;
+    const isR32Unplayed = m.phase === "round32" && existing.homeScore === undefined;
+    return {
+      ...m,
+      homeScore: existing.homeScore,
+      awayScore: existing.awayScore,
+      locked: existing.locked,
+      knockoutWinner: existing.knockoutWinner,
+      etHomeScore: existing.etHomeScore,
+      etAwayScore: existing.etAwayScore,
+      homeTeam: isR32Unplayed ? m.homeTeam : existing.homeTeam !== "TBD" ? existing.homeTeam : m.homeTeam,
+      awayTeam: isR32Unplayed ? m.awayTeam : existing.awayTeam !== "TBD" ? existing.awayTeam : m.awayTeam,
+    };
   });
   assignRound32FromGroupResults(parsed.tournament.groups, parsed.tournament.matches);
   return parsed;

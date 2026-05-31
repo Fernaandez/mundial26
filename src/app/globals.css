@@ -184,6 +184,22 @@ body {
   gap: 0.5rem;
 }
 
+/* Setzens: dues meitats del quadre (8+8 partits, 4 tercers per costat) */
+.bracket-r32-halves {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.bracket-r32-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
 .bracket-match {
   min-width: 0;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
@@ -221,6 +237,20 @@ body {
     justify-content: space-around;
     gap: 0.35rem;
     min-height: 0;
+  }
+
+  .bracket-r32-halves {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.35rem;
+    min-height: 0;
+  }
+
+  .bracket-r32-side {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    gap: 0.35rem;
   }
 
   .bracket-round .bracket-match {

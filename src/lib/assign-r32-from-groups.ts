@@ -3,7 +3,7 @@ import {
   buildRound32Pairings,
   groupPositionsFromStandings,
   isRound32BracketComplete,
-  qualifyingThirdGroupsOrdered,
+  resolveThirdByLeader,
 } from "@/lib/round32-bracket";
 import { computeAllGroupStandings, GroupStanding } from "@/lib/standings";
 
@@ -22,8 +22,7 @@ export function applyRound32FromStandings(
 ): boolean {
   const { skipPlayed = false } = options;
   const posiciones = groupPositionsFromStandings(standings);
-  const mejoresTerceros = qualifyingThirdGroupsOrdered(standings);
-  const pairings = buildRound32Pairings(posiciones, mejoresTerceros);
+  const pairings = buildRound32Pairings(posiciones, standings);
   let anyUpdate = false;
 
   for (const p of pairings) {
@@ -56,8 +55,7 @@ export function isRound32FullyAssignable(
 ): boolean {
   const standings = computeAllGroupStandings(groups, matches);
   const posiciones = groupPositionsFromStandings(standings);
-  const mejoresTerceros = qualifyingThirdGroupsOrdered(standings);
-  if (!mejoresTerceros) return false;
-  const pairings = buildRound32Pairings(posiciones, mejoresTerceros);
+  if (resolveThirdByLeader(standings) === null) return false;
+  const pairings = buildRound32Pairings(posiciones, standings);
   return isRound32BracketComplete(pairings);
 }

@@ -7,6 +7,7 @@ import { getBracketRounds, matchesByIdMap } from "@/lib/knockout";
 import { countExpectedBracketPicks } from "@/lib/knockout-advancement";
 import { getRealKnockoutMatchesForBracket } from "@/lib/predicted-bracket";
 import { BracketLayout } from "@/components/BracketLayout";
+import { BracketRoundMatches } from "@/components/BracketRoundMatches";
 
 interface PredictionBracketProps {
   matches: Match[];
@@ -59,8 +60,10 @@ export function PredictionBracket({
                 <span className="leading-tight">{round.name}</span>
                 {!roundOpen && !readOnly && <span className="text-xs opacity-70">🔒</span>}
               </div>
-              <div className="bracket-round-matches">
-                {round.matchIds.map((id) => {
+              <BracketRoundMatches
+                phase={round.phase}
+                matchIds={round.matchIds}
+                renderMatch={(id) => {
                   const match = byId[id];
                   if (!match) return null;
                   return (
@@ -74,8 +77,8 @@ export function PredictionBracket({
                       allTeams={allTeams}
                     />
                   );
-                })}
-              </div>
+                }}
+              />
             </div>
           );
         })}

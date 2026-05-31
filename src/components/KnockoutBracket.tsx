@@ -4,6 +4,7 @@ import { Match } from "@/types";
 import { MatchScoreboard } from "@/components/MatchScoreboard";
 import { MatchKickoff } from "@/components/MatchKickoff";
 import { BracketLayout } from "@/components/BracketLayout";
+import { BracketRoundMatches } from "@/components/BracketRoundMatches";
 import { getBracketRounds, isMatchFinished, matchesByIdMap } from "@/lib/knockout";
 
 interface KnockoutBracketProps {
@@ -26,8 +27,10 @@ export function KnockoutBracket({ matches }: KnockoutBracketProps) {
       {rounds.map((round) => (
         <div key={round.phase} className="bracket-round">
           <div className="bracket-round-title">{round.name}</div>
-          <div className="bracket-round-matches">
-            {round.matchIds.map((id) => {
+          <BracketRoundMatches
+            phase={round.phase}
+            matchIds={round.matchIds}
+            renderMatch={(id) => {
               const match = byId[id];
               if (!match) return null;
               const finished = isMatchFinished(match);
@@ -42,8 +45,8 @@ export function KnockoutBracket({ matches }: KnockoutBracketProps) {
                   <MatchScoreboard match={match} variant="bracket" showKickoff={false} />
                 </div>
               );
-            })}
-          </div>
+            }}
+          />
         </div>
       ))}
     </BracketLayout>

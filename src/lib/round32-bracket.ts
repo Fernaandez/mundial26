@@ -1,8 +1,9 @@
 /**
- * Assignació oficial Setzens (Round of 32) — algoritme FIFA sense taula de 495 combinacions.
- * Prioritat dels líders que esperen un 3r: 1E → 1I → 1A → 1L → 1G → 1D → 1B → 1K
+ * Assignació oficial Setzens (Round of 32).
+ * Taula FIFA (495 combinacions) + algoritme greedy com a recurs.
  */
 
+import thirdSlotsTable from "@/data/r32-third-slots.json";
 import {
   computeBestThirdsRanking,
   GroupStanding,
@@ -11,6 +12,8 @@ import {
 
 export type GroupPositions = Record<string, [string, string, string, string]>;
 
+export type ThirdSlotKey = "A" | "B" | "D" | "E" | "G" | "I" | "K" | "L";
+
 export interface Round32Pairing {
   matchNumber: number;
   id: string;
@@ -18,7 +21,21 @@ export interface Round32Pairing {
   awayTeam: string;
 }
 
-/** Líders que reben un 3r, en ordre estrict d'assignació */
+type CombinationRow = {
+  qual: string;
+  slots: Record<ThirdSlotKey, string>;
+};
+
+const COMBO_MAP = new Map<string, Record<ThirdSlotKey, string>>();
+for (const row of thirdSlotsTable as CombinationRow[]) {
+  COMBO_MAP.set(row.qual, row.slots);
+}
+
+/** Setzens — meitat esquerra i dreta del quadre FIFA (partits 1–8 / 9–16) */
+export const R32_LEFT_IDS = Array.from({ length: 8 }, (_, i) => `r32-${i + 1}`);
+export const R32_RIGHT_IDS = Array.from({ length: 8 }, (_, i) => `r32-${i + 9}`);
+
+/** Líders que reben un 3r, en ordre estrict d'assignació (recurs greedy) */
 const THIRD_HOSTS: { leaderGroup: string; options: string[] }[] = [
   { leaderGroup: "E", options: ["A", "B", "C", "D", "F"] },
   { leaderGroup: "I", options: ["C", "D", "F", "G", "H"] },
@@ -30,19 +47,13 @@ const THIRD_HOSTS: { leaderGroup: string; options: string[] }[] = [
   { leaderGroup: "K", options: ["D", "E", "I", "J", "L"] },
 ];
 
-const ALL_GROUPS = "ABCDEFGHIJKL".split("");
-
-/**
- * Assigna cada líder (1E, 1I, …) al grup del 3r classificat que li toca.
- * @param mejoresTerceros 8 lletres de grup, ordenades de millor a pitjor 3r
- */
-export function assignThirdPlaceGroups(
+export function assignThirdPlaceGroupsGreedy(
   mejoresTerceros: string[]
-): Record<string, string> | null {
+): Record<ThirdSlotKey, string> | null {
   if (mejoresTerceros.length !== 8) return null;
 
   const assignedThirdGroups = new Set<string>();
-  const leaderToThirdGroup: Record<string, string> = {};
+  const leaderToThirdGroup = {} as Record<ThirdSlotKey, string>;
 
   for (const { leaderGroup, options } of THIRD_HOSTS) {
     let matched = false;
@@ -51,7 +62,7 @@ export function assignThirdPlaceGroups(
       if (!options.includes(groupLetter)) continue;
       if (assignedThirdGroups.has(groupLetter)) continue;
 
-      leaderToThirdGroup[leaderGroup] = groupLetter;
+      leaderToThirdGroup[leaderGroup as ThirdSlotKey] = groupLetter;
       assignedThirdGroups.add(groupLetter);
       matched = true;
       break;
@@ -60,6 +71,27 @@ export function assignThirdPlaceGroups(
   }
 
   return leaderToThirdGroup;
+}
+
+/** Mapa líder (1E, 1A, …) → grup del 3r que el visita */
+export function resolveThirdByLeader(
+  standings: GroupStanding[]
+): Record<ThirdSlotKey, string> | null {
+  if (!standings.every(isGroupStandingComplete)) return null;
+
+  const ranking = computeBestThirdsRanking(standings, { requireComplete: true });
+  const qualifying = ranking.filter((e) => e.qualifies);
+  if (qualifying.length !== 8) return null;
+
+  const qualKey = qualifying
+    .map((e) => e.groupId)
+    .sort()
+    .join("");
+  const fromTable = COMBO_MAP.get(qualKey);
+  if (fromTable) return fromTable;
+
+  const performanceOrder = qualifying.map((e) => e.groupId);
+  return assignThirdPlaceGroupsGreedy(performanceOrder);
 }
 
 function teamAt(
@@ -86,14 +118,11 @@ function thirdTeam(
  */
 export function buildRound32Pairings(
   posicionesGrupos: GroupPositions,
-  mejoresTerceros: string[] | null
+  standings: GroupStanding[] | null
 ): Round32Pairing[] {
-  let thirdByLeader: Record<string, string> | null = null;
-  if (mejoresTerceros && mejoresTerceros.length === 8) {
-    thirdByLeader = assignThirdPlaceGroups(mejoresTerceros);
-  }
+  const thirdByLeader = standings ? resolveThirdByLeader(standings) : null;
 
-  const thirdAway = (leader: string): string => {
+  const thirdAway = (leader: ThirdSlotKey): string => {
     if (!thirdByLeader) return "TBD";
     const fromGroup = thirdByLeader[leader];
     if (!fromGroup) return "TBD";
