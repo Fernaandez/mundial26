@@ -1,6 +1,5 @@
-import { Match } from "@/types";
+import { Match, SpecialPredictions } from "@/types";
 import { ScorePrediction } from "@/types";
-
 export interface DerivedPodium {
   champion: string;
   runnerUp: string;
@@ -52,5 +51,24 @@ export const DEFAULT_MUNDIAL_FIELDS = {
   youngMvp: "",
   goldenGlove: "",
   surpriseTeam: "",
-  firstEliminatedFavorite: "",
+  disappointmentTeam: "",
+  nonQualifyingThird: "",
+  mostGroupGoals: "",
+  mostGroupGoalsConceded: "",
 } as const;
+
+/** Compatibilitat amb dades antigues */
+export function normalizeSpecialPredictions(
+  special?: Partial<SpecialPredictions> & { firstEliminatedFavorite?: string }
+): SpecialPredictions | undefined {
+  if (!special) return undefined;
+  return {
+    ...DEFAULT_MUNDIAL_FIELDS,
+    ...special,
+    disappointmentTeam:
+      special.disappointmentTeam ||
+      (special as { firstEliminatedFavorite?: string }).firstEliminatedFavorite ||
+      "",
+    groups: special.groups ?? [],
+  };
+}

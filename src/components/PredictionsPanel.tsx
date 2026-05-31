@@ -22,7 +22,8 @@ type MainSection = "groups" | "knockout" | "mundial";
 
 const MUNDIAL_FIELDS: (keyof Omit<SpecialPredictions, "groups">)[] = [
   "topScorer", "topAssists", "mvp", "youngMvp", "goldenGlove",
-  "surpriseTeam", "firstEliminatedFavorite",
+  "surpriseTeam", "disappointmentTeam",
+  "nonQualifyingThird", "mostGroupGoals", "mostGroupGoalsConceded",
 ];
 
 function countMundialFilled(special?: SpecialPredictions) {

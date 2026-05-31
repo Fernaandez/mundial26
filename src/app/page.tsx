@@ -47,7 +47,7 @@ export default function HomePage() {
           icon="🏆"
           title="Premi total"
           value={stats ? `${stats.prizes.pool}€` : "—"}
-          subtitle={stats ? `1r: ${stats.prizes.first}€ · 2n: ${stats.prizes.second}€ · 3r: ${stats.prizes.third}€` : "50% · 30% · 20%"}
+          subtitle={stats ? `1r: ${stats.prizes.first}€ · 2n: ${stats.prizes.second}€ · 3r: ${stats.prizes.third}€` : "70% · 20% · 10%"}
         />
       </div>
 

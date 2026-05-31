@@ -1,5 +1,6 @@
 import { Group, Match, Phase } from "@/types";
 import { getTeamIso } from "@/lib/flags";
+import { PRIZE_SPLIT } from "@/data/rules-config";
 import { applyScheduleToMatches } from "@/data/match-schedule";
 
 const TEAMS: Record<string, { name: string }> = {
@@ -150,7 +151,7 @@ export const TOURNAMENT_CONFIG = {
   shortName: "Mundial 2026",
   entryFee: 15,
   currency: "€",
-  prizeSplit: { first: 50, second: 30, third: 20 },
+  prizeSplit: { first: PRIZE_SPLIT.first, second: PRIZE_SPLIT.second, third: PRIZE_SPLIT.third },
   minParticipants: 8,
   maxParticipants: 12,
   groups: GROUPS,
@@ -159,37 +160,52 @@ export const TOURNAMENT_CONFIG = {
 };
 
 export const SCORING_RULES = {
+  /** 1 pt resultat 1/X/2 + 3 pts extra marcador exact = 4 total */
   group: {
+    outcome: 1,
+    exactBonus: 3,
     exact: 4,
-    resultAndDiff: 2,
-    resultOnly: 1,
   },
   knockout: {
-    exact: 8,
-    winnerAndDiff: 4,
-    winnerOnly: 2,
+    outcome: 1,
+    exactBonus: 3,
+    exact: 4,
   },
   special: {
-    topScorer: 10,
-    topAssists: 8,
-    mvp: 12,
+    groupExactOrder: 7,
+    nonQualifyingThird: 10,
+    mostGroupGoals: 10,
+    mostGroupGoalsConceded: 10,
+    topScorer: 15,
+    topAssists: 15,
+    goldenGlove: 10,
+    mvp: 20,
     youngMvp: 10,
-    goldenGlove: 8,
-    surpriseTeam: 6,
-    firstEliminatedFavorite: 8,
-    /** Podi: es calcula de les prediccions d'eliminatòries */
+    surpriseTeam: 15,
+    disappointmentTeam: 20,
+    quarterFinalist: 5,
+    semiFinalist: 10,
+    finalist: 15,
+    thirdPlace: 10,
     champion: 20,
-    runnerUp: 12,
-    thirdPlace: 8,
-    groupExactOrder: 6,
-    groupTopTwo: 2,
-    groupThirdQualifies: 3,
   },
 };
 
 export const PHASE_LABELS: Record<Phase, string> = {
   special: "Prediccions especials",
   groups: "Fase de grups",
+  round32: "16ens de final",
+  round16: "8ens de final",
+  quarter: "Quarts de final",
+  semi: "Semifinals",
+  third: "3r lloc",
+  final: "Final",
+};
+
+export const BREAKDOWN_LABELS: Record<keyof import("@/types").ScoreBreakdown, string> = {
+  special: "Mundial (jugadors/seleccions)",
+  groups: "Grups (partits + extras)",
+  advancement: "Elim. (classificats + podi)",
   round32: "16ens de final",
   round16: "8ens de final",
   quarter: "Quarts de final",

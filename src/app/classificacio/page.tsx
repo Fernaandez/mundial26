@@ -3,7 +3,7 @@
 import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 import { ScoreBreakdown } from "@/types";
-import { PHASE_LABELS } from "@/data/world-cup-2026";
+import { BREAKDOWN_LABELS } from "@/data/world-cup-2026";
 
 interface LeaderboardEntry {
   participantId: string;
@@ -96,7 +96,7 @@ export default function LeaderboardPage() {
               <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-pitch-800">
                 {(Object.entries(entry.breakdown) as [keyof ScoreBreakdown, number][]).map(([phase, pts]) => (
                   <div key={phase} className="bg-pitch-900/50 rounded-lg p-2 text-center">
-                    <div className="text-pitch-400 text-xs truncate">{PHASE_LABELS[phase]}</div>
+                    <div className="text-pitch-400 text-xs truncate">{BREAKDOWN_LABELS[phase]}</div>
                     <div className="font-bold text-white">{pts}</div>
                   </div>
                 ))}
@@ -154,7 +154,7 @@ export default function LeaderboardPage() {
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                         {(Object.entries(entry.breakdown) as [keyof ScoreBreakdown, number][]).map(([phase, pts]) => (
                           <div key={phase} className="bg-pitch-900/50 rounded-lg p-3 text-center">
-                            <div className="text-pitch-400 text-xs">{PHASE_LABELS[phase]}</div>
+                            <div className="text-pitch-400 text-xs">{BREAKDOWN_LABELS[phase]}</div>
                             <div className="font-bold text-white text-lg">{pts}</div>
                           </div>
                         ))}

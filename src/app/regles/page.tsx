@@ -1,119 +1,100 @@
-import { SCORING_RULES, PHASE_LABELS } from "@/data/world-cup-2026";
+import { SCORING_RULES, BREAKDOWN_LABELS } from "@/data/world-cup-2026";
+import {
+  DEADLINES,
+  ENTRY_FEE,
+  FIFA_TOP_10_CODES,
+  PRIZE_SPLIT,
+  RULES_NOTES,
+} from "@/data/rules-config";
+import { getTeamInfo } from "@/data/world-cup-2026";
 
 export default function RulesPage() {
   const g = SCORING_RULES.group;
   const k = SCORING_RULES.knockout;
   const s = SCORING_RULES.special;
 
+  const top10Names = FIFA_TOP_10_CODES.map((c) => getTeamInfo(c).name).join(", ");
+
   return (
     <div className="max-w-4xl mx-auto px-3 sm:px-4 py-8 sm:py-12">
-      <h1 className="font-display text-4xl sm:text-5xl text-pitch-400 text-center mb-6 sm:mb-8">REGLAMENT</h1>
+      <h1 className="font-display text-4xl sm:text-5xl text-pitch-400 text-center mb-2">REGLAMENT</h1>
+      <p className="text-center text-pitch-500 text-sm mb-8">Porra Mundial 2026 — normes oficials</p>
 
       <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
         <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">GENERAL</h2>
-        <ul className="space-y-2 text-pitch-200">
-          <li>• Entre <strong className="text-white">8 i 12 participants</strong></li>
-          <li>• Quota d&apos;entrada: <strong className="text-white">15€</strong> per persona</li>
-          <li>• Repartiment de premis: <strong className="text-white">50% · 30% · 20%</strong> (1r, 2n, 3r)</li>
-          <li>• Cal predir el <strong className="text-white">marcador exacte</strong> de cada partit (gols en 90 minuts)</li>
-          <li>• Les prediccions es tanquen quan comença el partit (l&apos;admin pot bloquejar manualment)</li>
-          <li>• En eliminatòries: resultat després de pròrroga compta com a empat en 90 min si aplica</li>
+        <ul className="space-y-2 text-pitch-200 text-sm sm:text-base">
+          <li>• Preu d&apos;entrada: <strong className="text-white">{ENTRY_FEE}€</strong> ({RULES_NOTES.payment})</li>
+          <li>• Repartiment de premis: <strong className="text-white">{PRIZE_SPLIT.first}% · {PRIZE_SPLIT.second}% · {PRIZE_SPLIT.third}%</strong> (1r, 2n, 3r)</li>
+          <li className="text-pitch-400 text-sm">{RULES_NOTES.prizesNote}</li>
+          <li>• Límit entrega <strong className="text-white">fase de grups + prediccions especials</strong>: {DEADLINES.groupsSubmit}</li>
+          <li>• Límit entrega <strong className="text-white">eliminatòries</strong>: {DEADLINES.knockoutSubmit}</li>
+          <li>• {DEADLINES.groupsEndKnockoutOpen}</li>
+          <li>• Cal predir el <strong className="text-white">marcador exacte</strong> de cada partit (90 minuts)</li>
         </ul>
       </section>
 
       <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
         <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">FASE DE GRUPS — PARTITS</h2>
-        <p className="text-pitch-300 mb-4 text-sm sm:text-base">72 partits · 12 grups de 4 equips</p>
-        <div className="overflow-x-auto -mx-2 px-2">
-        <table className="w-full text-left min-w-[280px]">
-          <thead>
-            <tr className="border-b border-pitch-700 text-pitch-400">
-              <th className="py-2">Encert</th>
-              <th className="py-2 text-right">Punts</th>
-            </tr>
-          </thead>
-          <tbody className="text-pitch-200">
-            <tr className="border-b border-pitch-800/50"><td className="py-3">Marcador exacte</td><td className="py-3 text-right font-bold text-pitch-400">{g.exact} pts</td></tr>
-            <tr className="border-b border-pitch-800/50"><td className="py-3">Resultat correcte (1/X/2) + diferència de gols</td><td className="py-3 text-right font-bold text-pitch-400">{g.resultAndDiff} pts</td></tr>
-            <tr><td className="py-3">Resultat correcte (1/X/2) només</td><td className="py-3 text-right font-bold text-pitch-400">{g.resultOnly} pt</td></tr>
-          </tbody>
-        </table>
-        </div>
-        <p className="text-sm text-pitch-500 mt-4">Màxim teòric fase grups: 72 × 4 = 288 punts</p>
+        <p className="text-pitch-300 mb-4 text-sm">72 partits · 12 grups de 4 equips</p>
+        <RulesTable rows={[
+          ["Resultat correcte (1 / X / 2)", `${g.outcome} pt`],
+          ["Marcador exacte (+3 extra)", `${g.exact} pts (${g.outcome}+${g.exactBonus})`],
+        ]} />
       </section>
 
       <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
-        <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">MILLORS 3RS CLASSIFICATS</h2>
-        <p className="text-pitch-300 mb-4 text-sm sm:text-base">
-          Del Mundial 2026 passen els <strong className="text-white">8 millors 3rs</strong> (12 grups → 8 passen, 4 queden fora).
-          Es calcula automàticament dels marcadors de grups (predicció o resultats reals): punts, diferència de gols i gols a favor.
+        <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">FASE DE GRUPS — EXTRAS</h2>
+        <p className="text-pitch-300 mb-4 text-sm">
+          L&apos;ordre de grups i els millors 3rs es calculen automàticament dels teus marcadors.
         </p>
-        <div className="overflow-x-auto -mx-2 px-2">
-        <table className="w-full text-left min-w-[280px]">
-          <thead>
-            <tr className="border-b border-pitch-700 text-pitch-400">
-              <th className="py-2">Encert</th>
-              <th className="py-2 text-right">Punts</th>
-            </tr>
-          </thead>
-          <tbody className="text-pitch-200">
-            <tr><td className="py-3">El 3r del grup passa o no (per grup complet)</td><td className="py-3 text-right font-bold text-gold-400">{s.groupThirdQualifies} pts/grup</td></tr>
-          </tbody>
-        </table>
+        <RulesTable rows={[
+          ["Ordre exacte d'un grup (4 posicions)", `${s.groupExactOrder} pts`],
+          ["Encertar un 3r que NO passa (dels 8 millors 3rs)", `${s.nonQualifyingThird} pts`],
+          ["Selecció amb més gols (GF) a fase de grups", `${s.mostGroupGoals} pts`],
+          ["Selecció amb més gols encaixats (GC) a fase de grups", `${s.mostGroupGoalsConceded} pts`],
+          ["Màxim golejador", `${s.topScorer} pts`],
+          ["Màxim assistent", `${s.topAssists} pts`],
+          ["Millor porter", `${s.goldenGlove} pts`],
+          ["Millor jugador (MVP)", `${s.mvp} pts`],
+          ["Millor jugador jove", `${s.youngMvp} pts`],
+          ["Selecció revelació", `${s.surpriseTeam} pts`],
+          ["Selecció decepció", `${s.disappointmentTeam} pts`],
+        ]} />
+        <div className="mt-4 space-y-2 text-sm text-pitch-400">
+          <p>{RULES_NOTES.youngPlayer}</p>
+          <p>{RULES_NOTES.topScorerTie}</p>
+          <p><strong className="text-pitch-300">Top 10 FIFA</strong> (31 maig 2026): {top10Names}</p>
+          <p>{RULES_NOTES.surpriseTeam}</p>
+          <p>{RULES_NOTES.disappointmentTeam}</p>
         </div>
-        <p className="text-sm text-pitch-500 mt-4">Màxim teòric millors 3rs: 12 × {s.groupThirdQualifies} = {12 * s.groupThirdQualifies} punts</p>
       </section>
 
       <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
         <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">ELIMINATÒRIES</h2>
-        <p className="text-pitch-300 mb-4 text-sm sm:text-base">16ens → 8ens → Quarts → Semis → 3r lloc → Final (32 partits)</p>
-        <div className="overflow-x-auto -mx-2 px-2">
-        <table className="w-full text-left min-w-[280px]">
-          <thead>
-            <tr className="border-b border-pitch-700 text-pitch-400">
-              <th className="py-2">Encert</th>
-              <th className="py-2 text-right">Punts</th>
-            </tr>
-          </thead>
-          <tbody className="text-pitch-200">
-            <tr className="border-b border-pitch-800/50"><td className="py-3">Marcador exacte (90 min)</td><td className="py-3 text-right font-bold text-pitch-400">{k.exact} pts</td></tr>
-            <tr className="border-b border-pitch-800/50"><td className="py-3">Guanyador correcte + diferència de gols</td><td className="py-3 text-right font-bold text-pitch-400">{k.winnerAndDiff} pts</td></tr>
-            <tr><td className="py-3">Guanyador correcte</td><td className="py-3 text-right font-bold text-pitch-400">{k.winnerOnly} pts</td></tr>
-          </tbody>
-        </table>
-        </div>
-        <p className="text-sm text-pitch-500 mt-4">Màxim teòric eliminatòries: 32 × 8 = 256 punts</p>
+        <p className="text-pitch-300 mb-4 text-sm">16ens → 8ens → Quarts → Semis → 3r lloc → Final</p>
+        <RulesTable rows={[
+          ["Resultat correcte (1 / X / 2)", `${k.outcome} pt`],
+          ["Marcador exacte (+3 extra)", `${k.exact} pts`],
+          ["Per equip encertat que classifica a quarts", `${s.quarterFinalist} pts/equip`],
+          ["Per equip encertat que classifica a semis", `${s.semiFinalist} pts/equip`],
+          ["Per equip encertat que classifica a la final", `${s.finalist} pts/equip`],
+          ["Encertar el 3r classificat (partit 3r/4t)", `${s.thirdPlace} pts`],
+          ["Encertar el campió (final)", `${s.champion} pts`],
+        ]} />
+        <p className="text-sm text-pitch-500 mt-4">
+          Campió, 3r i classificats per ronda es calculen de les teves prediccions de marcadors
+          a l&apos;eliminatòria (guanyador per partit).
+        </p>
       </section>
 
       <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
-        <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">PREDICCIONS DEL MUNDIAL</h2>
-        <p className="text-pitch-300 mb-4 text-sm sm:text-base">
-          MVP, golejadors, selecció sorpresa… El podi (campió, subcampió, 3r) es calcula de les teves prediccions d&apos;eliminatòries.
-        </p>
-        <div className="overflow-x-auto -mx-2 px-2">
-        <table className="w-full text-left min-w-[280px]">
-          <thead>
-            <tr className="border-b border-pitch-700 text-pitch-400">
-              <th className="py-2">Predicció</th>
-              <th className="py-2 text-right">Punts</th>
-            </tr>
-          </thead>
-          <tbody className="text-pitch-200">
-            <tr className="border-b border-pitch-800/50"><td className="py-3">Campió (de la teva final)</td><td className="py-3 text-right font-bold text-gold-400">{s.champion} pts</td></tr>
-            <tr className="border-b border-pitch-800/50"><td className="py-3">Subcampió (de la teva final)</td><td className="py-3 text-right font-bold text-gold-400">{s.runnerUp} pts</td></tr>
-            <tr className="border-b border-pitch-800/50"><td className="py-3">3r lloc (del teu partit 3r/4t)</td><td className="py-3 text-right font-bold text-gold-400">{s.thirdPlace} pts</td></tr>
-            <tr className="border-b border-pitch-800/50"><td className="py-3">MVP del Mundial</td><td className="py-3 text-right font-bold text-gold-400">{s.mvp} pts</td></tr>
-            <tr className="border-b border-pitch-800/50"><td className="py-3">MVP jove</td><td className="py-3 text-right font-bold text-gold-400">{s.youngMvp} pts</td></tr>
-            <tr className="border-b border-pitch-800/50"><td className="py-3">Màxim golejador</td><td className="py-3 text-right font-bold text-gold-400">{s.topScorer} pts</td></tr>
-            <tr className="border-b border-pitch-800/50"><td className="py-3">Màxim assistent</td><td className="py-3 text-right font-bold text-gold-400">{s.topAssists} pts</td></tr>
-            <tr className="border-b border-pitch-800/50"><td className="py-3">Guant d&apos;or (porter)</td><td className="py-3 text-right font-bold text-gold-400">{s.goldenGlove} pts</td></tr>
-            <tr className="border-b border-pitch-800/50"><td className="py-3">Selecció sorpresa</td><td className="py-3 text-right font-bold text-gold-400">{s.surpriseTeam} pts</td></tr>
-            <tr className="border-b border-pitch-800/50"><td className="py-3">Primer favorit eliminat</td><td className="py-3 text-right font-bold text-gold-400">{s.firstEliminatedFavorite} pts</td></tr>
-            <tr className="border-b border-pitch-800/50"><td className="py-3">Ordre exacte d&apos;un grup (dels teus marcadors)</td><td className="py-3 text-right font-bold text-gold-400">{s.groupExactOrder} pts/grup</td></tr>
-            <tr className="border-b border-pitch-800/50"><td className="py-3">Equip al top 2 (per grup)</td><td className="py-3 text-right font-bold text-gold-400">{s.groupTopTwo} pts/equip</td></tr>
-          </tbody>
-        </table>
-        </div>
+        <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">CLASSIFICACIÓ DE PUNTS</h2>
+        <p className="text-pitch-300 mb-4 text-sm">Com es desglossen els punts al rànquing:</p>
+        <ul className="space-y-1 text-sm text-pitch-300">
+          {(Object.entries(BREAKDOWN_LABELS) as [keyof typeof BREAKDOWN_LABELS, string][]).map(([k, label]) => (
+            <li key={k}>• <strong className="text-pitch-200">{label}</strong></li>
+          ))}
+        </ul>
       </section>
 
       <section className="card-glass rounded-2xl p-4 sm:p-8">
@@ -128,16 +109,39 @@ export default function RulesPage() {
   );
 }
 
+function RulesTable({ rows }: { rows: [string, string][] }) {
+  return (
+    <div className="overflow-x-auto -mx-2 px-2">
+      <table className="w-full text-left min-w-[280px]">
+        <thead>
+          <tr className="border-b border-pitch-700 text-pitch-400">
+            <th className="py-2">Concepte</th>
+            <th className="py-2 text-right">Punts</th>
+          </tr>
+        </thead>
+        <tbody className="text-pitch-200">
+          {rows.map(([label, pts]) => (
+            <tr key={label} className="border-b border-pitch-800/50">
+              <td className="py-3">{label}</td>
+              <td className="py-3 text-right font-bold text-gold-400">{pts}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function PrizeExample({ n }: { n: number }) {
-  const pool = n * 15;
+  const pool = n * ENTRY_FEE;
   return (
     <div className="bg-pitch-900/50 rounded-xl p-4">
       <div className="font-display text-2xl text-white">{n} jugadors</div>
       <div className="text-gold-400 font-bold text-xl">{pool}€ total</div>
       <div className="text-sm text-pitch-400 mt-2">
-        1r: {Math.round(pool * 0.5)}€<br />
-        2n: {Math.round(pool * 0.3)}€<br />
-        3r: {Math.round(pool * 0.2)}€
+        1r: {Math.round(pool * PRIZE_SPLIT.first / 100)}€<br />
+        2n: {Math.round(pool * PRIZE_SPLIT.second / 100)}€<br />
+        3r: {Math.round(pool * PRIZE_SPLIT.third / 100)}€
       </div>
     </div>
   );

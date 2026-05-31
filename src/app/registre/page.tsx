@@ -100,7 +100,7 @@ export default function RegisterPage() {
         <div className="bg-pitch-900/50 rounded-xl p-4 text-sm text-pitch-300">
           <strong className="text-pitch-200">Quota:</strong> 15€ per persona
           <br />
-          L&apos;admin marcarà quan hagis pagat. Premis: 50% · 30% · 20% per als 3 primers.
+          L&apos;admin marcarà quan hagis pagat. Premis: 70% · 20% · 10% per als 3 primers.
         </div>
 
         <button type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-50">

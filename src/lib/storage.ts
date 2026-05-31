@@ -12,25 +12,15 @@ import {
   isKnockoutPhase,
 } from "@/lib/phases";
 import { buildGroupPredictionsFromMatches, buildGroupStandingsActuals } from "@/lib/standings";
-import { DEFAULT_MUNDIAL_FIELDS } from "@/lib/mundial";
+import { DEFAULT_MUNDIAL_FIELDS, normalizeSpecialPredictions } from "@/lib/mundial";
+import { computeGroupStageStats } from "@/lib/group-stats";
+import { deriveAdvancementSets } from "@/lib/knockout-advancement";
+import { getMatchWinner } from "@/lib/knockout";
+import type { SpecialActuals } from "@/lib/scoring";
 
 const ROW_ID = 1;
 const DATA_DIR = path.join(process.cwd(), "data");
 const DATA_FILE = path.join(DATA_DIR, "quiniela.json");
-
-export interface SpecialActuals {
-  champion?: string;
-  runnerUp?: string;
-  thirdPlace?: string;
-  topScorer?: string;
-  topAssists?: string;
-  mvp?: string;
-  youngMvp?: string;
-  goldenGlove?: string;
-  surpriseTeam?: string;
-  firstEliminatedFavorite?: string;
-  groupStandings?: Record<string, { order: string[]; thirdQualifies: boolean; complete?: boolean }>;
-}
 
 export interface ExtendedAppData extends AppData {
   specialActuals?: SpecialActuals;
@@ -315,13 +305,13 @@ export async function savePredictions(
   const prev = p.special ?? defaultSpecial;
 
   if (special) {
-    p.special = {
+    p.special = normalizeSpecialPredictions({
       ...prev,
       ...special,
       groups: syncedGroups,
-    };
+    })!;
   } else {
-    p.special = { ...prev, groups: syncedGroups };
+    p.special = normalizeSpecialPredictions({ ...prev, groups: syncedGroups })!;
   }
 
   await writeData(data);
@@ -346,14 +336,28 @@ export async function saveSpecialActuals(adminPin: string, actuals: SpecialActua
 
 export async function getSpecialActuals(): Promise<SpecialActuals | undefined> {
   const data = await readData();
-  const computed = buildGroupStandingsActuals(data.tournament.groups, data.tournament.matches);
-  const hasComputed = Object.values(computed).some((g) => g.complete);
+  const { groups, matches } = data.tournament;
+  const computed = buildGroupStandingsActuals(groups, matches);
+  const groupStats = computeGroupStageStats(groups, matches);
+  const advancement = deriveAdvancementSets(matches);
+  const finalMatch = matches.find((m) => m.id === "final");
+  const thirdMatch = matches.find((m) => m.id === "third");
 
-  if (!data.specialActuals && !hasComputed) return undefined;
+  const hasGroupData = Object.values(computed).some((g) => g.complete);
+
+  if (!data.specialActuals && !hasGroupData) return undefined;
 
   return {
     ...data.specialActuals,
     groupStandings: computed,
+    nonQualifyingThird: groupStats.nonQualifyingThirds.length
+      ? groupStats.nonQualifyingThirds
+      : undefined,
+    mostGroupGoals: groupStats.mostGoals ?? undefined,
+    mostGroupGoalsConceded: groupStats.mostGoalsConceded ?? undefined,
+    advancement,
+    champion: finalMatch ? getMatchWinner(finalMatch) ?? undefined : data.specialActuals?.champion,
+    thirdPlace: thirdMatch ? getMatchWinner(thirdMatch) ?? undefined : data.specialActuals?.thirdPlace,
   };
 }
 

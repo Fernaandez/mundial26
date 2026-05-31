@@ -11,7 +11,7 @@ interface BestThirdsPanelProps {
 export function BestThirdsPanel({ entries, variant = "prediction" }: BestThirdsPanelProps) {
   const completeCount = entries.filter((e) => e.groupComplete).length;
   const qualifiers = entries.filter((e) => e.qualifies);
-  const pts = SCORING_RULES.special.groupThirdQualifies;
+  const pts = SCORING_RULES.special.nonQualifyingThird;
 
   if (entries.length === 0) {
     return (
@@ -67,8 +67,8 @@ export function BestThirdsPanel({ entries, variant = "prediction" }: BestThirdsP
       </div>
 
       <p className="text-xs text-pitch-500 mt-4 border-t border-pitch-800/40 pt-3">
-        Puntuació quiniela: <strong className="text-pitch-300">{pts} pts per grup</strong> si encertes
-        si el 3r d&apos;aquell grup passa o no (màx. 36 pts). Només compta quan el grup està complet.
+        Puntuació: <strong className="text-pitch-300">{pts} pts</strong> si encertes un 3r que
+        queda fora dels 8 millors 3rs classificats (predicció a pestanya Mundial).
       </p>
     </div>
   );

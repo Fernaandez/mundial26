@@ -53,7 +53,13 @@ export interface SpecialPredictions {
   youngMvp: string;
   goldenGlove: string;
   surpriseTeam: string;
-  firstEliminatedFavorite: string;
+  disappointmentTeam: string;
+  /** 3r de grup que NO passa entre els 8 millors 3rs */
+  nonQualifyingThird: string;
+  /** Selecció amb més gols a fase de grups */
+  mostGroupGoals: string;
+  /** Selecció amb més gols encaixats a fase de grups */
+  mostGroupGoalsConceded: string;
   groups: GroupStandingPrediction[];
 }
 
@@ -103,6 +109,7 @@ export interface ParticipantScore {
 export interface ScoreBreakdown {
   special: number;
   groups: number;
+  advancement: number;
   round32: number;
   round16: number;
   quarter: number;

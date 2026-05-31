@@ -9,6 +9,7 @@ import { MatchScoreboard } from "@/components/MatchScoreboard";
 import { GroupStandingsTable } from "@/components/GroupStandingsTable";
 import { computeGroupStanding, computeGroupStandingFromPredictions, computeThirdQualifierGroups } from "@/lib/standings";
 import { derivePodiumFromPredictions, DEFAULT_MUNDIAL_FIELDS } from "@/lib/mundial";
+import { FIFA_TOP_10_CODES, RULES_NOTES } from "@/data/rules-config";
 import { isMatchFinished } from "@/lib/knockout";
 
 interface MatchCardProps {
@@ -301,6 +302,9 @@ export function MundialForm({ special, allTeams, matches, predictions, onChange,
 
   const podium = derivePodiumFromPredictions(matches, predictions);
 
+  const top10Teams = allTeams.filter((t) => (FIFA_TOP_10_CODES as readonly string[]).includes(t.code));
+  const revelationTeams = allTeams.filter((t) => !(FIFA_TOP_10_CODES as readonly string[]).includes(t.code));
+
   function update(field: keyof Omit<SpecialPredictions, "groups">, value: string | number) {
     onChange({ ...current, [field]: value });
   }
@@ -310,8 +314,8 @@ export function MundialForm({ special, allTeams, matches, predictions, onChange,
       {!readOnly && (
         <div className="card-glass rounded-xl p-4 border border-gold-500/20">
           <p className="text-sm text-pitch-300">
-            Prediccions generals del torneig. El <strong className="text-gold-400">podi final</strong> (campió, subcampió, 3r)
-            es calcula sol quan prediu la final i el partit del 3r lloc a Eliminatòries.
+            Prediccions especials de la fase de grups i del torneig. Campió i 3r lloc es calculen
+            de les teves prediccions d&apos;eliminatòries (pestanya Elim.).
           </p>
         </div>
       )}
@@ -328,21 +332,56 @@ export function MundialForm({ special, allTeams, matches, predictions, onChange,
       )}
 
       <div className="card-glass rounded-2xl p-4 sm:p-6">
-        <h3 className="font-display text-xl sm:text-2xl text-gold-500 mb-4">MVP I JUGADORS</h3>
+        <h3 className="font-display text-xl sm:text-2xl text-gold-500 mb-2">FASE DE GRUPS</h3>
+        <p className="text-xs text-pitch-500 mb-4">{RULES_NOTES.surpriseTeam.split(".")[0]}.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <TextField label="⭐ MVP del Mundial" value={current.mvp} onChange={(v) => update("mvp", v)} disabled={disabled} placeholder="Nom del jugador" />
-          <TextField label="🌟 MVP jove (millor jove)" value={current.youngMvp} onChange={(v) => update("youngMvp", v)} disabled={disabled} placeholder="Nom del jugador" />
+          <SelectTeam
+            label="🚫 3r que NO passa (1 dels 8 millors 3rs)"
+            value={current.nonQualifyingThird}
+            teams={allTeams}
+            onChange={(v) => update("nonQualifyingThird", v)}
+            disabled={disabled}
+          />
+          <SelectTeam
+            label="⚽ Selecció amb més gols (GF)"
+            value={current.mostGroupGoals}
+            teams={allTeams}
+            onChange={(v) => update("mostGroupGoals", v)}
+            disabled={disabled}
+          />
+          <SelectTeam
+            label="🥅 Selecció amb més gols encaixats (GC)"
+            value={current.mostGroupGoalsConceded}
+            teams={allTeams}
+            onChange={(v) => update("mostGroupGoalsConceded", v)}
+            disabled={disabled}
+          />
+        </div>
+      </div>
+
+      <div className="card-glass rounded-2xl p-4 sm:p-6">
+        <h3 className="font-display text-xl sm:text-2xl text-gold-500 mb-4">MVP I JUGADORS</h3>
+        <p className="text-xs text-pitch-500 mb-4">{RULES_NOTES.youngPlayer}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <TextField label="⭐ Millor jugador (MVP)" value={current.mvp} onChange={(v) => update("mvp", v)} disabled={disabled} placeholder="Nom del jugador" />
+          <TextField label="🌟 Millor jugador jove" value={current.youngMvp} onChange={(v) => update("youngMvp", v)} disabled={disabled} placeholder="Nom del jugador" />
           <TextField label="⚽ Màxim golejador" value={current.topScorer} onChange={(v) => update("topScorer", v)} disabled={disabled} placeholder="Nom del jugador" />
           <TextField label="🎯 Màxim assistent" value={current.topAssists} onChange={(v) => update("topAssists", v)} disabled={disabled} placeholder="Nom del jugador" />
-          <TextField label="🧤 Guant d'or (porter)" value={current.goldenGlove} onChange={(v) => update("goldenGlove", v)} disabled={disabled} placeholder="Nom del porter" />
+          <TextField label="🧤 Millor porter" value={current.goldenGlove} onChange={(v) => update("goldenGlove", v)} disabled={disabled} placeholder="Nom del porter" />
         </div>
       </div>
 
       <div className="card-glass rounded-2xl p-4 sm:p-6">
         <h3 className="font-display text-xl sm:text-2xl text-gold-500 mb-4">SELECCIONS</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <SelectTeam label="🎲 Selecció sorpresa" value={current.surpriseTeam} teams={allTeams} onChange={(v) => update("surpriseTeam", v)} disabled={disabled} />
-          <SelectTeam label="💥 Primer favorit eliminat" value={current.firstEliminatedFavorite} teams={allTeams} onChange={(v) => update("firstEliminatedFavorite", v)} disabled={disabled} />
+          <div>
+            <SelectTeam label="🎲 Selecció revelació" value={current.surpriseTeam} teams={revelationTeams} onChange={(v) => update("surpriseTeam", v)} disabled={disabled} />
+            <p className="text-[10px] text-pitch-500 mt-1">Fora del top 10 FIFA · ha d&apos;arribar com a mínim als quarts</p>
+          </div>
+          <div>
+            <SelectTeam label="💥 Selecció decepció" value={current.disappointmentTeam} teams={top10Teams} onChange={(v) => update("disappointmentTeam", v)} disabled={disabled} />
+            <p className="text-[10px] text-pitch-500 mt-1">Només top 10 FIFA · ha de quedar fora abans dels vuitens (8ens)</p>
+          </div>
         </div>
       </div>
     </div>
