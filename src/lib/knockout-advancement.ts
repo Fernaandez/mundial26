@@ -58,7 +58,13 @@ export function deriveAdvancementSetsFromBracket(
     const teams = new Set<string>();
     for (const m of matches.filter((x) => x.phase === phase)) {
       const pick = bracketPicks[m.id];
-      if (pick && (m.homeTeam === pick || m.awayTeam === pick)) {
+      if (!pick || pick === "TBD") continue;
+      if (
+        m.homeTeam === pick ||
+        m.awayTeam === pick ||
+        m.homeTeam === "TBD" ||
+        m.awayTeam === "TBD"
+      ) {
         teams.add(pick);
       }
     }

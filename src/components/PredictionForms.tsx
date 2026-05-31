@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Match, Group, SpecialPredictions, Phase } from "@/types";
 import { getTeamInfo } from "@/data/world-cup-2026";
 import { PHASE_LABELS, PHASE_SHORT } from "@/data/phase-labels";
@@ -26,29 +27,100 @@ function parseScoreInput(value: string): number | null {
   return Number.isFinite(n) && n >= 0 ? n : null;
 }
 
-function mergeScoreChange(
-  side: "home" | "away",
-  raw: string,
-  prediction: { home: number; away: number } | undefined,
-  onChange: (pred: { home: number; away: number } | null) => void
-) {
-  const home = side === "home" ? parseScoreInput(raw) : (prediction?.home ?? null);
-  const away = side === "away" ? parseScoreInput(raw) : (prediction?.away ?? null);
-  if (home === null || away === null) {
-    onChange(null);
-    return;
+function ScoreInputs({
+  homeCode,
+  awayCode,
+  homeName,
+  awayName,
+  prediction,
+  onChange,
+  disabled,
+  compact,
+}: {
+  homeCode: string;
+  awayCode: string;
+  homeName: string;
+  awayName: string;
+  prediction?: { home: number; away: number };
+  onChange: (pred: { home: number; away: number } | null) => void;
+  disabled?: boolean;
+  compact?: boolean;
+}) {
+  const [homeText, setHomeText] = useState(
+    prediction?.home !== undefined ? String(prediction.home) : ""
+  );
+  const [awayText, setAwayText] = useState(
+    prediction?.away !== undefined ? String(prediction.away) : ""
+  );
+
+  useEffect(() => {
+    setHomeText(prediction?.home !== undefined ? String(prediction.home) : "");
+    setAwayText(prediction?.away !== undefined ? String(prediction.away) : "");
+  }, [prediction?.home, prediction?.away]);
+
+  function emit(hText: string, aText: string) {
+    const home = parseScoreInput(hText);
+    const away = parseScoreInput(aText);
+    if (home === null && away === null) {
+      onChange(null);
+    } else if (home !== null && away !== null) {
+      onChange({ home, away });
+    }
   }
-  onChange({ home, away });
+
+  function onHomeChange(raw: string) {
+    setHomeText(raw);
+    emit(raw, awayText);
+  }
+
+  function onAwayChange(raw: string) {
+    setAwayText(raw);
+    emit(homeText, raw);
+  }
+
+  const inputClass = compact ? "score-input w-12 h-10" : "score-input";
+
+  return (
+    <div className="flex items-center justify-center gap-2 sm:gap-3">
+      <TeamFlag code={homeCode} size={compact ? 20 : 26} />
+      <input
+        type="number"
+        inputMode="numeric"
+        min={0}
+        max={20}
+        value={homeText}
+        onChange={(e) => onHomeChange(e.target.value)}
+        disabled={disabled}
+        className={inputClass}
+        placeholder="-"
+        aria-label={`Gols ${homeName}`}
+      />
+      <span className="text-pitch-500 font-bold text-sm shrink-0">vs</span>
+      <input
+        type="number"
+        inputMode="numeric"
+        min={0}
+        max={20}
+        value={awayText}
+        onChange={(e) => onAwayChange(e.target.value)}
+        disabled={disabled}
+        className={inputClass}
+        placeholder="-"
+        aria-label={`Gols ${awayName}`}
+      />
+      <TeamFlag code={awayCode} size={compact ? 20 : 26} />
+    </div>
+  );
 }
 
 export function MatchCard({ match, prediction, onChange, disabled }: MatchCardProps) {
   const home = getTeamInfo(match.homeTeam);
   const away = getTeamInfo(match.awayTeam);
-  const locked = match.locked || disabled;
+  const inputDisabled = disabled;
   const finished = isMatchFinished(match);
 
   return (
-    <div className={`card-glass rounded-xl p-3 sm:p-4 ${locked && !finished ? "opacity-60" : ""}`}>
+    <div className={`card-glass rounded-xl p-3 sm:p-4 ${inputDisabled && !finished ? "opacity-60" : ""}`}>
       <MatchKickoff match={match} className="mb-2" />
       {match.label && (
         <div className="text-xs text-pitch-500 mb-2 uppercase tracking-wider truncate">{match.label}</div>
@@ -69,67 +141,27 @@ export function MatchCard({ match, prediction, onChange, disabled }: MatchCardPr
         </div>
       )}
 
-      {!finished && (
-        <div className="flex items-center justify-center gap-2 sm:gap-3">
-          <TeamFlag code={home.code} size={26} />
-          <input
-            type="number"
-            inputMode="numeric"
-            min={0}
-            max={20}
-            value={prediction?.home ?? ""}
-            onChange={(e) => mergeScoreChange("home", e.target.value, prediction, onChange)}
-            disabled={locked}
-            className="score-input"
-            placeholder="-"
-            aria-label={`Gols ${home.name}`}
-          />
-          <span className="text-pitch-500 font-bold text-sm shrink-0">vs</span>
-          <input
-            type="number"
-            inputMode="numeric"
-            min={0}
-            max={20}
-            value={prediction?.away ?? ""}
-            onChange={(e) => mergeScoreChange("away", e.target.value, prediction, onChange)}
-            disabled={locked}
-            className="score-input"
-            placeholder="-"
-            aria-label={`Gols ${away.name}`}
-          />
-          <TeamFlag code={away.code} size={26} />
-        </div>
-      )}
-
-      {finished && !locked && (
-        <div className="mt-3 pt-3 border-t border-pitch-800/50">
-          <div className="text-[10px] uppercase tracking-wider text-pitch-500 mb-2 text-center">La teva predicció</div>
-          <div className="flex items-center justify-center gap-2">
-            <TeamFlag code={home.code} size={20} />
-            <input
-              type="number"
-              inputMode="numeric"
-              min={0}
-              max={20}
-              value={prediction?.home ?? ""}
-              onChange={(e) => mergeScoreChange("home", e.target.value, prediction, onChange)}
-              className="score-input w-12 h-10"
-              placeholder="-"
-            />
-            <span className="text-pitch-500 font-bold text-sm shrink-0">vs</span>
-            <input
-              type="number"
-              inputMode="numeric"
-              min={0}
-              max={20}
-              value={prediction?.away ?? ""}
-              onChange={(e) => mergeScoreChange("away", e.target.value, prediction, onChange)}
-              className="score-input w-12 h-10"
-              placeholder="-"
-            />
-            <TeamFlag code={away.code} size={20} />
+      <div className={finished ? "mt-0" : ""}>
+        {finished && (
+          <div className="text-[10px] uppercase tracking-wider text-pitch-500 mb-2 text-center">
+            La teva predicció
           </div>
-        </div>
+        )}
+        <ScoreInputs
+          homeCode={home.code}
+          awayCode={away.code}
+          homeName={home.name}
+          awayName={away.name}
+          prediction={prediction}
+          onChange={onChange}
+          disabled={inputDisabled}
+          compact={finished}
+        />
+      </div>
+      {match.locked && !inputDisabled && (
+        <p className="text-[10px] text-amber-400/90 text-center mt-2">
+          Resultat oficial ja introduït — la predicció no es pot desar per aquest partit.
+        </p>
       )}
     </div>
   );

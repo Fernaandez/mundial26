@@ -171,6 +171,10 @@ body {
   flex-direction: column;
 }
 
+.bracket-round:first-child {
+  min-width: 220px;
+}
+
 .bracket-round-title {
   @apply font-display text-base text-gold-500 text-center mb-3 sticky top-0;
 }
