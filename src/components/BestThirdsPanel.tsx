@@ -2,6 +2,7 @@ import { BestThirdEntry } from "@/lib/standings";
 import { getTeamInfo } from "@/data/world-cup-2026";
 import { TeamFlag } from "@/components/TeamFlag";
 import { SCORING_RULES } from "@/data/world-cup-2026";
+import { getFifaRank } from "@/data/fifa-rankings";
 
 interface BestThirdsPanelProps {
   entries: BestThirdEntry[];
@@ -33,8 +34,8 @@ export function BestThirdsPanel({ entries, variant = "prediction" }: BestThirdsP
           <h3 className="font-display text-xl sm:text-2xl text-gold-500">8 MILLORS 3RS CLASSIFICATS</h3>
           <p className="text-sm text-pitch-400 mt-1">
             {variant === "prediction"
-              ? "Calculat dels teus marcadors · els 8 primers passen als setzens"
-              : "Calculat dels resultats oficials · els 8 primers passen als setzens"}
+              ? "Calculat dels teus marcadors · desempat: punts, DG, GF, victòries, fair play, rànquing FIFA"
+              : "Calculat dels resultats oficials · desempat: punts, DG, GF, victòries, fair play, rànquing FIFA"}
           </p>
         </div>
         <div className="text-right text-xs text-pitch-500">
@@ -55,6 +56,9 @@ export function BestThirdsPanel({ entries, variant = "prediction" }: BestThirdsP
               <th className="text-center py-2 w-10">Pts</th>
               <th className="text-center py-2 w-10">DG</th>
               <th className="text-center py-2 w-10">GF</th>
+              <th className="text-center py-2 w-8">V</th>
+              <th className="text-center py-2 w-10">FP</th>
+              <th className="text-center py-2 w-10">FIFA</th>
               <th className="text-center py-2 w-16">Passa</th>
             </tr>
           </thead>
@@ -106,6 +110,9 @@ function BestThirdRow({ entry }: { entry: BestThirdEntry }) {
         {entry.team.gd > 0 ? `+${entry.team.gd}` : entry.team.gd}
       </td>
       <td className="py-2.5 text-center tabular-nums text-pitch-300">{entry.team.gf}</td>
+      <td className="py-2.5 text-center tabular-nums text-pitch-300">{entry.team.won}</td>
+      <td className="py-2.5 text-center tabular-nums text-pitch-400">{entry.team.fairPlayPoints}</td>
+      <td className="py-2.5 text-center tabular-nums text-pitch-400">{getFifaRank(entry.team.code)}</td>
       <td className="py-2.5 text-center">
         {!entry.groupComplete ? (
           <span className="text-pitch-500 text-xs">—</span>

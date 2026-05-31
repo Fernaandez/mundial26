@@ -1,6 +1,7 @@
 "use client";
 
 import { Match, Phase } from "@/types";
+import { GroupStanding } from "@/lib/standings";
 import { getTeamInfo, getAllTeams } from "@/data/world-cup-2026";
 import { TeamFlag } from "@/components/TeamFlag";
 import { getBracketRounds, matchesByIdMap } from "@/lib/knockout";
@@ -11,6 +12,7 @@ import { BracketLayout } from "@/components/BracketLayout";
 interface PredictionBracketProps {
   matches: Match[];
   bracketPicks: Record<string, string>;
+  groupStandings?: GroupStanding[];
   onPick: (matchId: string, teamCode: string) => void;
   isPickEnabled?: (phase: Phase) => boolean;
   readOnly?: boolean;
@@ -19,11 +21,12 @@ interface PredictionBracketProps {
 export function PredictionBracket({
   matches,
   bracketPicks,
+  groupStandings,
   onPick,
   isPickEnabled,
   readOnly,
 }: PredictionBracketProps) {
-  const displayMatches = enrichKnockoutDisplayTeams(matches, bracketPicks);
+  const displayMatches = enrichKnockoutDisplayTeams(matches, bracketPicks, groupStandings);
   const byId = matchesByIdMap(displayMatches);
   const rounds = getBracketRounds();
   const pickCount = Object.keys(bracketPicks).length;

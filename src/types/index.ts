@@ -28,6 +28,15 @@ export interface Match {
   awayTeam: string;
   homeScore?: number;
   awayScore?: number;
+  /** Targetes (fair play) — opcional, només resultats reals */
+  homeYellowCards?: number;
+  awayYellowCards?: number;
+  homeRedCards?: number;
+  awayRedCards?: number;
+  homeRedFromTwoYellows?: number;
+  awayRedFromTwoYellows?: number;
+  homeYellowPlusDirectRed?: number;
+  awayYellowPlusDirectRed?: number;
   /** Guanyador en eliminatòria si el marcador és empat (pròrroga/penals) */
   knockoutWinner?: string;
   /** Marcador després de pròrroga/penals (només quadre; la puntuació usa homeScore/awayScore a 90 min) */

@@ -1,5 +1,6 @@
 import { Match } from "@/types";
-import { matchesByIdMap } from "@/lib/knockout";
+import { GroupStanding } from "@/lib/standings";
+import { buildKnockoutMatchesFromStandings } from "@/lib/assign-r32-from-groups";
 
 /** r32-i → r16-j, slot home/away */
 const FEEDERS: Record<string, { nextId: string; slot: "home" | "away" }> = {};
@@ -21,17 +22,22 @@ FEEDERS["sf-1"] = { nextId: "final", slot: "home" };
 FEEDERS["sf-2"] = { nextId: "final", slot: "away" };
 
 /**
- * Omple equips eliminatoris per al quadre de prediccions:
- * - Vuitens+ rep guanyadors triats als setzens anteriors
- * - Setzens amb TBD es mantenen (es tria guanyador amb selector)
+ * Quadre de prediccions:
+ * 1) Omple setzens des de la simulació de grups de l'usuari
+ * 2) Propaga guanyadors triats als vuitens+
  */
 export function enrichKnockoutDisplayTeams(
   matches: Match[],
-  bracketPicks: Record<string, string>
+  bracketPicks: Record<string, string>,
+  groupStandings?: GroupStanding[]
 ): Match[] {
-  const byId = matchesByIdMap(matches);
+  const base =
+    groupStandings && groupStandings.length > 0
+      ? buildKnockoutMatchesFromStandings(matches, groupStandings)
+      : matches.map((m) => ({ ...m }));
+
   const display: Record<string, Match> = Object.fromEntries(
-    matches.map((m) => [m.id, { ...m }])
+    base.map((m) => [m.id, { ...m }])
   );
 
   const pickOrder = [
@@ -62,4 +68,11 @@ export function enrichKnockoutDisplayTeams(
   }
 
   return matches.map((m) => display[m.id] ?? m);
+}
+
+export function getKnockoutMatchesForPredictions(
+  matches: Match[],
+  groupStandings: GroupStanding[]
+): Match[] {
+  return buildKnockoutMatchesFromStandings(matches, groupStandings);
 }

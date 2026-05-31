@@ -1,4 +1,6 @@
 import { Group, Match } from "@/types";
+import { compareFifaRanking } from "@/data/fifa-rankings";
+import { fairPlayPointsForTeamInMatch } from "@/lib/fair-play";
 
 export interface TeamStanding {
   code: string;
@@ -10,6 +12,8 @@ export interface TeamStanding {
   ga: number;
   gd: number;
   points: number;
+  /** Punts fair play acumulats (menys = millor conducta) */
+  fairPlayPoints: number;
   position: number;
 }
 
@@ -22,14 +26,39 @@ export interface GroupStanding {
 }
 
 function initStanding(code: string): Omit<TeamStanding, "position"> {
-  return { code, played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, gd: 0, points: 0 };
+  return {
+    code,
+    played: 0,
+    won: 0,
+    drawn: 0,
+    lost: 0,
+    gf: 0,
+    ga: 0,
+    gd: 0,
+    points: 0,
+    fairPlayPoints: 0,
+  };
 }
 
-function compareTeams(a: TeamStanding, b: TeamStanding): number {
+/** Classificació dins del grup (punts, DG, GF, codi) */
+function compareTeamsInGroup(a: TeamStanding, b: TeamStanding): number {
   if (b.points !== a.points) return b.points - a.points;
   if (b.gd !== a.gd) return b.gd - a.gd;
   if (b.gf !== a.gf) return b.gf - a.gf;
   return a.code.localeCompare(b.code);
+}
+
+/**
+ * Desempat dels 8 millors 3rs (FIFA):
+ * punts → DG → GF → victòries → fair play (menys millor) → rànquing FIFA
+ */
+export function compareBestThirdTeams(a: TeamStanding, b: TeamStanding): number {
+  if (b.points !== a.points) return b.points - a.points;
+  if (b.gd !== a.gd) return b.gd - a.gd;
+  if (b.gf !== a.gf) return b.gf - a.gf;
+  if (b.won !== a.won) return b.won - a.won;
+  if (a.fairPlayPoints !== b.fairPlayPoints) return a.fairPlayPoints - b.fairPlayPoints;
+  return compareFifaRanking(a.code, b.code);
 }
 
 export function isGroupStandingComplete(standing: GroupStanding): boolean {
@@ -69,7 +98,7 @@ export function computeBestThirdsRanking(
     });
   }
 
-  entries.sort((a, b) => compareTeams(a.team, b.team));
+  entries.sort((a, b) => compareBestThirdTeams(a.team, b.team));
 
   return entries.map((entry, i) => ({
     ...entry,
@@ -89,7 +118,7 @@ export function computeThirdQualifierGroupsFromStandings(
   );
 }
 
-/** Els 8 millors 3rs classificats (segons punts, DG, GF) */
+/** Els 8 millors 3rs classificats */
 export function computeThirdQualifierGroups(
   groups: Group[],
   matches: Match[],
@@ -126,6 +155,8 @@ export function computeGroupStanding(group: Group, matches: Match[]): GroupStand
     home.ga += as;
     away.gf += as;
     away.ga += hs;
+    home.fairPlayPoints += fairPlayPointsForTeamInMatch(m, m.homeTeam);
+    away.fairPlayPoints += fairPlayPointsForTeamInMatch(m, m.awayTeam);
 
     if (hs > as) {
       home.won++;
@@ -145,7 +176,7 @@ export function computeGroupStanding(group: Group, matches: Match[]): GroupStand
 
   const teams: TeamStanding[] = Array.from(stats.values())
     .map((s) => ({ ...s, gd: s.gf - s.ga, position: 0 }))
-    .sort(compareTeams)
+    .sort(compareTeamsInGroup)
     .map((s, i) => ({ ...s, position: i + 1 }));
 
   return {

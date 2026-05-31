@@ -18,6 +18,8 @@ for (const row of thirdCombinations as CombinationRow[]) {
   COMBO_MAP.set(row.qual, row.slots);
 }
 
+const ALL_GROUP_IDS = "ABCDEFGHIJKL".split("");
+
 function parseFixedSlot(slot: string): { position: number; groupId: string } | null {
   const m = slot.match(/^([12])([A-L])$/);
   if (!m) return null;
@@ -44,8 +46,6 @@ function thirdTeamCode(
   const team = standing.teams.find((t) => t.position === 3);
   return team?.code ?? null;
 }
-
-const ALL_GROUP_IDS = "ABCDEFGHIJKL".split("");
 
 function resolveThirdSlots(
   standings: GroupStanding[]
@@ -86,24 +86,29 @@ function resolveFixedSlot(
   return teamAtPosition(standingsByGroup, parsed.groupId, parsed.position);
 }
 
+export interface ApplyRound32Options {
+  /** No modificar partits amb resultat real ja introduït (torneig admin) */
+  skipPlayed?: boolean;
+}
+
 /**
- * Omple equips als partits de Setzens segons resultats reals de grups.
- * Només afecta dades del torneig (admin) — no prediccions dels jugadors.
+ * Omple equips als partits de Setzens segons classificació de grups.
+ * Funciona amb resultats reals o prediccions simulades per usuari.
  */
-export function assignRound32FromGroupResults(
-  groups: Group[],
-  matches: Match[]
+export function applyRound32FromStandings(
+  matches: Match[],
+  standings: GroupStanding[],
+  options: ApplyRound32Options = {}
 ): boolean {
-  const standings = computeAllGroupStandings(groups, matches);
+  const { skipPlayed = false } = options;
   const standingsByGroup = new Map(standings.map((s) => [s.groupId, s]));
   const thirdSlots = resolveThirdSlots(standings);
-
   let anyUpdate = false;
 
   for (const fixture of R32_FIXTURES) {
     const match = matches.find((m) => m.id === fixture.id);
     if (!match || match.phase !== "round32") continue;
-    if (match.homeScore !== undefined) continue;
+    if (skipPlayed && match.homeScore !== undefined) continue;
 
     const home = resolveFixedSlot(fixture.home, standingsByGroup);
     let away: string | null = null;
@@ -127,11 +132,39 @@ export function assignRound32FromGroupResults(
   return anyUpdate;
 }
 
-/** Tots els grups acabats i 8 tercers resolts */
+/** Clona partits i omple setzens des d'una classificació */
+export function buildKnockoutMatchesFromStandings(
+  matches: Match[],
+  standings: GroupStanding[],
+  options?: ApplyRound32Options
+): Match[] {
+  const clone = matches.map((m) => ({ ...m }));
+  applyRound32FromStandings(clone, standings, options);
+  return clone;
+}
+
+/**
+ * Omple equips als partits de Setzens segons resultats reals de grups (torneig admin).
+ */
+export function assignRound32FromGroupResults(
+  groups: Group[],
+  matches: Match[]
+): boolean {
+  const standings = computeAllGroupStandings(groups, matches);
+  return applyRound32FromStandings(matches, standings, { skipPlayed: true });
+}
+
 export function isRound32FullyAssignable(
   groups: Group[],
   matches: Match[]
 ): boolean {
   const standings = computeAllGroupStandings(groups, matches);
-  return resolveThirdSlots(standings) !== null;
+  const allComplete = standings.every(isGroupStandingComplete);
+  if (!allComplete) return false;
+  const bestThirds = computeBestThirdsRanking(standings, { requireComplete: true });
+  const qualifying = new Set(
+    bestThirds.filter((e) => e.qualifies).map((e) => e.groupId)
+  );
+  const qualKey = ALL_GROUP_IDS.filter((g) => !qualifying.has(g)).sort().join("");
+  return COMBO_MAP.has(qualKey);
 }
