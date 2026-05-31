@@ -9,7 +9,7 @@ export interface PredictionWindows {
 
 export const DEFAULT_PREDICTION_WINDOWS: PredictionWindows = {
   groupsLocked: false,
-  knockoutOpen: false,
+  knockoutOpen: true,
 };
 
 const KNOCKOUT_PHASES: Phase[] = [

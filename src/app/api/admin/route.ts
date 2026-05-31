@@ -4,6 +4,8 @@ import {
   updateMatchResult,
   markParticipantAcknowledged,
   deleteParticipant,
+  openAllForTesting,
+  resetQuinielaData,
   saveSpecialActuals,
   updateKnockoutTeams,
   adminAddParticipant,
@@ -46,6 +48,22 @@ export async function POST(request: Request) {
     if (action === "deleteParticipant") {
       await deleteParticipant(body.participantId, adminPin);
       return NextResponse.json({ success: true });
+    }
+
+    if (action === "openAllForTesting") {
+      const windows = await openAllForTesting(adminPin);
+      return NextResponse.json({ success: true, predictionWindows: windows });
+    }
+
+    if (action === "resetQuiniela") {
+      await resetQuinielaData(adminPin);
+      const data = await readData();
+      return NextResponse.json({
+        success: true,
+        matches: data.tournament.matches,
+        participants: data.participants,
+        predictionWindows: getPredictionWindows(data),
+      });
     }
 
     if (action === "addParticipant") {

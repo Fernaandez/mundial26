@@ -14,7 +14,7 @@ export default function AdminPage() {
   const [groups] = useState<Group[]>([]);
   const [predictionWindows, setPredictionWindows] = useState<PredictionWindows>({
     groupsLocked: false,
-    knockoutOpen: false,
+    knockoutOpen: true,
   });
   const [tab, setTab] = useState<"fases" | "results" | "participants" | "knockout">("fases");
   const [error, setError] = useState("");
@@ -101,6 +101,49 @@ export default function AdminPage() {
     }
     setError(data.error || "Error afegint participant");
     return false;
+  }
+
+  async function openForTesting() {
+    setSuccess("");
+    setError("");
+    const res = await fetch("/api/admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "openAllForTesting", adminPin: pin }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setPredictionWindows(data.predictionWindows);
+      setSuccess("Mode proves: grups i eliminatòries obertes!");
+    } else {
+      setError(data.error || "Error");
+    }
+  }
+
+  async function resetAll() {
+    if (
+      !window.confirm(
+        "Reset complet? S'esborraran TOTS els participants, prediccions i resultats. El torneig quedarà net per als teus col·legues."
+      )
+    ) {
+      return;
+    }
+    setSuccess("");
+    setError("");
+    const res = await fetch("/api/admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "resetQuiniela", adminPin: pin }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setMatches(data.matches);
+      setParticipants(data.participants);
+      setPredictionWindows(data.predictionWindows);
+      setSuccess("Reset complet! Pots passar el link als teus col·legues.");
+    } else {
+      setError(data.error || "Error en el reset");
+    }
   }
 
   async function updateWindows(updates: Partial<PredictionWindows>) {
@@ -202,6 +245,22 @@ export default function AdminPage() {
 
       {tab === "fases" && (
         <div className="space-y-6">
+          <div className="card-glass rounded-2xl p-5 sm:p-6 border border-gold-500/20">
+            <h2 className="font-display text-xl text-gold-500 mb-3">Mode proves</h2>
+            <p className="text-pitch-400 text-sm mb-4">
+              Obre grups i eliminatòries alhora per provar tot. Abans de passar el link als col·legues,
+              fes un reset complet per esborrar dades de prova.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <button type="button" onClick={openForTesting} className="btn-primary text-sm">
+                Obrir tot (proves)
+              </button>
+              <button type="button" onClick={resetAll} className="btn-secondary text-sm border-red-700/50 text-red-300">
+                Reset complet
+              </button>
+            </div>
+          </div>
+
           <div className="card-glass rounded-2xl p-5 sm:p-6">
             <h2 className="font-display text-xl text-gold-500 mb-4">1. Fase de grups</h2>
             <p className="text-pitch-400 text-sm mb-4">
@@ -244,7 +303,6 @@ export default function AdminPage() {
                   type="button"
                   onClick={() => updateWindows({ knockoutOpen: true })}
                   className="btn-primary text-sm"
-                  disabled={!predictionWindows.groupsLocked}
                 >
                   Obrir prediccions eliminatòries
                 </button>
@@ -258,9 +316,9 @@ export default function AdminPage() {
                 </button>
               )}
             </div>
-            {!predictionWindows.groupsLocked && !predictionWindows.knockoutOpen && (
+            {!predictionWindows.knockoutOpen && (
               <p className="text-pitch-500 text-xs mt-3">
-                Primer tanca la fase de grups abans d&apos;obrir eliminatòries (recomanat).
+                També pots usar «Obrir tot (proves)» a dalt per obrir grups i eliminatòries alhora.
               </p>
             )}
             <p className={`text-sm mt-3 ${predictionWindows.knockoutOpen ? "text-gold-400" : "text-pitch-500"}`}>

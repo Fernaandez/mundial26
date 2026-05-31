@@ -339,6 +339,21 @@ export async function deleteParticipant(participantId: string, adminPin: string)
   await writeData(data);
 }
 
+/** Grups oberts + eliminatòries obertes (mode proves) */
+export async function openAllForTesting(adminPin: string): Promise<PredictionWindows> {
+  return updatePredictionWindows(adminPin, { groupsLocked: false, knockoutOpen: true });
+}
+
+/** Esborra participants, resultats i prediccions; deixa el torneig net per compartir */
+export async function resetQuinielaData(adminPin: string): Promise<void> {
+  const data = await readData();
+  if (data.adminPin !== adminPin) throw new Error("PIN d'admin incorrecte");
+
+  const fresh = defaultData();
+  fresh.adminPin = data.adminPin;
+  await writeData(fresh);
+}
+
 export async function saveSpecialActuals(adminPin: string, actuals: SpecialActuals): Promise<void> {
   const data = await readData();
   if (data.adminPin !== adminPin) throw new Error("PIN d'admin incorrecte");
