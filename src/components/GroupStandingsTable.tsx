@@ -4,10 +4,16 @@ import { TeamFlag } from "@/components/TeamFlag";
 
 interface GroupStandingsTableProps {
   standing: GroupStanding;
-  compact?: boolean;
+  /** Mostra indicador de 3r que passaria com a millor 3r */
+  showThirdQualifier?: boolean;
+  thirdQualifies?: boolean;
 }
 
-export function GroupStandingsTable({ standing, compact = false }: GroupStandingsTableProps) {
+export function GroupStandingsTable({
+  standing,
+  showThirdQualifier = false,
+  thirdQualifies = false,
+}: GroupStandingsTableProps) {
   const progress = standing.totalMatches
     ? Math.round((standing.playedMatches / standing.totalMatches) * 100)
     : 0;
@@ -19,7 +25,7 @@ export function GroupStandingsTable({ standing, compact = false }: GroupStanding
         <div className="flex items-center gap-2 shrink-0">
           <div className="hidden sm:block w-20 h-1.5 bg-pitch-900 rounded-full overflow-hidden">
             <div
-              className="h-full bg-pitch-500 rounded-full transition-all duration-500"
+              className="h-full bg-pitch-500 rounded-full transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -30,22 +36,25 @@ export function GroupStandingsTable({ standing, compact = false }: GroupStanding
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-sm standings-table">
+        <table className="w-full text-sm standings-table min-w-[320px]">
           <thead>
-            <tr className="text-pitch-500 text-xs uppercase tracking-wider">
-              <th className="text-left py-2 pl-3 sm:pl-4 w-8">#</th>
+            <tr className="text-pitch-500 text-[10px] sm:text-xs uppercase tracking-wider">
+              <th className="text-left py-2 pl-2 sm:pl-3 w-7">#</th>
               <th className="text-left py-2">Equip</th>
-              {!compact && <th className="text-center py-2 w-8">PJ</th>}
-              {!compact && <th className="text-center py-2 w-8 hidden sm:table-cell">G</th>}
-              {!compact && <th className="text-center py-2 w-8 hidden sm:table-cell">E</th>}
-              {!compact && <th className="text-center py-2 w-8 hidden sm:table-cell">P</th>}
-              <th className="text-center py-2 w-10 hidden md:table-cell">DG</th>
-              <th className="text-center py-2 w-12 pr-3 sm:pr-4 font-bold text-pitch-300">Pts</th>
+              <th className="text-center py-2 w-8">GF</th>
+              <th className="text-center py-2 w-8">GC</th>
+              <th className="text-center py-2 w-9">DG</th>
+              <th className="text-center py-2 w-9 pr-2 sm:pr-3 font-bold text-pitch-300">Pts</th>
             </tr>
           </thead>
           <tbody>
             {standing.teams.map((t) => (
-              <StandingRow key={t.code} team={t} compact={compact} />
+              <StandingRow
+                key={t.code}
+                team={t}
+                showThirdQualifier={showThirdQualifier}
+                thirdQualifies={thirdQualifies && t.position === 3}
+              />
             ))}
           </tbody>
         </table>
@@ -53,59 +62,68 @@ export function GroupStandingsTable({ standing, compact = false }: GroupStanding
 
       <div className="px-3 py-2 border-t border-pitch-800/40 flex flex-wrap gap-3 text-[10px] text-pitch-500">
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-pitch-500" /> Classificat
+          <span className="w-2 h-2 rounded-full bg-pitch-500" /> Classificat (1r-2n)
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-gold-500" /> Possible 3r
+          <span className="w-2 h-2 rounded-full bg-gold-500" /> Millor 3r
         </span>
       </div>
     </div>
   );
 }
 
-function StandingRow({ team, compact }: { team: TeamStanding; compact?: boolean }) {
+function StandingRow({
+  team,
+  showThirdQualifier,
+  thirdQualifies,
+}: {
+  team: TeamStanding;
+  showThirdQualifier?: boolean;
+  thirdQualifies?: boolean;
+}) {
   const info = getTeamInfo(team.code);
-  const qualClass =
-    team.position === 1 || team.position === 2
-      ? "standings-row-qualify"
-      : team.position === 3
-        ? "standings-row-third"
-        : "standings-row-out";
+  const isTopTwo = team.position <= 2;
+  const isThird = team.position === 3;
+  const qualClass = isTopTwo
+    ? "standings-row-qualify"
+    : isThird && (showThirdQualifier ? thirdQualifies : true)
+      ? "standings-row-third"
+      : "standings-row-out";
 
   return (
-    <tr className={`standings-row ${qualClass} border-t border-pitch-800/30`}>
-      <td className="py-2 pl-3 sm:pl-4">
+    <tr className={`standings-row ${qualClass} border-t border-pitch-800/30 transition-colors duration-200`}>
+      <td className="py-2 pl-2 sm:pl-3">
         <span
           className={`inline-flex w-6 h-6 items-center justify-center rounded-full text-xs font-bold ${
-            team.position <= 2
+            isTopTwo
               ? "bg-pitch-600 text-white"
-              : team.position === 3
-                ? "bg-gold-500/20 text-gold-400"
-                : "bg-pitch-900 text-pitch-500"
+              : isThird && thirdQualifies
+                ? "bg-gold-500/30 text-gold-300"
+                : isThird
+                  ? "bg-gold-500/10 text-gold-500/60"
+                  : "bg-pitch-900 text-pitch-500"
           }`}
         >
           {team.position}
         </span>
       </td>
       <td className="py-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <TeamFlag code={team.code} size={compact ? 16 : 20} />
-          <span className="font-medium text-pitch-100 truncate max-w-[100px] sm:max-w-none">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <TeamFlag code={team.code} size={16} />
+          <span className="font-medium text-pitch-100 truncate text-xs sm:text-sm max-w-[72px] sm:max-w-none">
             {info.name}
           </span>
         </div>
       </td>
-      {!compact && <td className="text-center py-2 text-pitch-400">{team.played}</td>}
-      {!compact && <td className="text-center py-2 text-pitch-400 hidden sm:table-cell">{team.won}</td>}
-      {!compact && <td className="text-center py-2 text-pitch-400 hidden sm:table-cell">{team.drawn}</td>}
-      {!compact && <td className="text-center py-2 text-pitch-400 hidden sm:table-cell">{team.lost}</td>}
-      <td className="text-center py-2 hidden md:table-cell">
+      <td className="text-center py-2 text-pitch-300 tabular-nums">{team.gf}</td>
+      <td className="text-center py-2 text-pitch-300 tabular-nums">{team.ga}</td>
+      <td className="text-center py-2 tabular-nums">
         <span className={team.gd > 0 ? "text-pitch-400" : team.gd < 0 ? "text-red-400/80" : "text-pitch-500"}>
           {team.gd > 0 ? `+${team.gd}` : team.gd}
         </span>
       </td>
-      <td className="text-center py-2 pr-3 sm:pr-4">
-        <span className="font-display text-lg text-white">{team.points}</span>
+      <td className="text-center py-2 pr-2 sm:pr-3">
+        <span className="font-display text-base sm:text-lg text-white tabular-nums">{team.points}</span>
       </td>
     </tr>
   );

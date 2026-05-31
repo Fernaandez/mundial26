@@ -47,6 +47,7 @@ function scoreSpecialPredictions(
   actualRunnerUp: string | undefined,
   actualThird: string | undefined,
   actualTopScorer: string | undefined,
+  actualTopAssists: string | undefined,
   actualTotalGoals: number | undefined,
   actualGroupStandings: Record<string, { order: string[]; thirdQualifies: boolean }>
 ): number {
@@ -59,6 +60,7 @@ function scoreSpecialPredictions(
   if (actualRunnerUp && special.runnerUp === actualRunnerUp) pts += r.runnerUp;
   if (actualThird && special.thirdPlace === actualThird) pts += r.thirdPlace;
   if (actualTopScorer && special.topScorer === actualTopScorer) pts += r.topScorer;
+  if (actualTopAssists && special.topAssists && special.topAssists === actualTopAssists) pts += r.topAssists;
 
   if (actualTotalGoals !== undefined) {
     if (special.totalGoals === actualTotalGoals) {
@@ -100,6 +102,7 @@ export function calculateParticipantScore(
     runnerUp?: string;
     thirdPlace?: string;
     topScorer?: string;
+    topAssists?: string;
     totalGoals?: number;
     groupStandings?: Record<string, { order: string[]; thirdQualifies: boolean }>;
   }
@@ -137,6 +140,7 @@ export function calculateParticipantScore(
     specialActuals?.runnerUp,
     specialActuals?.thirdPlace,
     specialActuals?.topScorer,
+    specialActuals?.topAssists,
     specialActuals?.totalGoals,
     specialActuals?.groupStandings ?? {}
   );

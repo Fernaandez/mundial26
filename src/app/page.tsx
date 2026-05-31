@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 
 interface Stats {
   participantCount: number;
@@ -52,25 +51,25 @@ export default function HomePage() {
         />
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8 mb-12">
+      <div className="grid md:grid-cols-2 gap-8">
         <div className="card-glass rounded-2xl p-8">
           <h2 className="font-display text-3xl text-gold-500 mb-4">COM FUNCIONA</h2>
           <ol className="space-y-4 text-pitch-200">
             <li className="flex gap-3">
               <span className="flex-shrink-0 w-8 h-8 rounded-full bg-pitch-700 flex items-center justify-center font-bold">1</span>
-              <span><strong className="text-white">Registra&apos;t</strong> amb el teu nom i un PIN personal</span>
+              <span><strong className="text-white">Registra&apos;t</strong> des del menú superior</span>
             </li>
             <li className="flex gap-3">
               <span className="flex-shrink-0 w-8 h-8 rounded-full bg-pitch-700 flex items-center justify-center font-bold">2</span>
-              <span><strong className="text-white">Fes les prediccions</strong> — grups, eliminatòries i prediccions especials</span>
+              <span><strong className="text-white">Prediccions de grups</strong> — marcadors i classificació automàtica</span>
             </li>
             <li className="flex gap-3">
               <span className="flex-shrink-0 w-8 h-8 rounded-full bg-pitch-700 flex items-center justify-center font-bold">3</span>
-              <span><strong className="text-white">Guanya punts</strong> per cada encert — marcador exacte, resultat, classificacions...</span>
+              <span><strong className="text-white">Prediccions del Mundial</strong> — campió, golejador, assistències…</span>
             </li>
             <li className="flex gap-3">
               <span className="flex-shrink-0 w-8 h-8 rounded-full bg-pitch-700 flex items-center justify-center font-bold">4</span>
-              <span><strong className="text-white">Classifica&apos;t</strong> i emporta&apos;t el premi!</span>
+              <span><strong className="text-white">Eliminatòries</strong> quan l&apos;admin obri la fase</span>
             </li>
           </ol>
         </div>
@@ -78,30 +77,12 @@ export default function HomePage() {
         <div className="card-glass rounded-2xl p-8">
           <h2 className="font-display text-3xl text-gold-500 mb-4">FASES DEL TORNEIG</h2>
           <div className="space-y-3 text-pitch-200">
-            <PhaseRow name="Prediccions especials" desc="Campió, subcampió, classificacions de grups..." pts="fins a 150+ pts" />
-            <PhaseRow name="Fase de grups" desc="72 partits · 12 grups de 4" pts="4 pts max/partit" />
+            <PhaseRow name="Fase de grups" desc="72 partits · classificació en viu" pts="4 pts max/partit" />
+            <PhaseRow name="Mundial (general)" desc="Campió, golejador, assistències, totals" pts="fins a 150+ pts" />
             <PhaseRow name="16ens de final" desc="16 partits" pts="8 pts max/partit" />
             <PhaseRow name="8ens → Final" desc="15 partits eliminatoris" pts="8 pts max/partit" />
           </div>
         </div>
-      </div>
-
-      <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 justify-center px-2">
-        <Link href="/registre" className="btn-primary text-base sm:text-lg text-center">
-          Crear compte
-        </Link>
-        <Link href="/login" className="btn-secondary text-base sm:text-lg text-center">
-          Iniciar sessió
-        </Link>
-        <Link href="/classificacio" className="btn-secondary text-base sm:text-lg text-center">
-          Veure classificació
-        </Link>
-        <Link href="/torneig" className="btn-secondary text-base sm:text-lg text-center">
-          Torneig en directe
-        </Link>
-        <Link href="/regles" className="btn-secondary text-base sm:text-lg text-center">
-          Regles completes
-        </Link>
       </div>
     </div>
   );

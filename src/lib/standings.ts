@@ -32,6 +32,26 @@ function compareTeams(a: TeamStanding, b: TeamStanding): number {
   return a.code.localeCompare(b.code);
 }
 
+/** Els 8 millors 3rs classificats (segons punts, DG, GF) */
+export function computeThirdQualifierGroups(
+  groups: Group[],
+  matches: Match[],
+  predictions: Record<string, { home: number; away: number }>
+): Set<string> {
+  const thirds: { groupId: string; stats: TeamStanding }[] = [];
+
+  for (const g of groups) {
+    const standing = computeGroupStandingFromPredictions(g, matches, predictions);
+    const third = standing.teams.find((t) => t.position === 3);
+    if (third && standing.playedMatches > 0) {
+      thirds.push({ groupId: g.id, stats: third });
+    }
+  }
+
+  thirds.sort((a, b) => compareTeams(a.stats, b.stats));
+  return new Set(thirds.slice(0, 8).map((x) => x.groupId));
+}
+
 export function computeGroupStanding(group: Group, matches: Match[]): GroupStanding {
   const groupMatches = matches.filter(
     (m) => m.groupId === group.id && m.homeScore !== undefined && m.awayScore !== undefined
@@ -119,17 +139,17 @@ export function computeAllPredictedStandings(
 export function buildGroupPredictionsFromMatches(
   groups: Group[],
   matches: Match[],
-  predictions: Record<string, { home: number; away: number }>,
-  existingGroups?: { groupId: string; positions: [string, string, string, string]; thirdQualifies: boolean }[]
+  predictions: Record<string, { home: number; away: number }>
 ) {
+  const qualifyingThirds = computeThirdQualifierGroups(groups, matches, predictions);
+
   return groups.map((g) => {
     const standing = computeGroupStandingFromPredictions(g, matches, predictions);
     const positions = standing.teams.map((t) => t.code) as [string, string, string, string];
-    const existing = existingGroups?.find((x) => x.groupId === g.id);
     return {
       groupId: g.id,
       positions,
-      thirdQualifies: existing?.thirdQualifies ?? false,
+      thirdQualifies: qualifyingThirds.has(g.id),
     };
   });
 }

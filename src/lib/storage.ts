@@ -22,6 +22,7 @@ export interface SpecialActuals {
   runnerUp?: string;
   thirdPlace?: string;
   topScorer?: string;
+  topAssists?: string;
   totalGoals?: number;
   groupStandings?: Record<string, { order: string[]; thirdQualifies: boolean }>;
 }
@@ -287,16 +288,32 @@ export async function savePredictions(
     p.matches[matchId] = pred;
   }
 
-  if (special && canEditGroupPredictions(windows)) {
+  const syncedGroups = buildGroupPredictionsFromMatches(
+    data.tournament.groups,
+    data.tournament.matches,
+    p.matches
+  );
+
+  const defaultSpecial: SpecialPredictions = {
+    champion: "",
+    runnerUp: "",
+    thirdPlace: "",
+    topScorer: "",
+    topAssists: "",
+    totalGoals: 150,
+    groups: syncedGroups,
+  };
+
+  const prev = p.special ?? defaultSpecial;
+
+  if (special) {
     p.special = {
+      ...prev,
       ...special,
-      groups: buildGroupPredictionsFromMatches(
-        data.tournament.groups,
-        data.tournament.matches,
-        p.matches,
-        special.groups
-      ),
+      groups: syncedGroups,
     };
+  } else {
+    p.special = { ...prev, groups: syncedGroups };
   }
 
   await writeData(data);

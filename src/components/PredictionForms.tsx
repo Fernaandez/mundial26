@@ -6,7 +6,7 @@ import { PHASE_LABELS } from "@/data/world-cup-2026";
 import { TeamFlag } from "@/components/TeamFlag";
 import { MatchScoreboard } from "@/components/MatchScoreboard";
 import { GroupStandingsTable } from "@/components/GroupStandingsTable";
-import { computeGroupStanding, computeGroupStandingFromPredictions } from "@/lib/standings";
+import { computeGroupStanding, computeGroupStandingFromPredictions, computeThirdQualifierGroups } from "@/lib/standings";
 import { isMatchFinished } from "@/lib/knockout";
 
 interface MatchCardProps {
@@ -173,20 +173,38 @@ function TeamScoreRow({
 
 interface GroupSectionProps {
   group: Group;
+  groups: Group[];
   matches: Match[];
   predictions: Record<string, { home: number; away: number }>;
   onChange: (matchId: string, home: number, away: number) => void;
   disabled?: boolean;
 }
 
-export function GroupSection({ group, matches, predictions, onChange, disabled }: GroupSectionProps) {
+export function GroupSection({ group, groups, matches, predictions, onChange, disabled }: GroupSectionProps) {
   const groupMatches = matches.filter((m) => m.groupId === group.id);
-  const standing = computeGroupStanding(group, matches);
+  const predictedStanding = computeGroupStandingFromPredictions(group, matches, predictions);
+  const liveStanding = computeGroupStanding(group, matches);
+  const thirdQualifiers = computeThirdQualifierGroups(groups, matches, predictions);
 
   return (
     <div className="mb-8 sm:mb-10">
-      <GroupStandingsTable standing={standing} compact />
-      <h3 className="font-display text-xl sm:text-2xl text-pitch-400 mb-3 sm:mb-4 mt-4">Partits</h3>
+      {liveStanding.playedMatches > 0 && (
+        <div className="mb-4">
+          <p className="text-xs text-pitch-500 mb-1.5 uppercase tracking-wider">Resultats reals</p>
+          <GroupStandingsTable standing={liveStanding} />
+        </div>
+      )}
+      <div className="mb-4">
+        {liveStanding.playedMatches > 0 && (
+          <p className="text-xs text-gold-500/80 mb-1.5 uppercase tracking-wider">La teva predicció</p>
+        )}
+        <GroupStandingsTable
+          standing={predictedStanding}
+          showThirdQualifier
+          thirdQualifies={thirdQualifiers.has(group.id)}
+        />
+      </div>
+      <h3 className="font-display text-xl sm:text-2xl text-pitch-400 mb-3 sm:mb-4">Partits</h3>
       <div className="grid gap-3">
         {groupMatches.map((m) => (
           <MatchCard
@@ -241,22 +259,21 @@ export function PhaseTabs({ phases, active, onChange }: PhaseTabsProps) {
   );
 }
 
-interface SpecialFormProps {
-  groups: Group[];
-  matches: Match[];
-  predictions: Record<string, { home: number; away: number }>;
+interface MundialFormProps {
   special?: SpecialPredictions;
   allTeams: { code: string; name: string; iso: string }[];
   onChange: (special: SpecialPredictions) => void;
   disabled?: boolean;
+  groups: Group[];
 }
 
-export function SpecialForm({ groups, matches, predictions, special, allTeams, onChange, disabled }: SpecialFormProps) {
+export function MundialForm({ special, allTeams, onChange, disabled, groups }: MundialFormProps) {
   const current: SpecialPredictions = special ?? {
     champion: "",
     runnerUp: "",
     thirdPlace: "",
     topScorer: "",
+    topAssists: "",
     totalGoals: 150,
     groups: groups.map((g) => ({
       groupId: g.id,
@@ -265,19 +282,18 @@ export function SpecialForm({ groups, matches, predictions, special, allTeams, o
     })),
   };
 
-  function update(field: keyof SpecialPredictions, value: string | number) {
+  function update(field: keyof Omit<SpecialPredictions, "groups">, value: string | number) {
     onChange({ ...current, [field]: value });
-  }
-
-  function toggleThirdQualifies(groupId: string) {
-    const newGroups = current.groups.map((g) =>
-      g.groupId === groupId ? { ...g, thirdQualifies: !g.thirdQualifies } : g
-    );
-    onChange({ ...current, groups: newGroups });
   }
 
   return (
     <div className="space-y-6 sm:space-y-8">
+      <div className="card-glass rounded-xl p-4 border border-gold-500/20">
+        <p className="text-sm text-pitch-300">
+          Prediccions generals de tot el Mundial — campió, golejadors i totals. Independent de la fase de grups.
+        </p>
+      </div>
+
       <div className="card-glass rounded-2xl p-4 sm:p-6">
         <h3 className="font-display text-xl sm:text-2xl text-gold-500 mb-4">PODI FINAL</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -288,7 +304,7 @@ export function SpecialForm({ groups, matches, predictions, special, allTeams, o
       </div>
 
       <div className="card-glass rounded-2xl p-4 sm:p-6">
-        <h3 className="font-display text-xl sm:text-2xl text-gold-500 mb-4">BONUS</h3>
+        <h3 className="font-display text-xl sm:text-2xl text-gold-500 mb-4">JUGADORS I GOLS</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm text-pitch-300 mb-2">Màxim golejador</label>
@@ -302,6 +318,17 @@ export function SpecialForm({ groups, matches, predictions, special, allTeams, o
             />
           </div>
           <div>
+            <label className="block text-sm text-pitch-300 mb-2">Màxim assistent</label>
+            <input
+              type="text"
+              value={current.topAssists ?? ""}
+              onChange={(e) => update("topAssists", e.target.value)}
+              disabled={disabled}
+              placeholder="Nom del jugador"
+              className="input-field"
+            />
+          </div>
+          <div className="sm:col-span-2">
             <label className="block text-sm text-pitch-300 mb-2">Total gols del torneig</label>
             <input
               type="number"
@@ -314,55 +341,6 @@ export function SpecialForm({ groups, matches, predictions, special, allTeams, o
               className="input-field"
             />
           </div>
-        </div>
-      </div>
-
-      <div className="card-glass rounded-2xl p-4 sm:p-6">
-        <h3 className="font-display text-xl sm:text-2xl text-gold-500 mb-2">CLASSIFICACIONS DE GRUPS</h3>
-        <p className="text-sm text-pitch-400 mb-4 sm:mb-6">
-          L&apos;ordre del grup es calcula sol a partir dels marcadors que prediu a la pestanya Grups.
-          Només cal marcar si el 3r passa d&apos;eliminatòria.
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-          {groups.map((group) => {
-            const gp = current.groups.find((g) => g.groupId === group.id)!;
-            const liveStanding = computeGroupStanding(group, matches);
-            const predictedStanding = computeGroupStandingFromPredictions(group, matches, predictions);
-            const hasPredictions = predictedStanding.playedMatches > 0;
-
-            return (
-              <div key={group.id} className="space-y-3">
-                {liveStanding.playedMatches > 0 && (
-                  <div>
-                    <p className="text-xs text-pitch-500 mb-1.5 uppercase tracking-wider">Resultats reals</p>
-                    <GroupStandingsTable standing={liveStanding} compact />
-                  </div>
-                )}
-                <div>
-                  <p className="text-xs text-gold-500/80 mb-1.5 uppercase tracking-wider">
-                    La teva classificació prevista
-                  </p>
-                  {hasPredictions ? (
-                    <GroupStandingsTable standing={predictedStanding} compact />
-                  ) : (
-                    <div className="card-glass rounded-xl p-4 text-sm text-pitch-500 text-center">
-                      Omple els marcadors de {group.name} per veure l&apos;ordre previst
-                    </div>
-                  )}
-                </div>
-                <label className="flex items-start gap-2 text-sm text-pitch-300 cursor-pointer bg-pitch-950/50 rounded-xl p-3">
-                  <input
-                    type="checkbox"
-                    checked={gp.thirdQualifies}
-                    onChange={() => toggleThirdQualifies(group.id)}
-                    disabled={disabled}
-                    className="rounded mt-1 shrink-0"
-                  />
-                  <span>El 3r de {group.name} passa d&apos;eliminatoria</span>
-                </label>
-              </div>
-            );
-          })}
         </div>
       </div>
     </div>

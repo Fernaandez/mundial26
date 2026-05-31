@@ -80,6 +80,7 @@ export default function RulesPage() {
             <tr className="border-b border-pitch-800/50"><td className="py-3">3r lloc</td><td className="py-3 text-right font-bold text-gold-400">{s.thirdPlace} pts</td></tr>
             <tr className="border-b border-pitch-800/50"><td className="py-3">Màxim golejador</td><td className="py-3 text-right font-bold text-gold-400">{s.topScorer} pts</td></tr>
             <tr className="border-b border-pitch-800/50"><td className="py-3">Total gols del torneig (exacte)</td><td className="py-3 text-right font-bold text-gold-400">{s.totalGoalsExact} pts</td></tr>
+            <tr className="border-b border-pitch-800/50"><td className="py-3">Màxim assistent</td><td className="py-3 text-right font-bold text-gold-400">{s.topAssists} pts</td></tr>
             <tr className="border-b border-pitch-800/50"><td className="py-3">Total gols (±5 gols)</td><td className="py-3 text-right font-bold text-gold-400">{s.totalGoalsWithin5} pts</td></tr>
             <tr className="border-b border-pitch-800/50"><td className="py-3">Ordre exacte d&apos;un grup (calculat dels teus marcadors)</td><td className="py-3 text-right font-bold text-gold-400">{s.groupExactOrder} pts/grup</td></tr>
             <tr className="border-b border-pitch-800/50"><td className="py-3">Equip classificat al top 2 (per grup, sense ordre)</td><td className="py-3 text-right font-bold text-gold-400">{s.groupTopTwo} pts/equip</td></tr>

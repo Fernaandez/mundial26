@@ -173,6 +173,7 @@ export const SCORING_RULES = {
     runnerUp: 12,
     thirdPlace: 8,
     topScorer: 10,
+    topAssists: 8,
     totalGoalsExact: 8,
     totalGoalsWithin5: 4,
     groupExactOrder: 6,

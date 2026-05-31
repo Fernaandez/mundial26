@@ -49,6 +49,7 @@ export interface SpecialPredictions {
   runnerUp: string;
   thirdPlace: string;
   topScorer: string;
+  topAssists: string;
   totalGoals: number;
   groups: GroupStandingPrediction[];
 }

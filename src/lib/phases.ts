@@ -58,4 +58,4 @@ export function mergePredictionWindows(
 
 export const KNOCKOUT_PHASE_LIST: Phase[] = KNOCKOUT_PHASES;
 
-export const GROUP_STAGE_TABS: Phase[] = ["special", "groups"];
+export const GROUP_STAGE_TABS: Phase[] = ["groups"];
