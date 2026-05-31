@@ -1,18 +1,16 @@
 "use client";
 
 import { Match, Phase } from "@/types";
-import { GroupStanding } from "@/lib/standings";
 import { getTeamInfo, getAllTeams } from "@/data/world-cup-2026";
 import { TeamFlag } from "@/components/TeamFlag";
 import { getBracketRounds, matchesByIdMap } from "@/lib/knockout";
 import { countExpectedBracketPicks } from "@/lib/knockout-advancement";
-import { enrichKnockoutDisplayTeams } from "@/lib/predicted-bracket";
+import { getRealKnockoutMatchesForBracket } from "@/lib/predicted-bracket";
 import { BracketLayout } from "@/components/BracketLayout";
 
 interface PredictionBracketProps {
   matches: Match[];
   bracketPicks: Record<string, string>;
-  groupStandings?: GroupStanding[];
   onPick: (matchId: string, teamCode: string) => void;
   isPickEnabled?: (phase: Phase) => boolean;
   readOnly?: boolean;
@@ -21,12 +19,11 @@ interface PredictionBracketProps {
 export function PredictionBracket({
   matches,
   bracketPicks,
-  groupStandings,
   onPick,
   isPickEnabled,
   readOnly,
 }: PredictionBracketProps) {
-  const displayMatches = enrichKnockoutDisplayTeams(matches, bracketPicks, groupStandings);
+  const displayMatches = getRealKnockoutMatchesForBracket(matches);
   const byId = matchesByIdMap(displayMatches);
   const rounds = getBracketRounds();
   const pickCount = Object.keys(bracketPicks).length;
@@ -41,8 +38,8 @@ export function PredictionBracket({
           <>
             {!readOnly && (
               <p className="text-sm text-pitch-400 mb-4">
-                Clica la bandera o tria el guanyador de cada partit. El quadre mostra totes les rondes
-                (Setzens → Final) dins la pantalla.{" "}
+                Equips i marcadors oficials del torneig. Tu només tries qui passa de ronda (punts
+                d&apos;avancament). Marcadors els prediueu a la pestanya Marcadors.{" "}
                 {pickCount > 0 && `${pickCount}/${expectedPicks} tries.`}
               </p>
             )}
@@ -121,24 +118,31 @@ function BracketMatchPick({
       )}
 
       {bothReady ? (
-        <div className="flex items-center justify-center gap-1 sm:gap-1.5">
-          <PickFlag
-            code={home.code}
-            name={home.name}
-            selected={picked === home.code}
-            onClick={() => onPick(home.code)}
-            disabled={disabled}
-            size={22}
-          />
-          <span className="text-pitch-500 text-[10px] font-bold shrink-0">vs</span>
-          <PickFlag
-            code={away.code}
-            name={away.name}
-            selected={picked === away.code}
-            onClick={() => onPick(away.code)}
-            disabled={disabled}
-            size={22}
-          />
+        <div className="space-y-1">
+          <div className="flex items-center justify-center gap-1 sm:gap-1.5">
+            <PickFlag
+              code={home.code}
+              name={home.name}
+              selected={picked === home.code}
+              onClick={() => onPick(home.code)}
+              disabled={disabled}
+              size={22}
+            />
+            <span className="text-pitch-500 text-[10px] font-bold shrink-0">vs</span>
+            <PickFlag
+              code={away.code}
+              name={away.name}
+              selected={picked === away.code}
+              onClick={() => onPick(away.code)}
+              disabled={disabled}
+              size={22}
+            />
+          </div>
+          {match.homeScore !== undefined && match.awayScore !== undefined && (
+            <div className="text-center text-[10px] tabular-nums text-pitch-500">
+              Resultat oficial: {match.homeScore}–{match.awayScore}
+            </div>
+          )}
         </div>
       ) : (
         <div className="space-y-1 min-w-0">

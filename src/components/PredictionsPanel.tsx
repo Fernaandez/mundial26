@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Match, Group, SpecialPredictions, Phase } from "@/types";
 import { MatchCard, GroupSection, PhaseTabs, MundialForm } from "@/components/PredictionForms";
@@ -20,7 +20,6 @@ import {
 } from "@/lib/standings";
 import { BestThirdsPanel } from "@/components/BestThirdsPanel";
 import { PredictionBracket } from "@/components/PredictionBracket";
-import { getKnockoutMatchesForPredictions } from "@/lib/predicted-bracket";
 import { countMundialFilled, MUNDIAL_TOTAL_FIELDS } from "@/lib/mundial";
 import { DEFAULT_PREDICTION_WINDOWS } from "@/lib/phases";
 
@@ -108,11 +107,7 @@ export function PredictionsPanel({
   const bestThirds = computeBestThirdsRanking(predictedStandings);
   const thirdQualifierGroups = computeThirdQualifierGroups(groups, matches, predictions);
 
-  const knockoutDisplayMatches = useMemo(
-    () => getKnockoutMatchesForPredictions(matches, predictedStandings),
-    [matches, predictedStandings]
-  );
-  const phaseMatches = knockoutDisplayMatches.filter((m) => m.phase === activePhase);
+  const phaseMatches = matches.filter((m) => m.phase === activePhase);
 
   const canSave =
     !readOnly && (
@@ -340,7 +335,6 @@ export function PredictionsPanel({
               <PredictionBracket
                 matches={matches}
                 bracketPicks={bracketPicks}
-                groupStandings={predictedStandings}
                 onPick={handleBracketPick}
                 isPickEnabled={() => bracketEditable}
                 readOnly={readOnly}
