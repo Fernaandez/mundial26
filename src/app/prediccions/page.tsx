@@ -59,6 +59,20 @@ export default function PredictionsPage() {
     if (user) loadPredictions();
   }, [user, loadPredictions]);
 
+  // Actualitza resultats i classificacions en viu
+  useEffect(() => {
+    if (!user) return;
+    const refreshResults = async () => {
+      const res = await fetch("/api/tournament", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        setMatches(data.matches ?? []);
+      }
+    };
+    const interval = setInterval(refreshResults, 15000);
+    return () => clearInterval(interval);
+  }, [user]);
+
   async function handleSave() {
     if (!user) return;
     setSaving(true);
@@ -120,6 +134,9 @@ export default function PredictionsPage() {
           <Link href="/perfil" className="text-sm text-pitch-400 hover:text-pitch-200">← Perfil</Link>
           <h1 className="font-display text-3xl sm:text-4xl text-pitch-400 mt-1">PREDICCIONS</h1>
           <p className="text-pitch-300 truncate">{user.name}</p>
+          <Link href="/torneig" className="text-xs text-gold-500 hover:text-gold-400 mt-1 inline-block">
+            Veure classificacions i quadre →
+          </Link>
         </div>
         <div className="hidden md:flex items-center gap-3">
           <span className="text-sm text-pitch-400">
@@ -191,6 +208,7 @@ export default function PredictionsPage() {
           {activePhase === "special" && (
             <SpecialForm
               groups={groups}
+              matches={matches}
               special={special}
               allTeams={getAllTeams()}
               onChange={(s) => { setSpecial(s); setSaved(false); }}

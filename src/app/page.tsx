@@ -96,6 +96,9 @@ export default function HomePage() {
         <Link href="/classificacio" className="btn-secondary text-base sm:text-lg text-center">
           Veure classificació
         </Link>
+        <Link href="/torneig" className="btn-secondary text-base sm:text-lg text-center">
+          Torneig en directe
+        </Link>
         <Link href="/regles" className="btn-secondary text-base sm:text-lg text-center">
           Regles completes
         </Link>

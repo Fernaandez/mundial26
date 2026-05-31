@@ -78,6 +78,12 @@ export default function ProfilePage() {
           highlight
         />
         <ActionCard
+          emoji="🏟️"
+          title="Torneig"
+          desc="Classificacions de grups i quadre d'eliminatòries"
+          href="/torneig"
+        />
+        <ActionCard
           emoji="🏆"
           title="Classificació"
           desc="Mira el rànquing i els premis"

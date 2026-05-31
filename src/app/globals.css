@@ -95,3 +95,90 @@ body {
 .page-with-mobile-bar {
   @apply pb-24 md:pb-16;
 }
+
+/* Live indicator */
+.live-dot {
+  @apply w-2 h-2 rounded-full bg-pitch-500;
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
+  50% { opacity: 0.7; box-shadow: 0 0 0 4px rgba(34, 197, 94, 0); }
+}
+
+/* Group standings */
+.standings-row-qualify {
+  border-left: 3px solid rgb(34 197 94);
+}
+
+.standings-row-third {
+  border-left: 3px solid rgb(234 179 8);
+}
+
+.standings-row-out {
+  border-left: 3px solid transparent;
+}
+
+.standings-table tbody tr {
+  transition: background-color 0.3s ease;
+}
+
+.standings-table tbody tr:hover {
+  background: rgba(34, 197, 94, 0.05);
+}
+
+/* Knockout bracket */
+.bracket-scroll {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(30 58 47) transparent;
+}
+
+.bracket-round {
+  flex: 0 0 auto;
+  min-width: 200px;
+  max-width: 240px;
+  display: flex;
+  flex-direction: column;
+}
+
+.bracket-round-title {
+  @apply font-display text-base text-gold-500 text-center mb-3 sticky top-0;
+}
+
+.bracket-round-matches {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  flex: 1;
+  gap: 0.75rem;
+}
+
+.bracket-match {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.bracket-match-done {
+  border-color: rgba(234, 179, 8, 0.25);
+}
+
+.bracket-match-final {
+  @apply border-gold-500/40;
+  box-shadow: 0 0 20px rgba(234, 179, 8, 0.1);
+}
+
+@media (min-width: 1280px) {
+  .bracket-scroll {
+    justify-content: center;
+  }
+
+  .bracket-round {
+    flex: 1;
+    max-width: none;
+  }
+}

@@ -5,6 +5,7 @@ import { Match, Group, Participant } from "@/types";
 import { getTeamInfo, getAllTeams } from "@/data/world-cup-2026";
 import { PredictionWindows } from "@/lib/phases";
 import { TeamFlag } from "@/components/TeamFlag";
+import { MatchScoreboard } from "@/components/MatchScoreboard";
 
 export default function AdminPage() {
   const [pin, setPin] = useState("");
@@ -365,31 +366,26 @@ function AddParticipantForm({ onAdd }: { onAdd: (name: string, pin: string) => P
 function ResultRow({ match, onSave }: { match: Match; onSave: (id: string, h: number, a: number) => void }) {
   const [home, setHome] = useState(match.homeScore ?? 0);
   const [away, setAway] = useState(match.awayScore ?? 0);
-  const homeTeam = getTeamInfo(match.homeTeam);
-  const awayTeam = getTeamInfo(match.awayTeam);
 
   return (
-    <div className="card-glass rounded-xl p-4 flex flex-wrap items-center gap-4">
-      <span className="text-sm text-pitch-500 w-16">{match.groupId}</span>
-      <span className="flex-1 text-sm flex items-center gap-2">
-        <TeamFlag code={homeTeam.code} size={20} />
-        {homeTeam.name}
-      </span>
-      <div className="flex items-center gap-2">
-        <input type="number" min={0} max={20} value={home} onChange={(e) => setHome(+e.target.value)} className="score-input w-12" disabled={match.locked} />
-        <span>:</span>
-        <input type="number" min={0} max={20} value={away} onChange={(e) => setAway(+e.target.value)} className="score-input w-12" disabled={match.locked} />
+    <div className="card-glass rounded-xl p-4 space-y-3">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="text-sm font-display text-pitch-400 w-16">{match.groupId}</span>
+        <div className="flex-1 min-w-[200px]">
+          <MatchScoreboard match={{ ...match, homeScore: home, awayScore: away }} variant="compact" />
+        </div>
       </div>
-      <span className="flex-1 text-sm text-right flex items-center justify-end gap-2">
-        {awayTeam.name}
-        <TeamFlag code={awayTeam.code} size={20} />
-      </span>
-      {!match.locked && (
-        <button onClick={() => onSave(match.id, home, away)} className="btn-primary text-sm py-2 px-4">
-          Desar
-        </button>
-      )}
-      {match.locked && <span className="text-pitch-500 text-sm">🔒</span>}
+      <div className="flex flex-wrap items-center gap-3 justify-end">
+        <input type="number" min={0} max={20} value={home} onChange={(e) => setHome(+e.target.value)} className="score-input w-12" disabled={match.locked} aria-label="Gols local" />
+        <span>:</span>
+        <input type="number" min={0} max={20} value={away} onChange={(e) => setAway(+e.target.value)} className="score-input w-12" disabled={match.locked} aria-label="Gols visitant" />
+        {!match.locked && (
+          <button onClick={() => onSave(match.id, home, away)} className="btn-primary text-sm py-2 px-4">
+            Desar
+          </button>
+        )}
+        {match.locked && <span className="text-pitch-500 text-sm">🔒</span>}
+      </div>
     </div>
   );
 }
