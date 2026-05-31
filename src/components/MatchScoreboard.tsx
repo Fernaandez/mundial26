@@ -9,6 +9,7 @@ interface MatchScoreboardProps {
   variant?: "card" | "bracket" | "compact";
   prediction?: { home: number; away: number };
   showPrediction?: boolean;
+  showKickoff?: boolean;
 }
 
 export function MatchScoreboard({
@@ -16,6 +17,7 @@ export function MatchScoreboard({
   variant = "card",
   prediction,
   showPrediction = false,
+  showKickoff = true,
 }: MatchScoreboardProps) {
   const home = getTeamInfo(match.homeTeam);
   const away = getTeamInfo(match.awayTeam);
@@ -26,6 +28,7 @@ export function MatchScoreboard({
 
   const isBracket = variant === "bracket";
   const isCompact = variant === "compact";
+  const useInline = finished && !isBracket;
 
   return (
     <div className={isBracket ? "bracket-match-inner" : ""}>
@@ -34,55 +37,175 @@ export function MatchScoreboard({
           {match.label}
         </div>
       )}
-      {!isBracket && <MatchKickoff match={match} className="mb-2" compact={isCompact} />}
-
-      <TeamLine
-        code={home.code}
-        name={home.name}
-        score={finished ? match.homeScore : undefined}
-        predScore={showPrediction ? prediction?.home : undefined}
-        isWinner={homeWin}
-        isLoser={finished && awayWin}
-        align={isBracket ? "left" : "right"}
-        compact={isCompact}
-        large={variant === "card" && finished}
-      />
-
-      {finished ? (
-        <div
-          className={`text-center font-display text-pitch-500 ${
-            isCompact ? "text-xs py-0.5" : isBracket ? "text-sm py-1" : "text-lg py-1"
-          }`}
-        >
-          {isBracket ? "·" : "VS"}
-        </div>
-      ) : (
-        <div
-          className={`text-center text-pitch-600 font-bold ${
-            isCompact ? "text-xs py-0.5" : isBracket ? "text-xs py-1" : "text-sm py-1"
-          }`}
-        >
-          vs
-        </div>
+      {!isBracket && showKickoff && (
+        <MatchKickoff match={match} className="mb-2" compact={isCompact} />
       )}
 
-      <TeamLine
-        code={away.code}
-        name={away.name}
-        score={finished ? match.awayScore : undefined}
-        predScore={showPrediction ? prediction?.away : undefined}
-        isWinner={awayWin}
-        isLoser={finished && homeWin}
-        align="left"
-        compact={isCompact}
-        large={variant === "card" && finished}
-      />
+      {useInline ? (
+        <InlineScoreLine
+          home={home}
+          away={away}
+          homeScore={match.homeScore!}
+          awayScore={match.awayScore!}
+          homeWin={homeWin}
+          awayWin={awayWin}
+          compact={isCompact}
+        />
+      ) : (
+        <>
+          <TeamLine
+            code={home.code}
+            name={home.name}
+            score={finished ? match.homeScore : undefined}
+            predScore={showPrediction ? prediction?.home : undefined}
+            isWinner={homeWin}
+            isLoser={finished && awayWin}
+            align={isBracket ? "left" : "right"}
+            compact={isCompact}
+            large={variant === "card" && finished}
+          />
+
+          {finished ? (
+            <div
+              className={`text-center font-display text-pitch-500 ${
+                isCompact ? "text-xs py-0.5" : isBracket ? "text-sm py-1" : "text-lg py-1"
+              }`}
+            >
+              {isBracket ? "·" : "VS"}
+            </div>
+          ) : (
+            <div
+              className={`text-center text-pitch-600 font-bold ${
+                isCompact ? "text-xs py-0.5" : isBracket ? "text-xs py-1" : "text-sm py-1"
+              }`}
+            >
+              vs
+            </div>
+          )}
+
+          <TeamLine
+            code={away.code}
+            name={away.name}
+            score={finished ? match.awayScore : undefined}
+            predScore={showPrediction ? prediction?.away : undefined}
+            isWinner={awayWin}
+            isLoser={finished && homeWin}
+            align="left"
+            compact={isCompact}
+            large={variant === "card" && finished}
+          />
+        </>
+      )}
 
       {showPrediction && prediction && finished && (
         <div className="text-center text-[10px] text-pitch-500 mt-1.5 border-t border-pitch-800/50 pt-1.5">
           Predicció: {prediction.home} - {prediction.away}
         </div>
       )}
+    </div>
+  );
+}
+
+function InlineScoreLine({
+  home,
+  away,
+  homeScore,
+  awayScore,
+  homeWin,
+  awayWin,
+  compact,
+}: {
+  home: { code: string; name: string };
+  away: { code: string; name: string };
+  homeScore: number;
+  awayScore: number;
+  homeWin: boolean;
+  awayWin: boolean;
+  compact?: boolean;
+}) {
+  const flagSize = compact ? 16 : 20;
+  const scoreClass = compact
+    ? "font-display text-lg text-gold-400"
+    : "font-display text-xl sm:text-2xl text-gold-400";
+  const nameClass = compact ? "text-xs" : "text-sm";
+
+  return (
+    <div
+      className={`flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap rounded-lg px-2 py-1.5 bg-pitch-950/40 ${
+        compact ? "text-xs" : ""
+      }`}
+    >
+      <TeamSide
+        code={home.code}
+        name={home.name}
+        score={homeScore}
+        isWinner={homeWin}
+        isLoser={awayWin}
+        flagSize={flagSize}
+        nameClass={nameClass}
+        scoreClass={scoreClass}
+        side="home"
+      />
+      <span className="text-pitch-500 font-bold text-xs sm:text-sm shrink-0 px-0.5">vs</span>
+      <TeamSide
+        code={away.code}
+        name={away.name}
+        score={awayScore}
+        isWinner={awayWin}
+        isLoser={homeWin}
+        flagSize={flagSize}
+        nameClass={nameClass}
+        scoreClass={scoreClass}
+        side="away"
+      />
+    </div>
+  );
+}
+
+function TeamSide({
+  code,
+  name,
+  score,
+  isWinner,
+  isLoser,
+  flagSize,
+  nameClass,
+  scoreClass,
+  side,
+}: {
+  code: string;
+  name: string;
+  score: number;
+  isWinner: boolean;
+  isLoser: boolean;
+  flagSize: number;
+  nameClass: string;
+  scoreClass: string;
+  side: "home" | "away";
+}) {
+  const isTbd = code === "TBD";
+  const flag = !isTbd ? (
+    <TeamFlag code={code} size={flagSize} />
+  ) : (
+    <span
+      className="inline-flex items-center justify-center rounded bg-pitch-800 text-pitch-500 text-[10px] shrink-0"
+      style={{ width: flagSize, height: Math.round(flagSize * 0.75) }}
+    >
+      ?
+    </span>
+  );
+
+  return (
+    <div
+      className={`inline-flex items-center gap-1 sm:gap-1.5 min-w-0 ${
+        side === "home" ? "flex-row" : "flex-row-reverse"
+      } ${isWinner ? "text-gold-300" : isLoser ? "opacity-55" : ""}`}
+    >
+      {flag}
+      <span className={`${nameClass} font-medium truncate max-w-[5.5rem] sm:max-w-none ${isTbd ? "italic text-pitch-500" : "text-pitch-100"}`}>
+        {isTbd ? "Per definir" : name}
+      </span>
+      <span className={`${scoreClass} shrink-0 tabular-nums`}>{score}</span>
     </div>
   );
 }

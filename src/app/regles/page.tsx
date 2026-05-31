@@ -40,7 +40,8 @@ export default function RulesPage() {
         <h3 className="font-display text-lg text-pitch-300 mb-3">Partits</h3>
         <RulesTable rows={[
           ["Resultat correcte (1 / X / 2)", `${g.outcome} pt`],
-          ["Marcador exacte", `${g.exact} pts`],
+          ["Bonus marcador exacte (s'acumula)", `+${g.exact} pts`],
+          ["Total si encertes l'exacte", `${g.outcome + g.exact} pts`],
         ]} />
 
         <h3 className="font-display text-lg text-pitch-300 mb-3 mt-6">Classificació de grups</h3>
@@ -90,7 +91,8 @@ export default function RulesPage() {
         <p className="text-pitch-300 mb-4 text-sm">16ens → 8ens → Quarts → Semis → 3r lloc → Final</p>
         <RulesTable rows={[
           ["Resultat correcte (1 / X / 2)", `${k.outcome} pt`],
-          ["Marcador exacte", `${k.exact} pts`],
+          ["Bonus marcador exacte (s'acumula)", `+${k.exact} pts`],
+          ["Total si encertes l'exacte", `${k.outcome + k.exact} pts`],
         ]} />
       </section>
 

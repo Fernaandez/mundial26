@@ -40,6 +40,7 @@ export function MatchCard({ match, prediction, onChange, disabled }: MatchCardPr
           <MatchScoreboard
             match={match}
             variant="card"
+            showKickoff={false}
             prediction={prediction}
             showPrediction={!!prediction}
           />

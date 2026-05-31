@@ -160,7 +160,7 @@ export const TOURNAMENT_CONFIG = {
 };
 
 export const SCORING_RULES = {
-  /** 1 pt per 1/X/2 · 3 pts marcador exacte (no s'acumulen) */
+  /** 1 pt encert 1/X/2 + 3 pts extra exacte (4 total) */
   group: {
     outcome: 1,
     exact: 3,

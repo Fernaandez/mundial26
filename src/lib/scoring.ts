@@ -20,21 +20,24 @@ function getOutcome(h: number, a: number): "H" | "D" | "A" {
   return "D";
 }
 
-/** 1 pt per 1/X/2 · 3 pts marcador exacte */
+/** 1 pt per 1/X/2 + 3 pts extra marcador exacte (4 total) */
 function scoreMatchPrediction(
   predicted: ScorePrediction,
   actual: ScorePrediction
 ): number {
   const rules = SCORING_RULES.group;
 
-  if (predicted.home === actual.home && predicted.away === actual.away) {
-    return rules.exact;
-  }
-
   const predOutcome = getOutcome(predicted.home, predicted.away);
   const actOutcome = getOutcome(actual.home, actual.away);
+  const outcomeCorrect = predOutcome === actOutcome;
+  const exact =
+    predicted.home === actual.home && predicted.away === actual.away;
 
-  if (predOutcome === actOutcome) {
+  if (exact) {
+    return rules.outcome + rules.exact;
+  }
+
+  if (outcomeCorrect) {
     return rules.outcome;
   }
 
