@@ -29,6 +29,10 @@ export function isGroupStagePhase(phase: Phase): boolean {
   return phase === "groups" || phase === "special";
 }
 
+export function canEditSpecialPredictions(w: PredictionWindows): boolean {
+  return !w.groupsLocked;
+}
+
 export function canEditGroupPredictions(w: PredictionWindows): boolean {
   return !w.groupsLocked;
 }

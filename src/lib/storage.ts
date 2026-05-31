@@ -9,6 +9,7 @@ import {
   mergePredictionWindows,
   canEditGroupPredictions,
   canEditKnockoutPredictions,
+  canEditSpecialPredictions,
   isKnockoutPhase,
 } from "@/lib/phases";
 import { buildGroupPredictionsFromMatches, buildGroupStandingsActuals } from "@/lib/standings";
@@ -304,7 +305,7 @@ export async function savePredictions(
 
   const prev = p.special ?? defaultSpecial;
 
-  if (special) {
+  if (special && canEditSpecialPredictions(windows)) {
     p.special = normalizeSpecialPredictions({
       ...prev,
       ...special,

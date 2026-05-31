@@ -274,7 +274,7 @@ export default function AdminPage() {
                   onClick={() => updateWindows({ groupsLocked: true })}
                   className="btn-primary text-sm"
                 >
-                  Tancar prediccions de grups
+                  Tancar grups i prediccions especials
                 </button>
               ) : (
                 <button
@@ -282,12 +282,12 @@ export default function AdminPage() {
                   onClick={() => updateWindows({ groupsLocked: false })}
                   className="btn-secondary text-sm"
                 >
-                  Reobrir prediccions de grups
+                  Reobrir grups i prediccions especials
                 </button>
               )}
             </div>
             <p className={`text-sm mt-3 ${predictionWindows.groupsLocked ? "text-gold-400" : "text-pitch-500"}`}>
-              Estat: {predictionWindows.groupsLocked ? "🔒 Tancada — només lectura" : "✅ Oberta — es poden editar"}
+              Estat: {predictionWindows.groupsLocked ? "🔒 Tancada — grups, especials i Mundial només lectura" : "✅ Oberta — es poden editar"}
             </p>
           </div>
 

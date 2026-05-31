@@ -2,7 +2,7 @@ import { Match, Phase } from "@/types";
 import { PHASE_LABELS } from "@/data/world-cup-2026";
 
 const DISPLAY_TZ = "Europe/Madrid";
-const LOCALE = "ca-ES";
+const LOCALE = "es-ES";
 
 export interface FormattedKickoff {
   date: string;

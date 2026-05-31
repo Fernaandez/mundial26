@@ -48,70 +48,40 @@ export function MatchCard({ match, prediction, onChange, disabled }: MatchCardPr
       )}
 
       {!finished && (
-        <>
-          {/* Mobile layout */}
-          <div className="sm:hidden space-y-2">
-            <TeamScoreRow
-              code={home.code}
-              name={home.name}
-              score={prediction?.home ?? ""}
-              onScoreChange={(v) => onChange(v, prediction?.away ?? 0)}
-              locked={locked}
-            />
-            <div className="text-center text-pitch-600 font-bold text-sm">VS</div>
-            <TeamScoreRow
-              code={away.code}
-              name={away.name}
-              score={prediction?.away ?? ""}
-              onScoreChange={(v) => onChange(prediction?.home ?? 0, v)}
-              locked={locked}
-            />
-          </div>
-
-          {/* Desktop layout */}
-          <div className="hidden sm:flex items-center justify-between gap-2">
-            <div className="flex-1 min-w-0 text-right flex items-center justify-end gap-2">
-              <TeamFlag code={home.code} size={24} />
-              <span className="font-medium text-base">{home.name}</span>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <input
-                type="number"
-                inputMode="numeric"
-                min={0}
-                max={20}
-                value={prediction?.home ?? ""}
-                onChange={(e) => onChange(parseInt(e.target.value) || 0, prediction?.away ?? 0)}
-                disabled={locked}
-                className="score-input"
-                placeholder="-"
-                aria-label={`Gols ${home.name}`}
-              />
-              <span className="text-pitch-500 font-bold">:</span>
-              <input
-                type="number"
-                inputMode="numeric"
-                min={0}
-                max={20}
-                value={prediction?.away ?? ""}
-                onChange={(e) => onChange(prediction?.home ?? 0, parseInt(e.target.value) || 0)}
-                disabled={locked}
-                className="score-input"
-                placeholder="-"
-                aria-label={`Gols ${away.name}`}
-              />
-            </div>
-            <div className="flex-1 min-w-0 text-left flex items-center gap-2">
-              <span className="font-medium text-base">{away.name}</span>
-              <TeamFlag code={away.code} size={24} />
-            </div>
-          </div>
-        </>
+        <div className="flex items-center justify-center gap-2 sm:gap-3">
+          <TeamFlag code={home.code} size={26} />
+          <input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={20}
+            value={prediction?.home ?? ""}
+            onChange={(e) => onChange(parseInt(e.target.value) || 0, prediction?.away ?? 0)}
+            disabled={locked}
+            className="score-input"
+            placeholder="-"
+            aria-label={`Gols ${home.name}`}
+          />
+          <span className="text-pitch-500 font-bold">:</span>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={20}
+            value={prediction?.away ?? ""}
+            onChange={(e) => onChange(prediction?.home ?? 0, parseInt(e.target.value) || 0)}
+            disabled={locked}
+            className="score-input"
+            placeholder="-"
+            aria-label={`Gols ${away.name}`}
+          />
+          <TeamFlag code={away.code} size={26} />
+        </div>
       )}
 
       {finished && !locked && (
         <div className="mt-3 pt-3 border-t border-pitch-800/50">
-          <div className="text-[10px] uppercase tracking-wider text-pitch-500 mb-2">La teva predicció</div>
+          <div className="text-[10px] uppercase tracking-wider text-pitch-500 mb-2 text-center">La teva predicció</div>
           <div className="flex items-center justify-center gap-2">
             <TeamFlag code={home.code} size={20} />
             <input
@@ -139,39 +109,6 @@ export function MatchCard({ match, prediction, onChange, disabled }: MatchCardPr
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function TeamScoreRow({
-  code,
-  name,
-  score,
-  onScoreChange,
-  locked,
-}: {
-  code: string;
-  name: string;
-  score: number | string;
-  onScoreChange: (v: number) => void;
-  locked?: boolean;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <TeamFlag code={code} size={20} />
-      <span className="font-medium text-sm flex-1 min-w-0 truncate">{name}</span>
-      <input
-        type="number"
-        inputMode="numeric"
-        min={0}
-        max={20}
-        value={score}
-        onChange={(e) => onScoreChange(parseInt(e.target.value) || 0)}
-        disabled={locked}
-        className="score-input shrink-0"
-        placeholder="-"
-        aria-label={`Gols ${name}`}
-      />
     </div>
   );
 }

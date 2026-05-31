@@ -106,6 +106,42 @@ export function MatchScoreboard({
   );
 }
 
+/** Bandera + resultat centrat (calendari, llistes…) */
+export function MatchFlagsLine({
+  homeCode,
+  awayCode,
+  homeName,
+  awayName,
+  homeScore,
+  awayScore,
+  compact = false,
+}: {
+  homeCode: string;
+  awayCode: string;
+  homeName: string;
+  awayName: string;
+  homeScore?: number;
+  awayScore?: number;
+  compact?: boolean;
+}) {
+  const flagSize = compact ? 22 : 26;
+  const finished = homeScore !== undefined && awayScore !== undefined;
+
+  return (
+    <div className="flex items-center justify-center gap-2 sm:gap-3">
+      <span title={homeName}><TeamFlag code={homeCode} size={flagSize} /></span>
+      {finished ? (
+        <span className="font-display text-lg sm:text-xl text-gold-400 tabular-nums">
+          {homeScore} - {awayScore}
+        </span>
+      ) : (
+        <span className="text-pitch-500 text-sm font-bold">vs</span>
+      )}
+      <span title={awayName}><TeamFlag code={awayCode} size={flagSize} /></span>
+    </div>
+  );
+}
+
 function InlineScoreLine({
   home,
   away,
@@ -123,55 +159,44 @@ function InlineScoreLine({
   awayWin: boolean;
   compact?: boolean;
 }) {
-  const flagSize = compact ? 16 : 20;
+  const flagSize = compact ? 22 : 28;
   const scoreClass = compact
-    ? "font-display text-lg text-gold-400"
-    : "font-display text-xl sm:text-2xl text-gold-400";
-  const nameClass = compact ? "text-xs" : "text-sm";
+    ? "font-display text-lg text-gold-400 tabular-nums"
+    : "font-display text-xl sm:text-2xl text-gold-400 tabular-nums";
 
   return (
-    <div
-      className={`flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap rounded-lg px-2 py-1.5 bg-pitch-950/40 ${
-        compact ? "text-xs" : ""
-      }`}
-    >
-      <TeamSide
+    <div className="flex items-center justify-center gap-2 sm:gap-3">
+      <FlagScore
         code={home.code}
         name={home.name}
         score={homeScore}
         isWinner={homeWin}
         isLoser={awayWin}
         flagSize={flagSize}
-        nameClass={nameClass}
         scoreClass={scoreClass}
-        side="home"
       />
-      <span className="text-pitch-500 font-bold text-xs sm:text-sm shrink-0 px-0.5">vs</span>
-      <TeamSide
+      <span className="text-pitch-500 font-bold text-xs sm:text-sm shrink-0">vs</span>
+      <FlagScore
         code={away.code}
         name={away.name}
         score={awayScore}
         isWinner={awayWin}
         isLoser={homeWin}
         flagSize={flagSize}
-        nameClass={nameClass}
         scoreClass={scoreClass}
-        side="away"
       />
     </div>
   );
 }
 
-function TeamSide({
+function FlagScore({
   code,
   name,
   score,
   isWinner,
   isLoser,
   flagSize,
-  nameClass,
   scoreClass,
-  side,
 }: {
   code: string;
   name: string;
@@ -179,33 +204,28 @@ function TeamSide({
   isWinner: boolean;
   isLoser: boolean;
   flagSize: number;
-  nameClass: string;
   scoreClass: string;
-  side: "home" | "away";
 }) {
   const isTbd = code === "TBD";
-  const flag = !isTbd ? (
-    <TeamFlag code={code} size={flagSize} />
-  ) : (
-    <span
-      className="inline-flex items-center justify-center rounded bg-pitch-800 text-pitch-500 text-[10px] shrink-0"
-      style={{ width: flagSize, height: Math.round(flagSize * 0.75) }}
-    >
-      ?
-    </span>
-  );
 
   return (
     <div
-      className={`inline-flex items-center gap-1 sm:gap-1.5 min-w-0 ${
-        side === "home" ? "flex-row" : "flex-row-reverse"
-      } ${isWinner ? "text-gold-300" : isLoser ? "opacity-55" : ""}`}
+      className={`inline-flex items-center gap-1.5 sm:gap-2 ${
+        isWinner ? "text-gold-300" : isLoser ? "opacity-55" : ""
+      }`}
+      title={isTbd ? "Per definir" : name}
     >
-      {flag}
-      <span className={`${nameClass} font-medium truncate max-w-[5.5rem] sm:max-w-none ${isTbd ? "italic text-pitch-500" : "text-pitch-100"}`}>
-        {isTbd ? "Per definir" : name}
-      </span>
-      <span className={`${scoreClass} shrink-0 tabular-nums`}>{score}</span>
+      {!isTbd ? (
+        <TeamFlag code={code} size={flagSize} />
+      ) : (
+        <span
+          className="inline-flex items-center justify-center rounded bg-pitch-800 text-pitch-500 text-[10px] shrink-0"
+          style={{ width: flagSize, height: Math.round(flagSize * 0.75) }}
+        >
+          ?
+        </span>
+      )}
+      <span className={scoreClass}>{score}</span>
     </div>
   );
 }

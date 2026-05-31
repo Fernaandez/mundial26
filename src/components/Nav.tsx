@@ -22,7 +22,7 @@ export function Nav() {
   const userLinks = [
     { href: "/perfil", label: "Perfil" },
     { href: "/prediccions", label: "Prediccions" },
-    { href: "/prediccions/altres", label: "La gent" },
+    { href: "/prediccions/altres", label: "Participants" },
     { href: "/calendari", label: "Calendari" },
     { href: "/torneig", label: "Torneig" },
     { href: "/classificacio", label: "Classificació" },

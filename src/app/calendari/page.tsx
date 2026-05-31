@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { Match, Phase } from "@/types";
 import { getTeamInfo, PHASE_LABELS } from "@/data/world-cup-2026";
-import { TeamFlag } from "@/components/TeamFlag";
+import { MatchFlagsLine } from "@/components/MatchScoreboard";
 import { MatchKickoff } from "@/components/MatchKickoff";
 import { groupMatchesByDay, phaseLabel } from "@/lib/match-dates";
 import { isMatchFinished } from "@/lib/knockout";
@@ -45,7 +45,7 @@ export default function CalendariPage() {
     <div className="max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
       <h1 className="font-display text-4xl sm:text-5xl text-pitch-400 mb-2">CALENDARI</h1>
       <p className="text-pitch-400 text-sm mb-6">
-        Tots els partits del Mundial · hora de Catalunya (CEST)
+        Tots els partits del Mundial · hora d&apos;Espanya (peninsular)
       </p>
 
       <div className="phase-tabs-scroll -mx-3 px-3 sm:mx-0 sm:px-0 mb-8">
@@ -116,27 +116,23 @@ function CalendarRow({ match }: { match: Match }) {
         finished ? "border border-gold-500/20" : ""
       }`}
     >
-      <div className="sm:w-44 shrink-0">
+      <div className="sm:w-44 shrink-0 text-center sm:text-left">
         <MatchKickoff match={match} compact />
       </div>
-      <div className="flex-1 min-w-0">
-        <div className="text-[10px] uppercase tracking-wider text-pitch-500 mb-1">
+      <div className="flex-1 min-w-0 text-center">
+        <div className="text-[10px] uppercase tracking-wider text-pitch-500 mb-2">
           {match.groupId ? `Grup ${match.groupId}` : phase}
           {match.label && match.groupId === undefined && ` · ${match.label}`}
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <TeamFlag code={home.code} size={20} />
-          <span className="font-medium text-pitch-100">{home.name}</span>
-          {finished ? (
-            <span className="font-display text-lg text-gold-400 px-1">
-              {match.homeScore} - {match.awayScore}
-            </span>
-          ) : (
-            <span className="text-pitch-500 text-sm px-1">vs</span>
-          )}
-          <span className="font-medium text-pitch-100">{away.name}</span>
-          <TeamFlag code={away.code} size={20} />
-        </div>
+        <MatchFlagsLine
+          homeCode={home.code}
+          awayCode={away.code}
+          homeName={home.name}
+          awayName={away.name}
+          homeScore={finished ? match.homeScore : undefined}
+          awayScore={finished ? match.awayScore : undefined}
+          compact
+        />
       </div>
     </div>
   );

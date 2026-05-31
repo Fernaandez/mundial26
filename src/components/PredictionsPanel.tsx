@@ -10,6 +10,7 @@ import {
   KNOCKOUT_PHASE_LIST,
   canEditGroupPredictions,
   canEditKnockoutPredictions,
+  canEditSpecialPredictions,
 } from "@/lib/phases";
 import {
   computeBestThirdsRanking,
@@ -73,6 +74,7 @@ export function PredictionsPanel({
 
   const readOnly = mode === "view";
   const groupsEditable = !readOnly && canEditGroupPredictions(windows);
+  const specialEditable = !readOnly && canEditSpecialPredictions(windows);
   const knockoutEditable = !readOnly && canEditKnockoutPredictions(windows);
   const showKnockout = readOnly || knockoutEditable;
 
@@ -92,7 +94,7 @@ export function PredictionsPanel({
     !readOnly && (
       mainSection === "groups" ? groupsEditable :
       mainSection === "knockout" ? knockoutEditable :
-      true
+      specialEditable
     );
 
   const sectionLabel =
@@ -159,6 +161,7 @@ export function PredictionsPanel({
           onClick={() => setMainSection("mundial")}
           title="Mundial"
           subtitle={`${mundialFilled}/${MUNDIAL_FIELDS.length}`}
+          locked={!readOnly && !specialEditable}
         />
       </div>
 
@@ -236,16 +239,24 @@ export function PredictionsPanel({
       )}
 
       {mainSection === "mundial" && (
-        <MundialForm
-          groups={groups}
-          matches={matches}
-          predictions={predictions}
-          special={special}
-          allTeams={getAllTeams()}
-          onChange={onSpecialChange ?? noopChange}
-          disabled={readOnly}
-          readOnly={readOnly}
-        />
+        <>
+          {!specialEditable && !readOnly && (
+            <div className="card-glass rounded-xl p-4 mb-6 border border-pitch-600/40">
+              <p className="text-pitch-200 font-medium">Prediccions especials tancades</p>
+              <p className="text-pitch-400 text-sm mt-1">Només lectura.</p>
+            </div>
+          )}
+          <MundialForm
+            groups={groups}
+            matches={matches}
+            predictions={predictions}
+            special={special}
+            allTeams={getAllTeams()}
+            onChange={onSpecialChange ?? noopChange}
+            disabled={readOnly || !specialEditable}
+            readOnly={readOnly}
+          />
+        </>
       )}
 
       {canSave && onSave && (
