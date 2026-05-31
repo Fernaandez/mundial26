@@ -27,8 +27,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { participantId, pin, matches, special } = await request.json();
-    const participant = await savePredictions(participantId, pin, matches, special);
+    const { participantId, pin, matches, special, bracketPicks } = await request.json();
+    const participant = await savePredictions(participantId, pin, matches, special, bracketPicks);
     return NextResponse.json({ success: true, participant });
   } catch (e) {
     return NextResponse.json(

@@ -23,7 +23,7 @@ export default function RulesPage() {
       <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
         <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">GENERAL</h2>
         <ul className="space-y-2 text-pitch-200 text-sm sm:text-base mb-6">
-          <li>• Preu d&apos;entrada: <strong className="text-white">{ENTRY_FEE}€</strong> ({RULES_NOTES.payment})</li>
+          <li>• Preu d&apos;entrada: <strong className="text-white">{ENTRY_FEE}€</strong> · {RULES_NOTES.payment}</li>
           <li>• Repartiment de premis: <strong className="text-white">{PRIZE_SPLIT.first}% · {PRIZE_SPLIT.second}% · {PRIZE_SPLIT.third}%</strong> (1r, 2n, 3r)</li>
           <li className="text-pitch-400 text-sm">{RULES_NOTES.prizesNote}</li>
           <li>• Cal predir el <strong className="text-white">marcador exacte</strong> de cada partit (90 minuts)</li>
@@ -59,7 +59,7 @@ export default function RulesPage() {
       <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
         <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">PUNTUACIONS ESPECIALS</h2>
         <p className="text-pitch-300 mb-4 text-sm">
-          Jugadors, seleccions i eliminatòries (tot el que no són partits ni classificació de grups).
+          Jugadors i seleccions (tot el que no són partits ni classificació de grups).
         </p>
         <RulesTable rows={[
           ["Màxim golejador", `${s.topScorer} pts`],
@@ -69,11 +69,6 @@ export default function RulesPage() {
           ["Millor jugador jove", `${s.youngMvp} pts`],
           ["Selecció revelació", `${s.surpriseTeam} pts`],
           ["Selecció decepció", `${s.disappointmentTeam} pts`],
-          ["Per equip encertat que classifica a vuitens (8ens)", `${s.round16Finalist} pt/equip`],
-          ["Per equip encertat que classifica a quarts", `${s.quarterFinalist} pts/equip`],
-          ["Per equip encertat que classifica a semis", `${s.semiFinalist} pts/equip`],
-          ["Encertar el 3r classificat", `${s.thirdPlace} pts`],
-          ["Encertar el campió", `${s.champion} pts`],
         ]} />
         <div className="mt-4 space-y-2 text-sm text-pitch-400">
           <p>{RULES_NOTES.youngPlayer}</p>
@@ -81,20 +76,30 @@ export default function RulesPage() {
           <p><strong className="text-pitch-300">Top 10 FIFA</strong> (31 maig 2026): {top10Names}</p>
           <p>{RULES_NOTES.surpriseTeam}</p>
           <p>{RULES_NOTES.disappointmentTeam}</p>
-          <p className="text-pitch-500">
-            Els classificats per ronda es calculen de les teves prediccions de marcadors
-            a l&apos;eliminatòria (guanyador per partit).
-          </p>
         </div>
       </section>
 
       <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
         <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">ELIMINATÒRIES — PARTITS</h2>
-        <p className="text-pitch-300 mb-4 text-sm">16ens → 8ens → Quarts → Semis → 3r lloc → Final</p>
+        <p className="text-pitch-300 mb-4 text-sm">
+          16ens → 8ens → Quarts → Semis → 3r lloc → Final. A la pestanya <strong className="text-pitch-200">Marcadors</strong> introdueix el resultat abans de cada eliminatòria.
+        </p>
         <RulesTable rows={[
           ["Resultat correcte (1 / X / 2)", `${k.outcome} pt`],
           ["Bonus marcador exacte (s'acumula)", `+${k.exact} pts`],
           ["Total si encertes l'exacte", `${k.outcome + k.exact} pts`],
+        ]} />
+
+        <h3 className="font-display text-lg text-pitch-300 mb-3 mt-6">Classificats per ronda</h3>
+        <p className="text-pitch-400 text-sm mb-3">
+          A la pestanya <strong className="text-pitch-200">Quadre</strong>, clica la bandera de la selecció que creus que passarà de ronda. D&apos;aquí es sumen els punts de classificació (vuitens, quarts, semis, campió i 3r).
+        </p>
+        <RulesTable rows={[
+          ["Per equip encertat que classifica a vuitens (8ens)", `${s.round16Finalist} pt/equip`],
+          ["Per equip encertat que classifica a quarts", `${s.quarterFinalist} pts/equip`],
+          ["Per equip encertat que classifica a semis", `${s.semiFinalist} pts/equip`],
+          ["Encertar el 3r classificat", `${s.thirdPlace} pts`],
+          ["Encertar el campió", `${s.champion} pts`],
         ]} />
       </section>
 

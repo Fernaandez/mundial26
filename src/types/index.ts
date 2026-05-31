@@ -81,6 +81,8 @@ export interface Participant {
   joinedAt: string;
   special?: SpecialPredictions;
   matches: Record<string, ScorePrediction>;
+  /** Guanyador per partit eliminatori (quadre) — punts d'avancament */
+  bracketPicks?: Record<string, string>;
 }
 
 export interface TournamentConfig {

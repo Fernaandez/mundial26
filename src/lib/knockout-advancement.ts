@@ -41,10 +41,37 @@ export interface AdvancementSets {
   toFinal: Set<string>;
 }
 
+export function deriveAdvancementSetsFromBracket(
+  matches: Match[],
+  bracketPicks: Record<string, string>
+): AdvancementSets {
+  function winnersOfPhase(phase: Phase): Set<string> {
+    const teams = new Set<string>();
+    for (const m of matches.filter((x) => x.phase === phase)) {
+      const pick = bracketPicks[m.id];
+      if (pick && (m.homeTeam === pick || m.awayTeam === pick)) {
+        teams.add(pick);
+      }
+    }
+    return teams;
+  }
+
+  return {
+    toRound16: winnersOfPhase("round32"),
+    toQuarter: winnersOfPhase("round16"),
+    toSemi: winnersOfPhase("quarter"),
+    toFinal: winnersOfPhase("semi"),
+  };
+}
+
 export function deriveAdvancementSets(
   matches: Match[],
-  predictions?: Record<string, ScorePrediction>
+  predictions?: Record<string, ScorePrediction>,
+  bracketPicks?: Record<string, string>
 ): AdvancementSets {
+  if (bracketPicks && Object.keys(bracketPicks).length > 0) {
+    return deriveAdvancementSetsFromBracket(matches, bracketPicks);
+  }
   return {
     toRound16: teamsWinningPhase(matches, "round32", predictions),
     toQuarter: teamsWinningPhase(matches, "round16", predictions),

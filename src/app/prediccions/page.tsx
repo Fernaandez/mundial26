@@ -15,6 +15,7 @@ export default function PredictionsPage() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [predictions, setPredictions] = useState<Record<string, { home: number; away: number }>>({});
   const [special, setSpecial] = useState<SpecialPredictions | undefined>();
+  const [bracketPicks, setBracketPicks] = useState<Record<string, string>>({});
   const [windows, setWindows] = useState<PredictionWindows>({ groupsLocked: false, knockoutOpen: false });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -37,6 +38,7 @@ export default function PredictionsPage() {
       setGroups(data.groups ?? []);
       setPredictions(data.participant?.matches ?? {});
       setSpecial(data.participant?.special);
+      setBracketPicks(data.participant?.bracketPicks ?? {});
       setWindows(data.predictionWindows ?? { groupsLocked: false, knockoutOpen: false });
     } finally {
       setDataLoading(false);
@@ -73,6 +75,7 @@ export default function PredictionsPage() {
           pin: user.pin,
           matches: predictions,
           special,
+          bracketPicks,
         }),
       });
       if (res.ok) setSaved(true);
@@ -111,9 +114,11 @@ export default function PredictionsPage() {
         groups={groups}
         predictions={predictions}
         special={special}
+        bracketPicks={bracketPicks}
         windows={windows}
         onPredictionChange={updatePrediction}
         onSpecialChange={(s) => { setSpecial(s); setSaved(false); }}
+        onBracketChange={(p) => { setBracketPicks(p); setSaved(false); }}
         onSave={handleSave}
         saving={saving}
         saved={saved}

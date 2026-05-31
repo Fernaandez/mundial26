@@ -25,6 +25,7 @@ function AltresPredictionsContent() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [predictions, setPredictions] = useState<Record<string, { home: number; away: number }>>({});
   const [special, setSpecial] = useState<SpecialPredictions | undefined>();
+  const [bracketPicks, setBracketPicks] = useState<Record<string, string>>({});
   const [targetName, setTargetName] = useState("");
   const [listLoading, setListLoading] = useState(true);
   const [viewLoading, setViewLoading] = useState(false);
@@ -65,6 +66,7 @@ function AltresPredictionsContent() {
       setGroups(data.groups ?? []);
       setPredictions(data.participant?.matches ?? {});
       setSpecial(data.participant?.special);
+      setBracketPicks(data.participant?.bracketPicks ?? {});
       setTargetName(data.participant?.name ?? "");
     } finally {
       setViewLoading(false);
@@ -166,6 +168,7 @@ function AltresPredictionsContent() {
           groups={groups}
           predictions={predictions}
           special={special}
+          bracketPicks={bracketPicks}
           backHref="/prediccions/altres"
           backLabel="← Tornar a la llista"
         />

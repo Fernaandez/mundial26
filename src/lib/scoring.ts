@@ -48,6 +48,12 @@ function norm(s: string) {
   return s.trim().toLowerCase();
 }
 
+function teamListMatch(predicted: string, actualRaw?: string): boolean {
+  if (!predicted?.trim() || !actualRaw?.trim()) return false;
+  const codes = actualRaw.split(/[,;]/).map((s) => s.trim().toUpperCase()).filter(Boolean);
+  return codes.includes(predicted.trim().toUpperCase());
+}
+
 function scoreGroupExtras(
   special: SpecialPredictions,
   actuals: SpecialActualsInput
@@ -109,7 +115,7 @@ function scoreMundialFields(
   }
 
   if (actuals.surpriseTeam) {
-    if (special.surpriseTeam === actuals.surpriseTeam) pts += r.surpriseTeam;
+    if (teamListMatch(special.surpriseTeam, actuals.surpriseTeam)) pts += r.surpriseTeam;
   } else if (
     special.surpriseTeam &&
     !isFifaTop10(special.surpriseTeam) &&
@@ -119,7 +125,7 @@ function scoreMundialFields(
   }
 
   if (actuals.disappointmentTeam) {
-    if (special.disappointmentTeam === actuals.disappointmentTeam) pts += r.disappointmentTeam;
+    if (teamListMatch(special.disappointmentTeam, actuals.disappointmentTeam)) pts += r.disappointmentTeam;
   } else if (
     special.disappointmentTeam &&
     isFifaTop10(special.disappointmentTeam) &&
@@ -140,13 +146,13 @@ function scoreMundialFields(
 
 function scoreKnockoutAdvancement(
   matches: Match[],
-  matchPredictions: Record<string, ScorePrediction>,
+  bracketPicks: Record<string, string> | undefined,
   actuals: SpecialActualsInput
 ): number {
   let pts = 0;
   const r = SCORING_RULES.special;
 
-  const predAdv = deriveAdvancementSets(matches, matchPredictions);
+  const predAdv = deriveAdvancementSets(matches, undefined, bracketPicks);
   const actAdv = actuals.advancement ?? deriveAdvancementSets(matches);
 
   pts += scoreAdvancementPoints(predAdv, actAdv, {
@@ -219,7 +225,7 @@ export function calculateParticipantScore(
     breakdown.special = scoreMundialFields(special, actuals, matches);
     breakdown.advancement = scoreKnockoutAdvancement(
       matches,
-      participant.matches,
+      participant.bracketPicks,
       actuals
     );
   }

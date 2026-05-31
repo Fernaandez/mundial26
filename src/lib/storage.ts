@@ -275,7 +275,8 @@ export async function savePredictions(
   participantId: string,
   pin: string,
   matches: Record<string, { home: number; away: number }>,
-  special?: SpecialPredictions
+  special?: SpecialPredictions,
+  bracketPicks?: Record<string, string>
 ): Promise<Participant> {
   const data = await readData();
   const p = data.participants.find((x) => x.id === participantId);
@@ -313,6 +314,10 @@ export async function savePredictions(
     })!;
   } else {
     p.special = normalizeSpecialPredictions({ ...prev, groups: syncedGroups })!;
+  }
+
+  if (bracketPicks !== undefined && canEditKnockoutPredictions(windows)) {
+    p.bracketPicks = { ...bracketPicks };
   }
 
   await writeData(data);

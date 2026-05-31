@@ -28,6 +28,7 @@ export async function GET(request: Request) {
       name: target.name,
       matches: target.matches ?? {},
       special: target.special,
+      bracketPicks: target.bracketPicks ?? {},
     },
     matches: data.tournament.matches,
     groups: data.tournament.groups,

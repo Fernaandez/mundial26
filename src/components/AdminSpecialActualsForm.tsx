@@ -1,9 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { getAllTeams } from "@/data/world-cup-2026";
-import { FIFA_TOP_10_CODES } from "@/data/rules-config";
-import { TeamFlag } from "@/components/TeamFlag";
 import type { SpecialActualsInput } from "@/lib/scoring";
 
 interface AdminSpecialActualsFormProps {
@@ -13,18 +10,12 @@ interface AdminSpecialActualsFormProps {
 }
 
 export function AdminSpecialActualsForm({ initial, adminPin, onSaved }: AdminSpecialActualsFormProps) {
-  const allTeams = getAllTeams();
-  const top10Teams = allTeams.filter((t) => (FIFA_TOP_10_CODES as readonly string[]).includes(t.code));
-  const revelationTeams = allTeams.filter((t) => !(FIFA_TOP_10_CODES as readonly string[]).includes(t.code));
-
   const [form, setForm] = useState<SpecialActualsInput>({
     topScorer: initial.topScorer ?? "",
     topAssists: initial.topAssists ?? "",
     mvp: initial.mvp ?? "",
     youngMvp: initial.youngMvp ?? "",
     goldenGlove: initial.goldenGlove ?? "",
-    champion: initial.champion ?? "",
-    thirdPlace: initial.thirdPlace ?? "",
     surpriseTeam: initial.surpriseTeam ?? "",
     disappointmentTeam: initial.disappointmentTeam ?? "",
   });
@@ -65,7 +56,7 @@ export function AdminSpecialActualsForm({ initial, adminPin, onSaved }: AdminSpe
       <div>
         <h2 className="font-display text-xl text-gold-500 mb-2">Resultats especials reals</h2>
         <p className="text-pitch-400 text-sm">
-          Introdueix els guanyadors oficials per puntuar les prediccions especials dels participants.
+          Jugadors i seleccions. Campió i 3r es calculen sols dels resultats de la final i del partit del 3r lloc.
         </p>
       </div>
 
@@ -81,12 +72,20 @@ export function AdminSpecialActualsForm({ initial, adminPin, onSaved }: AdminSpe
       </div>
 
       <div>
-        <h3 className="font-display text-lg text-pitch-300 mb-3">Podi i seleccions</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <TeamSelect label="Campió" value={form.champion ?? ""} teams={allTeams} onChange={(v) => setField("champion", v)} />
-          <TeamSelect label="3r lloc" value={form.thirdPlace ?? ""} teams={allTeams} onChange={(v) => setField("thirdPlace", v)} />
-          <TeamSelect label="Selecció revelació" value={form.surpriseTeam ?? ""} teams={revelationTeams} onChange={(v) => setField("surpriseTeam", v)} />
-          <TeamSelect label="Selecció decepció" value={form.disappointmentTeam ?? ""} teams={top10Teams} onChange={(v) => setField("disappointmentTeam", v)} />
+        <h3 className="font-display text-lg text-pitch-300 mb-3">Seleccions</h3>
+        <div className="grid grid-cols-1 gap-4">
+          <TeamListInput
+            label="Selecció revelació"
+            hint="Codi selecció separats per comes si n'hi ha més d'una (ex: COL, JPN)"
+            value={form.surpriseTeam ?? ""}
+            onChange={(v) => setField("surpriseTeam", v)}
+          />
+          <TeamListInput
+            label="Selecció decepció"
+            hint="Codi selecció separats per comes si n'hi ha més d'una (ex: ESP, FRA)"
+            value={form.disappointmentTeam ?? ""}
+            onChange={(v) => setField("disappointmentTeam", v)}
+          />
         </div>
       </div>
 
@@ -124,33 +123,28 @@ function TextInput({
   );
 }
 
-function TeamSelect({
+function TeamListInput({
   label,
+  hint,
   value,
-  teams,
   onChange,
 }: {
   label: string;
+  hint: string;
   value: string;
-  teams: { code: string; name: string }[];
   onChange: (v: string) => void;
 }) {
   return (
     <div>
       <label className="block text-sm text-pitch-300 mb-2">{label}</label>
-      <div className="flex items-center gap-2">
-        {value && <TeamFlag code={value} size={22} />}
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="flex-1 px-3 py-2 bg-pitch-950 border border-pitch-700 rounded-xl text-sm"
-        >
-          <option value="">— Sense definir —</option>
-          {teams.map((t) => (
-            <option key={t.code} value={t.code}>{t.name}</option>
-          ))}
-        </select>
-      </div>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full px-4 py-2 bg-pitch-950 border border-pitch-700 rounded-xl text-sm"
+        placeholder="COL, JPN"
+      />
+      <p className="text-[10px] text-pitch-500 mt-1">{hint}</p>
     </div>
   );
 }

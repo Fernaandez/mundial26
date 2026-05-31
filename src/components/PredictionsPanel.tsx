@@ -18,8 +18,10 @@ import {
   computeAllPredictedStandings,
 } from "@/lib/standings";
 import { BestThirdsPanel } from "@/components/BestThirdsPanel";
+import { PredictionBracket } from "@/components/PredictionBracket";
+import { DEFAULT_MUNDIAL_FIELDS } from "@/lib/mundial";
 
-type MainSection = "groups" | "knockout" | "mundial";
+type MainSection = "groups" | "knockout" | "bracket" | "mundial";
 
 const MUNDIAL_FIELDS: (keyof Omit<SpecialPredictions, "groups">)[] = [
   "topScorer", "topAssists", "mvp", "youngMvp", "goldenGlove",
@@ -43,9 +45,11 @@ export interface PredictionsPanelProps {
   groups: Group[];
   predictions: Record<string, { home: number; away: number }>;
   special?: SpecialPredictions;
+  bracketPicks?: Record<string, string>;
   windows?: PredictionWindows;
   onPredictionChange?: (matchId: string, home: number, away: number) => void;
   onSpecialChange?: (special: SpecialPredictions) => void;
+  onBracketChange?: (picks: Record<string, string>) => void;
   onSave?: () => void;
   saving?: boolean;
   saved?: boolean;
@@ -61,9 +65,11 @@ export function PredictionsPanel({
   groups,
   predictions,
   special,
+  bracketPicks = {},
   windows = { groupsLocked: false, knockoutOpen: false },
   onPredictionChange,
   onSpecialChange,
+  onBracketChange,
   onSave,
   saving = false,
   saved = false,
@@ -83,6 +89,7 @@ export function PredictionsPanel({
   const knockoutMatchIds = matches.filter((m) => KNOCKOUT_PHASE_LIST.includes(m.phase)).map((m) => m.id);
   const groupPredicted = groupMatchIds.filter((id) => predictions[id]).length;
   const knockoutPredicted = knockoutMatchIds.filter((id) => predictions[id]).length;
+  const bracketFilled = Object.keys(bracketPicks).length;
   const mundialFilled = countMundialFilled(special);
 
   const phaseMatches = matches.filter((m) => m.phase === activePhase);
@@ -95,15 +102,27 @@ export function PredictionsPanel({
     !readOnly && (
       mainSection === "groups" ? groupsEditable :
       mainSection === "knockout" ? knockoutEditable :
+      mainSection === "bracket" ? knockoutEditable :
       specialEditable
     );
 
   const sectionLabel =
     mainSection === "groups" ? `${groupPredicted}/${groupMatchIds.length} partits` :
-    mainSection === "knockout" ? `${knockoutPredicted}/${knockoutMatchIds.length} partits` :
+    mainSection === "knockout" ? `${knockoutPredicted}/${knockoutMatchIds.length} marcadors` :
+    mainSection === "bracket" ? `${bracketFilled} classificats` :
     `${mundialFilled}/${MUNDIAL_FIELDS.length} prediccions`;
 
   const noopChange = () => {};
+
+  function handleBracketPick(matchId: string, teamCode: string) {
+    const next = { ...bracketPicks, [matchId]: teamCode };
+    onBracketChange?.(next);
+    if (onSpecialChange && special) {
+      const base = { ...DEFAULT_MUNDIAL_FIELDS, ...special, groups: special.groups ?? [] };
+      if (matchId === "final") onSpecialChange({ ...base, champion: teamCode });
+      else if (matchId === "third") onSpecialChange({ ...base, thirdPlace: teamCode });
+    }
+  }
 
   return (
     <>
@@ -143,7 +162,7 @@ export function PredictionsPanel({
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-2 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
         <SectionTab
           active={mainSection === "groups"}
           onClick={() => setMainSection("groups")}
@@ -153,8 +172,15 @@ export function PredictionsPanel({
         <SectionTab
           active={mainSection === "knockout"}
           onClick={() => { setMainSection("knockout"); setActivePhase("round32"); }}
-          title="Elim."
+          title="Marcadors"
           subtitle={`${knockoutPredicted}/${knockoutMatchIds.length}`}
+          locked={!readOnly && !knockoutEditable}
+        />
+        <SectionTab
+          active={mainSection === "bracket"}
+          onClick={() => setMainSection("bracket")}
+          title="Quadre"
+          subtitle={`${bracketFilled} tries`}
           locked={!readOnly && !knockoutEditable}
         />
         <SectionTab
@@ -216,6 +242,12 @@ export function PredictionsPanel({
             </div>
           ) : (
             <>
+              {!readOnly && (
+                <p className="text-sm text-pitch-400 mb-4">
+                  Marcadors exactes abans de cada eliminatòria — sumen punts de resultat (1/X/2 i exacte).
+                  Qui passa de ronda es tria al <strong className="text-pitch-200">Quadre</strong>.
+                </p>
+              )}
               <PhaseTabs phases={KNOCKOUT_PHASE_LIST} active={activePhase} onChange={setActivePhase} />
               <div>
                 <h2 className="font-display text-xl sm:text-2xl text-pitch-400 mb-4">{PHASE_LABELS[activePhase]}</h2>
@@ -235,6 +267,28 @@ export function PredictionsPanel({
                 )}
               </div>
             </>
+          )}
+        </>
+      )}
+
+      {mainSection === "bracket" && (
+        <>
+          {!showKnockout ? (
+            <div className="card-glass rounded-2xl p-8 text-center">
+              <div className="text-4xl mb-4">🔒</div>
+              <h2 className="font-display text-2xl text-pitch-300 mb-3">Quadre encara tancat</h2>
+              <p className="text-pitch-400 text-sm max-w-md mx-auto">
+                Quan l&apos;admin obri eliminatòries podràs triar qui passa cada ronda.
+              </p>
+            </div>
+          ) : (
+            <PredictionBracket
+              matches={matches}
+              bracketPicks={bracketPicks}
+              onPick={handleBracketPick}
+              disabled={!knockoutEditable}
+              readOnly={readOnly}
+            />
           )}
         </>
       )}
