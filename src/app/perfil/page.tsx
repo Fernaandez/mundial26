@@ -78,6 +78,12 @@ export default function ProfilePage() {
           highlight
         />
         <ActionCard
+          emoji="👀"
+          title="Prediccions de la gent"
+          desc="Mira què han predit els altres participants"
+          href="/prediccions/altres"
+        />
+        <ActionCard
           emoji="🏟️"
           title="Torneig"
           desc="Classificacions de grups i quadre d'eliminatòries"

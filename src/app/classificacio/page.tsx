@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useState } from "react";
+import Link from "next/link";
 import { ScoreBreakdown } from "@/types";
 import { PHASE_LABELS } from "@/data/world-cup-2026";
 
@@ -75,7 +76,13 @@ export default function LeaderboardPage() {
             <div className="flex items-center gap-3">
               <span className="font-display text-2xl w-8 shrink-0">{i < 3 ? MEDALS[i] : i + 1}</span>
               <div className="flex-1 min-w-0">
-                <div className="font-semibold text-white truncate">{entry.name}</div>
+                <Link
+                  href={`/prediccions/altres?id=${entry.participantId}`}
+                  className="font-semibold text-white truncate block hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {entry.name}
+                </Link>
                 <div className="h-2 bg-pitch-900 rounded-full overflow-hidden mt-2">
                   <div
                     className="h-full bg-pitch-500 rounded-full"
@@ -122,7 +129,15 @@ export default function LeaderboardPage() {
                   <td className="py-4 px-4 font-display text-xl">
                     {i < 3 ? MEDALS[i] : i + 1}
                   </td>
-                  <td className="py-4 px-4 font-semibold text-white">{entry.name}</td>
+                  <td className="py-4 px-4 font-semibold text-white">
+                    <Link
+                      href={`/prediccions/altres?id=${entry.participantId}`}
+                      className="hover:text-pitch-300 hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {entry.name}
+                    </Link>
+                  </td>
                   <td className="py-4 px-4 text-right font-bold text-pitch-400 text-lg">{entry.total}</td>
                   <td className="py-4 px-4">
                     <div className="h-2 bg-pitch-900 rounded-full overflow-hidden">

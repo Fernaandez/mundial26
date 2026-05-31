@@ -87,12 +87,6 @@ export default function RulesPage() {
             <tr className="border-b border-pitch-800/50"><td className="py-3">Guant d&apos;or (porter)</td><td className="py-3 text-right font-bold text-gold-400">{s.goldenGlove} pts</td></tr>
             <tr className="border-b border-pitch-800/50"><td className="py-3">Selecció sorpresa</td><td className="py-3 text-right font-bold text-gold-400">{s.surpriseTeam} pts</td></tr>
             <tr className="border-b border-pitch-800/50"><td className="py-3">Primer favorit eliminat</td><td className="py-3 text-right font-bold text-gold-400">{s.firstEliminatedFavorite} pts</td></tr>
-            <tr className="border-b border-pitch-800/50"><td className="py-3">Total gols del torneig (exacte)</td><td className="py-3 text-right font-bold text-gold-400">{s.totalGoalsExact} pts</td></tr>
-            <tr className="border-b border-pitch-800/50"><td className="py-3">Total gols (±5 gols)</td><td className="py-3 text-right font-bold text-gold-400">{s.totalGoalsWithin5} pts</td></tr>
-            <tr className="border-b border-pitch-800/50"><td className="py-3">Targetes vermelles (exacte)</td><td className="py-3 text-right font-bold text-gold-400">{s.redCardsExact} pts</td></tr>
-            <tr className="border-b border-pitch-800/50"><td className="py-3">Targetes vermelles (±3)</td><td className="py-3 text-right font-bold text-gold-400">{s.redCardsWithin3} pts</td></tr>
-            <tr className="border-b border-pitch-800/50"><td className="py-3">Penals (exacte)</td><td className="py-3 text-right font-bold text-gold-400">{s.penaltyShootoutsExact} pts</td></tr>
-            <tr className="border-b border-pitch-800/50"><td className="py-3">Penals (±1)</td><td className="py-3 text-right font-bold text-gold-400">{s.penaltyShootoutsWithin1} pts</td></tr>
             <tr className="border-b border-pitch-800/50"><td className="py-3">Ordre exacte d&apos;un grup (dels teus marcadors)</td><td className="py-3 text-right font-bold text-gold-400">{s.groupExactOrder} pts/grup</td></tr>
             <tr className="border-b border-pitch-800/50"><td className="py-3">Equip al top 2 (per grup)</td><td className="py-3 text-right font-bold text-gold-400">{s.groupTopTwo} pts/equip</td></tr>
             <tr><td className="py-3">3r classificat passa (calculat automàtic)</td><td className="py-3 text-right font-bold text-gold-400">{s.groupThirdQualifies} pts/grup</td></tr>

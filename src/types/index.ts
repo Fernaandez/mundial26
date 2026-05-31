@@ -50,11 +50,8 @@ export interface SpecialPredictions {
   mvp: string;
   youngMvp: string;
   goldenGlove: string;
-  totalGoals: number;
   surpriseTeam: string;
   firstEliminatedFavorite: string;
-  redCardsTotal: number;
-  penaltyShootoutCount: number;
   groups: GroupStandingPrediction[];
 }
 

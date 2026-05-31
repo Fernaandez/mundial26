@@ -27,11 +27,8 @@ export interface SpecialActuals {
   mvp?: string;
   youngMvp?: string;
   goldenGlove?: string;
-  totalGoals?: number;
   surpriseTeam?: string;
   firstEliminatedFavorite?: string;
-  redCardsTotal?: number;
-  penaltyShootoutCount?: number;
   groupStandings?: Record<string, { order: string[]; thirdQualifies: boolean }>;
 }
 

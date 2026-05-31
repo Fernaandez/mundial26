@@ -51,9 +51,6 @@ export const DEFAULT_MUNDIAL_FIELDS = {
   mvp: "",
   youngMvp: "",
   goldenGlove: "",
-  totalGoals: 150,
   surpriseTeam: "",
   firstEliminatedFavorite: "",
-  redCardsTotal: 20,
-  penaltyShootoutCount: 4,
 } as const;

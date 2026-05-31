@@ -59,11 +59,8 @@ function scoreSpecialPredictions(
     mvp?: string;
     youngMvp?: string;
     goldenGlove?: string;
-    totalGoals?: number;
     surpriseTeam?: string;
     firstEliminatedFavorite?: string;
-    redCardsTotal?: number;
-    penaltyShootoutCount?: number;
     groupStandings?: Record<string, { order: string[]; thirdQualifies: boolean }>;
   }
 ): number {
@@ -86,23 +83,6 @@ function scoreSpecialPredictions(
   if (actuals.surpriseTeam && special.surpriseTeam === actuals.surpriseTeam) pts += r.surpriseTeam;
   if (actuals.firstEliminatedFavorite && special.firstEliminatedFavorite === actuals.firstEliminatedFavorite) {
     pts += r.firstEliminatedFavorite;
-  }
-
-  if (actuals.totalGoals !== undefined) {
-    if (special.totalGoals === actuals.totalGoals) pts += r.totalGoalsExact;
-    else if (Math.abs(special.totalGoals - actuals.totalGoals) <= 5) pts += r.totalGoalsWithin5;
-  }
-
-  if (actuals.redCardsTotal !== undefined) {
-    if (special.redCardsTotal === actuals.redCardsTotal) pts += r.redCardsExact;
-    else if (Math.abs(special.redCardsTotal - actuals.redCardsTotal) <= 3) pts += r.redCardsWithin3;
-  }
-
-  if (actuals.penaltyShootoutCount !== undefined) {
-    if (special.penaltyShootoutCount === actuals.penaltyShootoutCount) pts += r.penaltyShootoutsExact;
-    else if (Math.abs(special.penaltyShootoutCount - actuals.penaltyShootoutCount) <= 1) {
-      pts += r.penaltyShootoutsWithin1;
-    }
   }
 
   for (const gp of special.groups) {
