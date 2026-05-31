@@ -155,7 +155,7 @@ function BracketMatchPick({
             value={picked ?? ""}
             onChange={(e) => e.target.value && onPick(e.target.value)}
             disabled={disabled}
-            className="w-full min-w-0 px-1 py-1.5 bg-pitch-950 border border-pitch-700 rounded-lg text-[10px] sm:text-xs truncate"
+            className="w-full max-w-full min-w-0 box-border px-1 py-1.5 bg-pitch-950 border border-pitch-700 rounded-lg text-[10px] sm:text-xs"
             aria-label={`Guanyador ${match.label ?? match.id}`}
           >
             <option value="">— Tria —</option>
