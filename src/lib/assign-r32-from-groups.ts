@@ -45,6 +45,8 @@ function thirdTeamCode(
   return team?.code ?? null;
 }
 
+const ALL_GROUP_IDS = "ABCDEFGHIJKL".split("");
+
 function resolveThirdSlots(
   standings: GroupStanding[]
 ): Record<ThirdSlotKey, string> | null {
@@ -52,17 +54,23 @@ function resolveThirdSlots(
   if (!allComplete) return null;
 
   const bestThirds = computeBestThirdsRanking(standings, { requireComplete: true });
-  const qualifying = bestThirds.filter((e) => e.qualifies).map((e) => e.groupId);
-  if (qualifying.length !== 8) return null;
+  const qualifying = new Set(
+    bestThirds.filter((e) => e.qualifies).map((e) => e.groupId)
+  );
+  if (qualifying.size !== 8) return null;
 
-  const qualKey = [...qualifying].sort().join("");
+  // Annex C FIFA: clau = 4 grups el 3r del qual NO classifica
+  const qualKey = ALL_GROUP_IDS.filter((g) => !qualifying.has(g))
+    .sort()
+    .join("");
   const slots = COMBO_MAP.get(qualKey);
   if (!slots) return null;
 
+  const standingsByGroup = new Map(standings.map((s) => [s.groupId, s]));
   const result = {} as Record<ThirdSlotKey, string>;
   for (const key of Object.keys(slots) as ThirdSlotKey[]) {
     const groupId = slots[key];
-    const code = thirdTeamCode(new Map(standings.map((s) => [s.groupId, s])), groupId);
+    const code = thirdTeamCode(standingsByGroup, groupId);
     if (!code) return null;
     result[key] = code;
   }
