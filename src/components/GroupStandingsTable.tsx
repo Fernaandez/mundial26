@@ -89,7 +89,7 @@ function StandingRow({ team, compact }: { team: TeamStanding; compact?: boolean 
       </td>
       <td className="py-2">
         <div className="flex items-center gap-2 min-w-0">
-          <TeamFlag code={team.code} size={compact ? 18 : 22} />
+          <TeamFlag code={team.code} size={compact ? 22 : 28} />
           <span className="font-medium text-pitch-100 truncate max-w-[100px] sm:max-w-none">
             {info.name}
           </span>

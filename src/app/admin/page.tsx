@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Match, Group, Participant } from "@/types";
 import { getTeamInfo, getAllTeams } from "@/data/world-cup-2026";
 import { PredictionWindows } from "@/lib/phases";
-import { TeamFlag } from "@/components/TeamFlag";
 import { MatchScoreboard } from "@/components/MatchScoreboard";
 
 export default function AdminPage() {

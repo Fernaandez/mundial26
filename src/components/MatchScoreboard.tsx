@@ -107,7 +107,7 @@ function TeamLine({
   large?: boolean;
 }) {
   const isTbd = code === "TBD";
-  const flagSize = compact ? 18 : large ? 32 : 22;
+  const flagSize = compact ? 22 : large ? 36 : 28;
 
   return (
     <div

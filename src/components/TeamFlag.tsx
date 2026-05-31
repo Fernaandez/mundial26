@@ -1,4 +1,4 @@
-import { getTeamIso, getFlagUrl } from "@/lib/flags";
+import { getTeamIso } from "@/lib/flags";
 
 interface TeamFlagProps {
   code: string;
@@ -6,14 +6,14 @@ interface TeamFlagProps {
   className?: string;
 }
 
-export function TeamFlag({ code, size = 24, className = "" }: TeamFlagProps) {
+export function TeamFlag({ code, size = 28, className = "" }: TeamFlagProps) {
   const iso = getTeamIso(code);
 
   if (!iso) {
     return (
       <span
-        className={`inline-flex items-center justify-center rounded bg-pitch-800 text-pitch-400 text-xs font-bold shrink-0 ${className}`}
-        style={{ width: size, height: Math.round(size * 0.75) }}
+        className={`team-flag team-flag--empty ${className}`}
+        style={{ fontSize: size }}
         aria-hidden
       >
         ?
@@ -21,17 +21,11 @@ export function TeamFlag({ code, size = 24, className = "" }: TeamFlagProps) {
     );
   }
 
-  const height = Math.round(size * 0.75);
-
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={getFlagUrl(iso, size * 2)}
-      width={size}
-      height={height}
-      alt=""
-      className={`inline-block rounded-sm object-cover shrink-0 border border-pitch-700/50 ${className}`}
-      loading="lazy"
+    <span
+      className={`fi fi-${iso} team-flag ${className}`}
+      style={{ fontSize: size }}
+      aria-hidden
     />
   );
 }

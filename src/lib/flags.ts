@@ -1,4 +1,4 @@
-/** Codi FIFA → codi ISO per flagcdn.com */
+/** Codi FIFA → codi ISO per flag-icons (SVG locals) */
 const TEAM_ISO: Record<string, string> = {
   MEX: "mx",
   RSA: "za",
@@ -52,8 +52,4 @@ const TEAM_ISO: Record<string, string> = {
 
 export function getTeamIso(code: string): string | null {
   return TEAM_ISO[code] ?? null;
-}
-
-export function getFlagUrl(iso: string, width = 40): string {
-  return `https://flagcdn.com/w${width}/${iso}.png`;
 }
