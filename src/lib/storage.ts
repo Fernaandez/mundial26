@@ -12,6 +12,7 @@ import {
   isKnockoutPhase,
 } from "@/lib/phases";
 import { buildGroupPredictionsFromMatches } from "@/lib/standings";
+import { DEFAULT_MUNDIAL_FIELDS } from "@/lib/mundial";
 
 const ROW_ID = 1;
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -23,7 +24,14 @@ export interface SpecialActuals {
   thirdPlace?: string;
   topScorer?: string;
   topAssists?: string;
+  mvp?: string;
+  youngMvp?: string;
+  goldenGlove?: string;
   totalGoals?: number;
+  surpriseTeam?: string;
+  firstEliminatedFavorite?: string;
+  redCardsTotal?: number;
+  penaltyShootoutCount?: number;
   groupStandings?: Record<string, { order: string[]; thirdQualifies: boolean }>;
 }
 
@@ -295,12 +303,7 @@ export async function savePredictions(
   );
 
   const defaultSpecial: SpecialPredictions = {
-    champion: "",
-    runnerUp: "",
-    thirdPlace: "",
-    topScorer: "",
-    topAssists: "",
-    totalGoals: 150,
+    ...DEFAULT_MUNDIAL_FIELDS,
     groups: syncedGroups,
   };
 

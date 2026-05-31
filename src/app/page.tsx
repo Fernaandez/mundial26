@@ -65,7 +65,7 @@ export default function HomePage() {
             </li>
             <li className="flex gap-3">
               <span className="flex-shrink-0 w-8 h-8 rounded-full bg-pitch-700 flex items-center justify-center font-bold">3</span>
-              <span><strong className="text-white">Prediccions del Mundial</strong> — campió, golejador, assistències…</span>
+              <span><strong className="text-white">Prediccions del Mundial</strong> — MVP, golejador, assistent, sorpreses…</span>
             </li>
             <li className="flex gap-3">
               <span className="flex-shrink-0 w-8 h-8 rounded-full bg-pitch-700 flex items-center justify-center font-bold">4</span>
@@ -78,7 +78,7 @@ export default function HomePage() {
           <h2 className="font-display text-3xl text-gold-500 mb-4">FASES DEL TORNEIG</h2>
           <div className="space-y-3 text-pitch-200">
             <PhaseRow name="Fase de grups" desc="72 partits · classificació en viu" pts="4 pts max/partit" />
-            <PhaseRow name="Mundial (general)" desc="Campió, golejador, assistències, totals" pts="fins a 150+ pts" />
+            <PhaseRow name="Mundial (general)" desc="MVP, golejador, sorpreses, totals…" pts="fins a 150+ pts" />
             <PhaseRow name="16ens de final" desc="16 partits" pts="8 pts max/partit" />
             <PhaseRow name="8ens → Final" desc="15 partits eliminatoris" pts="8 pts max/partit" />
           </div>

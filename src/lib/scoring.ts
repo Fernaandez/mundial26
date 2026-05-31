@@ -6,6 +6,7 @@ import {
   SpecialPredictions,
 } from "@/types";
 import { SCORING_RULES } from "@/data/world-cup-2026";
+import { derivePodiumFromPredictions } from "@/lib/mundial";
 
 function getOutcome(h: number, a: number): "H" | "D" | "A" {
   if (h > a) return "H";
@@ -41,37 +42,71 @@ function scoreMatchPrediction(
   return 0;
 }
 
+function norm(s: string) {
+  return s.trim().toLowerCase();
+}
+
 function scoreSpecialPredictions(
   special: SpecialPredictions | undefined,
-  actualChampion: string | undefined,
-  actualRunnerUp: string | undefined,
-  actualThird: string | undefined,
-  actualTopScorer: string | undefined,
-  actualTopAssists: string | undefined,
-  actualTotalGoals: number | undefined,
-  actualGroupStandings: Record<string, { order: string[]; thirdQualifies: boolean }>
+  matches: Match[],
+  matchPredictions: Record<string, ScorePrediction>,
+  actuals: {
+    champion?: string;
+    runnerUp?: string;
+    thirdPlace?: string;
+    topScorer?: string;
+    topAssists?: string;
+    mvp?: string;
+    youngMvp?: string;
+    goldenGlove?: string;
+    totalGoals?: number;
+    surpriseTeam?: string;
+    firstEliminatedFavorite?: string;
+    redCardsTotal?: number;
+    penaltyShootoutCount?: number;
+    groupStandings?: Record<string, { order: string[]; thirdQualifies: boolean }>;
+  }
 ): number {
   if (!special) return 0;
 
   let pts = 0;
   const r = SCORING_RULES.special;
 
-  if (actualChampion && special.champion === actualChampion) pts += r.champion;
-  if (actualRunnerUp && special.runnerUp === actualRunnerUp) pts += r.runnerUp;
-  if (actualThird && special.thirdPlace === actualThird) pts += r.thirdPlace;
-  if (actualTopScorer && special.topScorer === actualTopScorer) pts += r.topScorer;
-  if (actualTopAssists && special.topAssists && special.topAssists === actualTopAssists) pts += r.topAssists;
+  const podium = derivePodiumFromPredictions(matches, matchPredictions);
+  if (actuals.champion && podium.champion && podium.champion === actuals.champion) pts += r.champion;
+  if (actuals.runnerUp && podium.runnerUp && podium.runnerUp === actuals.runnerUp) pts += r.runnerUp;
+  if (actuals.thirdPlace && podium.thirdPlace && podium.thirdPlace === actuals.thirdPlace) pts += r.thirdPlace;
 
-  if (actualTotalGoals !== undefined) {
-    if (special.totalGoals === actualTotalGoals) {
-      pts += r.totalGoalsExact;
-    } else if (Math.abs(special.totalGoals - actualTotalGoals) <= 5) {
-      pts += r.totalGoalsWithin5;
+  if (actuals.topScorer && norm(special.topScorer) === norm(actuals.topScorer)) pts += r.topScorer;
+  if (actuals.topAssists && special.topAssists && norm(special.topAssists) === norm(actuals.topAssists)) pts += r.topAssists;
+  if (actuals.mvp && special.mvp && norm(special.mvp) === norm(actuals.mvp)) pts += r.mvp;
+  if (actuals.youngMvp && special.youngMvp && norm(special.youngMvp) === norm(actuals.youngMvp)) pts += r.youngMvp;
+  if (actuals.goldenGlove && special.goldenGlove && norm(special.goldenGlove) === norm(actuals.goldenGlove)) pts += r.goldenGlove;
+
+  if (actuals.surpriseTeam && special.surpriseTeam === actuals.surpriseTeam) pts += r.surpriseTeam;
+  if (actuals.firstEliminatedFavorite && special.firstEliminatedFavorite === actuals.firstEliminatedFavorite) {
+    pts += r.firstEliminatedFavorite;
+  }
+
+  if (actuals.totalGoals !== undefined) {
+    if (special.totalGoals === actuals.totalGoals) pts += r.totalGoalsExact;
+    else if (Math.abs(special.totalGoals - actuals.totalGoals) <= 5) pts += r.totalGoalsWithin5;
+  }
+
+  if (actuals.redCardsTotal !== undefined) {
+    if (special.redCardsTotal === actuals.redCardsTotal) pts += r.redCardsExact;
+    else if (Math.abs(special.redCardsTotal - actuals.redCardsTotal) <= 3) pts += r.redCardsWithin3;
+  }
+
+  if (actuals.penaltyShootoutCount !== undefined) {
+    if (special.penaltyShootoutCount === actuals.penaltyShootoutCount) pts += r.penaltyShootoutsExact;
+    else if (Math.abs(special.penaltyShootoutCount - actuals.penaltyShootoutCount) <= 1) {
+      pts += r.penaltyShootoutsWithin1;
     }
   }
 
   for (const gp of special.groups) {
-    const actual = actualGroupStandings[gp.groupId];
+    const actual = actuals.groupStandings?.[gp.groupId];
     if (!actual) continue;
 
     const predOrder = gp.positions.join(",");
@@ -94,18 +129,12 @@ function scoreSpecialPredictions(
   return pts;
 }
 
+export type SpecialActuals = Parameters<typeof scoreSpecialPredictions>[3];
+
 export function calculateParticipantScore(
   participant: Participant,
   matches: Match[],
-  specialActuals?: {
-    champion?: string;
-    runnerUp?: string;
-    thirdPlace?: string;
-    topScorer?: string;
-    topAssists?: string;
-    totalGoals?: number;
-    groupStandings?: Record<string, { order: string[]; thirdQualifies: boolean }>;
-  }
+  specialActuals?: SpecialActuals
 ): { total: number; breakdown: ScoreBreakdown } {
   const breakdown: ScoreBreakdown = {
     special: 0,
@@ -136,13 +165,9 @@ export function calculateParticipantScore(
 
   breakdown.special = scoreSpecialPredictions(
     participant.special,
-    specialActuals?.champion,
-    specialActuals?.runnerUp,
-    specialActuals?.thirdPlace,
-    specialActuals?.topScorer,
-    specialActuals?.topAssists,
-    specialActuals?.totalGoals,
-    specialActuals?.groupStandings ?? {}
+    matches,
+    participant.matches,
+    specialActuals ?? {}
   );
 
   const total = Object.values(breakdown).reduce((a, b) => a + b, 0);
@@ -152,7 +177,7 @@ export function calculateParticipantScore(
 export function calculateAllScores(
   participants: Participant[],
   matches: Match[],
-  specialActuals?: Parameters<typeof calculateParticipantScore>[2]
+  specialActuals?: SpecialActuals
 ) {
   return participants
     .map((p) => {
@@ -176,4 +201,4 @@ export function calculatePrizes(
   };
 }
 
-export { scoreMatchPrediction, getOutcome };
+export { scoreMatchPrediction, getOutcome, derivePodiumFromPredictions };

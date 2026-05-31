@@ -7,6 +7,7 @@ import { TeamFlag } from "@/components/TeamFlag";
 import { MatchScoreboard } from "@/components/MatchScoreboard";
 import { GroupStandingsTable } from "@/components/GroupStandingsTable";
 import { computeGroupStanding, computeGroupStandingFromPredictions, computeThirdQualifierGroups } from "@/lib/standings";
+import { derivePodiumFromPredictions, DEFAULT_MUNDIAL_FIELDS } from "@/lib/mundial";
 import { isMatchFinished } from "@/lib/knockout";
 
 interface MatchCardProps {
@@ -262,25 +263,29 @@ export function PhaseTabs({ phases, active, onChange }: PhaseTabsProps) {
 interface MundialFormProps {
   special?: SpecialPredictions;
   allTeams: { code: string; name: string; iso: string }[];
+  matches: Match[];
+  predictions: Record<string, { home: number; away: number }>;
   onChange: (special: SpecialPredictions) => void;
   disabled?: boolean;
   groups: Group[];
 }
 
-export function MundialForm({ special, allTeams, onChange, disabled, groups }: MundialFormProps) {
-  const current: SpecialPredictions = special ?? {
-    champion: "",
-    runnerUp: "",
-    thirdPlace: "",
-    topScorer: "",
-    topAssists: "",
-    totalGoals: 150,
-    groups: groups.map((g) => ({
-      groupId: g.id,
-      positions: [g.teams[0].code, g.teams[1].code, g.teams[2].code, g.teams[3].code] as [string, string, string, string],
-      thirdQualifies: false,
-    })),
+function emptyGroups(groups: Group[]) {
+  return groups.map((g) => ({
+    groupId: g.id,
+    positions: [g.teams[0].code, g.teams[1].code, g.teams[2].code, g.teams[3].code] as [string, string, string, string],
+    thirdQualifies: false,
+  }));
+}
+
+export function MundialForm({ special, allTeams, matches, predictions, onChange, disabled, groups }: MundialFormProps) {
+  const current: SpecialPredictions = {
+    ...DEFAULT_MUNDIAL_FIELDS,
+    ...special,
+    groups: special?.groups ?? emptyGroups(groups),
   };
+
+  const podium = derivePodiumFromPredictions(matches, predictions);
 
   function update(field: keyof Omit<SpecialPredictions, "groups">, value: string | number) {
     onChange({ ...current, [field]: value });
@@ -290,59 +295,116 @@ export function MundialForm({ special, allTeams, onChange, disabled, groups }: M
     <div className="space-y-6 sm:space-y-8">
       <div className="card-glass rounded-xl p-4 border border-gold-500/20">
         <p className="text-sm text-pitch-300">
-          Prediccions generals de tot el Mundial — campió, golejadors i totals. Independent de la fase de grups.
+          Prediccions generals del torneig. El <strong className="text-gold-400">podi final</strong> (campió, subcampió, 3r)
+          es calcula sol quan prediu la final i el partit del 3r lloc a Eliminatòries.
         </p>
       </div>
 
+      {(podium.champion || podium.runnerUp || podium.thirdPlace) && (
+        <div className="card-glass rounded-2xl p-4 sm:p-6 border border-pitch-600/30">
+          <h3 className="font-display text-lg text-pitch-400 mb-3">PODI (de les teves eliminatòries)</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+            <PodiumPreview label="🏆 Campió" code={podium.champion} />
+            <PodiumPreview label="🥈 Subcampió" code={podium.runnerUp} />
+            <PodiumPreview label="🥉 3r lloc" code={podium.thirdPlace} />
+          </div>
+        </div>
+      )}
+
       <div className="card-glass rounded-2xl p-4 sm:p-6">
-        <h3 className="font-display text-xl sm:text-2xl text-gold-500 mb-4">PODI FINAL</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <SelectTeam label="🏆 Campió" value={current.champion} teams={allTeams} onChange={(v) => update("champion", v)} disabled={disabled} />
-          <SelectTeam label="🥈 Subcampió" value={current.runnerUp} teams={allTeams} onChange={(v) => update("runnerUp", v)} disabled={disabled} />
-          <SelectTeam label="🥉 3r lloc" value={current.thirdPlace} teams={allTeams} onChange={(v) => update("thirdPlace", v)} disabled={disabled} />
+        <h3 className="font-display text-xl sm:text-2xl text-gold-500 mb-4">MVP I JUGADORS</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <TextField label="⭐ MVP del Mundial" value={current.mvp} onChange={(v) => update("mvp", v)} disabled={disabled} placeholder="Nom del jugador" />
+          <TextField label="🌟 MVP jove (millor jove)" value={current.youngMvp} onChange={(v) => update("youngMvp", v)} disabled={disabled} placeholder="Nom del jugador" />
+          <TextField label="⚽ Màxim golejador" value={current.topScorer} onChange={(v) => update("topScorer", v)} disabled={disabled} placeholder="Nom del jugador" />
+          <TextField label="🎯 Màxim assistent" value={current.topAssists} onChange={(v) => update("topAssists", v)} disabled={disabled} placeholder="Nom del jugador" />
+          <TextField label="🧤 Guant d'or (porter)" value={current.goldenGlove} onChange={(v) => update("goldenGlove", v)} disabled={disabled} placeholder="Nom del porter" />
         </div>
       </div>
 
       <div className="card-glass rounded-2xl p-4 sm:p-6">
-        <h3 className="font-display text-xl sm:text-2xl text-gold-500 mb-4">JUGADORS I GOLS</h3>
+        <h3 className="font-display text-xl sm:text-2xl text-gold-500 mb-4">SELECCIONS I CURIOSITATS</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm text-pitch-300 mb-2">Màxim golejador</label>
-            <input
-              type="text"
-              value={current.topScorer}
-              onChange={(e) => update("topScorer", e.target.value)}
-              disabled={disabled}
-              placeholder="Nom del jugador"
-              className="input-field"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-pitch-300 mb-2">Màxim assistent</label>
-            <input
-              type="text"
-              value={current.topAssists ?? ""}
-              onChange={(e) => update("topAssists", e.target.value)}
-              disabled={disabled}
-              placeholder="Nom del jugador"
-              className="input-field"
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <label className="block text-sm text-pitch-300 mb-2">Total gols del torneig</label>
-            <input
-              type="number"
-              inputMode="numeric"
-              min={0}
-              max={500}
-              value={current.totalGoals}
-              onChange={(e) => update("totalGoals", parseInt(e.target.value) || 0)}
-              disabled={disabled}
-              className="input-field"
-            />
-          </div>
+          <SelectTeam label="🎲 Selecció sorpresa" value={current.surpriseTeam} teams={allTeams} onChange={(v) => update("surpriseTeam", v)} disabled={disabled} />
+          <SelectTeam label="💥 Primer favorit eliminat" value={current.firstEliminatedFavorite} teams={allTeams} onChange={(v) => update("firstEliminatedFavorite", v)} disabled={disabled} />
+          <NumberField label="Total gols del torneig" value={current.totalGoals} onChange={(v) => update("totalGoals", v)} disabled={disabled} min={0} max={500} />
+          <NumberField label="Total targetes vermelles" value={current.redCardsTotal} onChange={(v) => update("redCardsTotal", v)} disabled={disabled} min={0} max={200} />
+          <NumberField label="Partits decidits als penals" value={current.penaltyShootoutCount} onChange={(v) => update("penaltyShootoutCount", v)} disabled={disabled} min={0} max={30} />
         </div>
       </div>
+    </div>
+  );
+}
+
+function PodiumPreview({ label, code }: { label: string; code: string }) {
+  const info = code ? getTeamInfo(code) : null;
+  return (
+    <div className="flex items-center gap-2 bg-pitch-950/50 rounded-xl p-3">
+      {code && <TeamFlag code={code} size={20} />}
+      <div>
+        <div className="text-pitch-500 text-xs">{label}</div>
+        <div className="text-pitch-100 font-medium">{info?.name ?? "—"}</div>
+      </div>
+    </div>
+  );
+}
+
+function TextField({
+  label,
+  value,
+  onChange,
+  disabled,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  disabled?: boolean;
+  placeholder?: string;
+}) {
+  return (
+    <div>
+      <label className="block text-sm text-pitch-300 mb-2">{label}</label>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        placeholder={placeholder}
+        className="input-field"
+      />
+    </div>
+  );
+}
+
+function NumberField({
+  label,
+  value,
+  onChange,
+  disabled,
+  min,
+  max,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  disabled?: boolean;
+  min?: number;
+  max?: number;
+}) {
+  return (
+    <div>
+      <label className="block text-sm text-pitch-300 mb-2">{label}</label>
+      <input
+        type="number"
+        inputMode="numeric"
+        min={min}
+        max={max}
+        value={value}
+        onChange={(e) => onChange(parseInt(e.target.value) || 0)}
+        disabled={disabled}
+        className="input-field"
+      />
     </div>
   );
 }

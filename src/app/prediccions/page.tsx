@@ -123,13 +123,14 @@ export default function PredictionsPage() {
 
   const phaseMatches = matches.filter((m) => m.phase === activePhase);
 
-  const mundialFilled = [
-    special?.champion,
-    special?.runnerUp,
-    special?.thirdPlace,
-    special?.topScorer,
-    special?.topAssists,
-  ].filter(Boolean).length;
+  const mundialFields: (keyof Omit<SpecialPredictions, "groups">)[] = [
+    "topScorer", "topAssists", "mvp", "youngMvp", "goldenGlove",
+    "surpriseTeam", "firstEliminatedFavorite",
+  ];
+  const mundialFilled = mundialFields.filter((k) => {
+    const v = special?.[k];
+    return typeof v === "string" ? v.trim() !== "" : false;
+  }).length;
 
   const canSave =
     mainSection === "groups" ? groupsEditable :
@@ -139,7 +140,7 @@ export default function PredictionsPage() {
   const sectionLabel =
     mainSection === "groups" ? `${groupPredicted}/${groupMatchIds.length} partits` :
     mainSection === "knockout" ? `${knockoutPredicted}/${knockoutMatchIds.length} partits` :
-    `${mundialFilled}/5 prediccions`;
+    `${mundialFilled}/${mundialFields.length} prediccions`;
 
   return (
     <div className="max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-28 md:pb-8">
@@ -199,7 +200,7 @@ export default function PredictionsPage() {
         >
           <div className="font-display text-base sm:text-lg">Mundial</div>
           <div className="text-[10px] sm:text-xs opacity-80 mt-1">
-            Campió, gols… · {mundialFilled}/5
+            Campió, MVP… · {mundialFilled}/{mundialFields.length}
           </div>
         </button>
       </div>
@@ -271,6 +272,8 @@ export default function PredictionsPage() {
       {mainSection === "mundial" && (
         <MundialForm
           groups={groups}
+          matches={matches}
+          predictions={predictions}
           special={special}
           allTeams={getAllTeams()}
           onChange={(s) => { setSpecial(s); setSaved(false); }}
