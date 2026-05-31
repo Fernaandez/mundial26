@@ -2,6 +2,7 @@
 
 import { Match } from "@/types";
 import { MatchScoreboard } from "@/components/MatchScoreboard";
+import { MatchKickoff } from "@/components/MatchKickoff";
 import { getBracketRounds, isMatchFinished, matchesByIdMap } from "@/lib/knockout";
 
 interface KnockoutBracketProps {
@@ -38,6 +39,7 @@ export function KnockoutBracket({ matches }: KnockoutBracketProps) {
                       finished ? "bracket-match-done" : ""
                     } ${round.phase === "final" ? "bracket-match-final" : ""}`}
                   >
+                    <MatchKickoff match={match} className="mb-2" compact />
                     <MatchScoreboard match={match} variant="bracket" />
                   </div>
                 );

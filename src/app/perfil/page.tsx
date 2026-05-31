@@ -84,6 +84,12 @@ export default function ProfilePage() {
           href="/prediccions/altres"
         />
         <ActionCard
+          emoji="📅"
+          title="Calendari"
+          desc="Horaris de tots els partits (grups a final)"
+          href="/calendari"
+        />
+        <ActionCard
           emoji="🏟️"
           title="Torneig"
           desc="Classificacions de grups i quadre d'eliminatòries"

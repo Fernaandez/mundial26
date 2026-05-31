@@ -4,6 +4,7 @@ import { Match, Group, SpecialPredictions, Phase } from "@/types";
 import { getTeamInfo } from "@/data/world-cup-2026";
 import { PHASE_LABELS } from "@/data/world-cup-2026";
 import { TeamFlag } from "@/components/TeamFlag";
+import { MatchKickoff } from "@/components/MatchKickoff";
 import { MatchScoreboard } from "@/components/MatchScoreboard";
 import { GroupStandingsTable } from "@/components/GroupStandingsTable";
 import { computeGroupStanding, computeGroupStandingFromPredictions, computeThirdQualifierGroups } from "@/lib/standings";
@@ -25,6 +26,7 @@ export function MatchCard({ match, prediction, onChange, disabled }: MatchCardPr
 
   return (
     <div className={`card-glass rounded-xl p-3 sm:p-4 ${locked && !finished ? "opacity-60" : ""}`}>
+      <MatchKickoff match={match} className="mb-2" />
       {match.label && (
         <div className="text-xs text-pitch-500 mb-2 uppercase tracking-wider truncate">{match.label}</div>
       )}

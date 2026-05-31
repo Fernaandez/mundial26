@@ -28,7 +28,9 @@ export interface Match {
   awayTeam: string;
   homeScore?: number;
   awayScore?: number;
+  /** Hora d'inici ISO 8601 */
   date?: string;
+  city?: string;
   locked: boolean;
   label?: string;
 }

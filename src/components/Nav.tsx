@@ -13,6 +13,7 @@ export function Nav() {
 
   const publicLinks = [
     { href: "/", label: "Inici" },
+    { href: "/calendari", label: "Calendari" },
     { href: "/torneig", label: "Torneig" },
     { href: "/classificacio", label: "Classificació" },
     { href: "/regles", label: "Regles" },
@@ -22,6 +23,7 @@ export function Nav() {
     { href: "/perfil", label: "Perfil" },
     { href: "/prediccions", label: "Prediccions" },
     { href: "/prediccions/altres", label: "La gent" },
+    { href: "/calendari", label: "Calendari" },
     { href: "/torneig", label: "Torneig" },
     { href: "/classificacio", label: "Classificació" },
     { href: "/regles", label: "Regles" },

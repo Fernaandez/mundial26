@@ -1,6 +1,7 @@
 import { Match } from "@/types";
 import { getTeamInfo } from "@/data/world-cup-2026";
 import { TeamFlag } from "@/components/TeamFlag";
+import { MatchKickoff } from "@/components/MatchKickoff";
 import { getMatchWinner, isMatchFinished } from "@/lib/knockout";
 
 interface MatchScoreboardProps {
@@ -33,6 +34,7 @@ export function MatchScoreboard({
           {match.label}
         </div>
       )}
+      {!isBracket && <MatchKickoff match={match} className="mb-2" compact={isCompact} />}
 
       <TeamLine
         code={home.code}

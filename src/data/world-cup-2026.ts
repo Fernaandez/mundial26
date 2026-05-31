@@ -1,5 +1,6 @@
 import { Group, Match, Phase } from "@/types";
 import { getTeamIso } from "@/lib/flags";
+import { applyScheduleToMatches } from "@/data/match-schedule";
 
 const TEAMS: Record<string, { name: string }> = {
   MEX: { name: "Mèxic" },
@@ -122,7 +123,7 @@ export const KNOCKOUT_MATCHES: Match[] = [
   ko("final", "final", "TBD", "TBD", "Final"),
 ];
 
-export const ALL_MATCHES = [...GROUP_MATCHES, ...KNOCKOUT_MATCHES];
+export const ALL_MATCHES = applyScheduleToMatches([...GROUP_MATCHES, ...KNOCKOUT_MATCHES]);
 
 export const KNOCKOUT_ROUNDS = [
   { phase: "round32" as Phase, name: "16ens de final", matchIds: KNOCKOUT_MATCHES.filter((m) => m.phase === "round32").map((m) => m.id) },
