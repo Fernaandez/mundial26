@@ -41,11 +41,6 @@ export function MatchScoreboard({
 
   return (
     <div className={isBracket ? "bracket-match-inner" : ""}>
-      {match.label && isBracket && (
-        <div className="text-[9px] text-pitch-500 uppercase tracking-wider mb-1 truncate hidden md:block">
-          {match.label}
-        </div>
-      )}
       {!isBracket && showKickoff && (
         <MatchKickoff match={match} className="mb-2" compact={isCompact} />
       )}

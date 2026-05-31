@@ -6,6 +6,7 @@ import { TeamFlag } from "@/components/TeamFlag";
 import { getBracketRounds, matchesByIdMap } from "@/lib/knockout";
 import { countExpectedBracketPicks } from "@/lib/knockout-advancement";
 import { getRealKnockoutMatchesForBracket } from "@/lib/predicted-bracket";
+import { PHASE_SHORT } from "@/data/phase-labels";
 import { BracketLayout } from "@/components/BracketLayout";
 import { BracketRoundMatches } from "@/components/BracketRoundMatches";
 
@@ -57,7 +58,7 @@ export function PredictionBracket({
           return (
             <div key={round.phase} className="bracket-round">
               <div className="bracket-round-title gap-1">
-                <span className="leading-tight">{round.name}</span>
+                <span className="leading-tight">{PHASE_SHORT[round.phase] ?? round.name}</span>
                 {!roundOpen && !readOnly && <span className="text-xs opacity-70">🔒</span>}
               </div>
               <BracketRoundMatches
@@ -114,12 +115,6 @@ function BracketMatchPick({
         phase === "final" ? "bracket-match-final" : ""
       } ${picked ? "border border-gold-500/30" : ""}`}
     >
-      {match.label && (
-        <div className="text-[9px] sm:text-[10px] text-pitch-500 uppercase tracking-wider mb-1 truncate hidden sm:block">
-          {match.label}
-        </div>
-      )}
-
       {bothReady ? (
         <div className="space-y-1">
           <div className="flex items-center justify-center gap-1 sm:gap-1.5">

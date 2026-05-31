@@ -14,20 +14,24 @@ interface BracketRoundMatchesProps {
 export function BracketRoundMatches({ phase, matchIds, renderMatch }: BracketRoundMatchesProps) {
   if (phase === "round32") {
     return (
-      <div className="bracket-r32-halves">
-        <div className="bracket-r32-side">
-          {R32_LEFT_IDS.map((id) => renderMatch(id))}
-        </div>
-        <div className="bracket-r32-side">
-          {R32_RIGHT_IDS.map((id) => renderMatch(id))}
+      <div className="bracket-round-body">
+        <div className="bracket-r32-halves">
+          <div className="bracket-r32-side">
+            {R32_LEFT_IDS.map((id) => renderMatch(id))}
+          </div>
+          <div className="bracket-r32-side">
+            {R32_RIGHT_IDS.map((id) => renderMatch(id))}
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bracket-round-matches">
-      {matchIds.map((id) => renderMatch(id))}
+    <div className="bracket-round-body">
+      <div className="bracket-round-matches">
+        {matchIds.map((id) => renderMatch(id))}
+      </div>
     </div>
   );
 }
