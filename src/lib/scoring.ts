@@ -108,7 +108,9 @@ function scoreMundialFields(
     pts += r.goldenGlove;
   }
 
-  if (
+  if (actuals.surpriseTeam) {
+    if (special.surpriseTeam === actuals.surpriseTeam) pts += r.surpriseTeam;
+  } else if (
     special.surpriseTeam &&
     !isFifaTop10(special.surpriseTeam) &&
     surpriseTeamQualifies(special.surpriseTeam, matches)
@@ -116,12 +118,21 @@ function scoreMundialFields(
     pts += r.surpriseTeam;
   }
 
-  if (
+  if (actuals.disappointmentTeam) {
+    if (special.disappointmentTeam === actuals.disappointmentTeam) pts += r.disappointmentTeam;
+  } else if (
     special.disappointmentTeam &&
     isFifaTop10(special.disappointmentTeam) &&
     disappointmentTeamValid(special.disappointmentTeam, matches)
   ) {
     pts += r.disappointmentTeam;
+  }
+
+  if (actuals.champion && special.champion && special.champion === actuals.champion) {
+    pts += r.champion;
+  }
+  if (actuals.thirdPlace && special.thirdPlace && special.thirdPlace === actuals.thirdPlace) {
+    pts += r.thirdPlace;
   }
 
   return pts;

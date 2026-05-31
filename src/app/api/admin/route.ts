@@ -27,6 +27,7 @@ export async function GET(request: Request) {
     participants: data.participants,
     groups: data.tournament.groups,
     predictionWindows: getPredictionWindows(data),
+    specialActuals: data.specialActuals ?? {},
   });
 }
 

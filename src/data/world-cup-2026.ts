@@ -184,6 +184,8 @@ export const SCORING_RULES = {
     round16Finalist: 1,
     quarterFinalist: 5,
     semiFinalist: 10,
+    thirdPlace: 10,
+    champion: 20,
   },
 };
 

@@ -5,6 +5,8 @@ import { Match, Group, Participant } from "@/types";
 import { getTeamInfo, getAllTeams } from "@/data/world-cup-2026";
 import { PredictionWindows } from "@/lib/phases";
 import { MatchScoreboard } from "@/components/MatchScoreboard";
+import { AdminSpecialActualsForm } from "@/components/AdminSpecialActualsForm";
+import type { SpecialActualsInput } from "@/lib/scoring";
 
 export default function AdminPage() {
   const [pin, setPin] = useState("");
@@ -16,9 +18,10 @@ export default function AdminPage() {
     groupsLocked: false,
     knockoutOpen: true,
   });
-  const [tab, setTab] = useState<"fases" | "results" | "participants" | "knockout">("fases");
+  const [tab, setTab] = useState<"fases" | "results" | "participants" | "knockout" | "specials">("fases");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [specialActuals, setSpecialActuals] = useState<SpecialActualsInput>({});
 
   async function login(e: React.FormEvent) {
     e.preventDefault();
@@ -32,6 +35,7 @@ export default function AdminPage() {
     setMatches(data.matches);
     setParticipants(data.participants);
     setPredictionWindows(data.predictionWindows ?? { groupsLocked: false, knockoutOpen: false });
+    setSpecialActuals(data.specialActuals ?? {});
     setAuthenticated(true);
   }
 
@@ -210,6 +214,7 @@ export default function AdminPage() {
     results: "Resultats grups",
     participants: "Participants",
     knockout: "Eliminatòries",
+    specials: "Especials",
   };
 
   return (
@@ -229,7 +234,7 @@ export default function AdminPage() {
 
       <div className="phase-tabs-scroll -mx-3 px-3 sm:mx-0 sm:px-0 mb-8">
         <div className="flex gap-2 min-w-max sm:min-w-0 sm:flex-wrap">
-        {(["fases", "results", "participants", "knockout"] as const).map((t) => (
+        {(["fases", "results", "participants", "knockout", "specials"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -383,6 +388,21 @@ export default function AdminPage() {
           </table>
           </div>
         </div>
+      )}
+
+      {tab === "specials" && (
+        <AdminSpecialActualsForm
+          initial={specialActuals}
+          adminPin={pin}
+          onSaved={async () => {
+            setSuccess("Resultats especials actualitzats!");
+            const refresh = await fetch(`/api/admin?pin=${pin}`);
+            if (refresh.ok) {
+              const data = await refresh.json();
+              setSpecialActuals(data.specialActuals ?? {});
+            }
+          }}
+        />
       )}
 
       {tab === "knockout" && (

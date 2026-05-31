@@ -99,7 +99,7 @@ export function MatchScoreboard({
 
       {showPrediction && prediction && finished && (
         <div className="text-center text-[10px] text-pitch-500 mt-1.5 border-t border-pitch-800/50 pt-1.5">
-          Predicció: {prediction.home} - {prediction.away}
+          Predicció: {prediction.home} vs {prediction.away}
         </div>
       )}
     </div>
@@ -131,9 +131,11 @@ export function MatchFlagsLine({
     <div className="flex items-center justify-center gap-2 sm:gap-3">
       <span title={homeName}><TeamFlag code={homeCode} size={flagSize} /></span>
       {finished ? (
-        <span className="font-display text-lg sm:text-xl text-gold-400 tabular-nums">
-          {homeScore} - {awayScore}
-        </span>
+        <>
+          <span className="font-display text-lg sm:text-xl text-gold-400 tabular-nums">{homeScore}</span>
+          <span className="text-pitch-500 text-sm font-bold">vs</span>
+          <span className="font-display text-lg sm:text-xl text-gold-400 tabular-nums">{awayScore}</span>
+        </>
       ) : (
         <span className="text-pitch-500 text-sm font-bold">vs</span>
       )}
@@ -174,6 +176,7 @@ function InlineScoreLine({
         isLoser={awayWin}
         flagSize={flagSize}
         scoreClass={scoreClass}
+        side="home"
       />
       <span className="text-pitch-500 font-bold text-xs sm:text-sm shrink-0">vs</span>
       <FlagScore
@@ -184,6 +187,7 @@ function InlineScoreLine({
         isLoser={homeWin}
         flagSize={flagSize}
         scoreClass={scoreClass}
+        side="away"
       />
     </div>
   );
@@ -197,6 +201,7 @@ function FlagScore({
   isLoser,
   flagSize,
   scoreClass,
+  side = "home",
 }: {
   code: string;
   name: string;
@@ -205,8 +210,20 @@ function FlagScore({
   isLoser: boolean;
   flagSize: number;
   scoreClass: string;
+  side?: "home" | "away";
 }) {
   const isTbd = code === "TBD";
+
+  const flag = !isTbd ? (
+    <TeamFlag code={code} size={flagSize} />
+  ) : (
+    <span
+      className="inline-flex items-center justify-center rounded bg-pitch-800 text-pitch-500 text-[10px] shrink-0"
+      style={{ width: flagSize, height: Math.round(flagSize * 0.75) }}
+    >
+      ?
+    </span>
+  );
 
   return (
     <div
@@ -215,17 +232,17 @@ function FlagScore({
       }`}
       title={isTbd ? "Per definir" : name}
     >
-      {!isTbd ? (
-        <TeamFlag code={code} size={flagSize} />
+      {side === "home" ? (
+        <>
+          {flag}
+          <span className={scoreClass}>{score}</span>
+        </>
       ) : (
-        <span
-          className="inline-flex items-center justify-center rounded bg-pitch-800 text-pitch-500 text-[10px] shrink-0"
-          style={{ width: flagSize, height: Math.round(flagSize * 0.75) }}
-        >
-          ?
-        </span>
+        <>
+          <span className={scoreClass}>{score}</span>
+          {flag}
+        </>
       )}
-      <span className={scoreClass}>{score}</span>
     </div>
   );
 }

@@ -55,6 +55,8 @@ export const DEFAULT_MUNDIAL_FIELDS = {
   nonQualifyingThird: "",
   mostGroupGoals: "",
   mostGroupGoalsConceded: "",
+  champion: "",
+  thirdPlace: "",
 } as const;
 
 /** Compatibilitat amb dades antigues */

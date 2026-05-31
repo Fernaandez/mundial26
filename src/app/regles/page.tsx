@@ -72,6 +72,8 @@ export default function RulesPage() {
           ["Per equip encertat que classifica a vuitens (8ens)", `${s.round16Finalist} pt/equip`],
           ["Per equip encertat que classifica a quarts", `${s.quarterFinalist} pts/equip`],
           ["Per equip encertat que classifica a semis", `${s.semiFinalist} pts/equip`],
+          ["Encertar el 3r classificat", `${s.thirdPlace} pts`],
+          ["Encertar el campió", `${s.champion} pts`],
         ]} />
         <div className="mt-4 space-y-2 text-sm text-pitch-400">
           <p>{RULES_NOTES.youngPlayer}</p>

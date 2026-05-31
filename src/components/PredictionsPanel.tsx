@@ -25,6 +25,7 @@ const MUNDIAL_FIELDS: (keyof Omit<SpecialPredictions, "groups">)[] = [
   "topScorer", "topAssists", "mvp", "youngMvp", "goldenGlove",
   "surpriseTeam", "disappointmentTeam",
   "nonQualifyingThird", "mostGroupGoals", "mostGroupGoalsConceded",
+  "champion", "thirdPlace",
 ];
 
 function countMundialFilled(special?: SpecialPredictions) {

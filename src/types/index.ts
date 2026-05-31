@@ -60,6 +60,10 @@ export interface SpecialPredictions {
   mostGroupGoals: string;
   /** Selecció amb més gols encaixats a fase de grups */
   mostGroupGoalsConceded: string;
+  /** Campió del torneig */
+  champion: string;
+  /** Guanyador del partit del 3r lloc */
+  thirdPlace: string;
   groups: GroupStandingPrediction[];
 }
 

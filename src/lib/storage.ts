@@ -358,7 +358,7 @@ export async function resetQuinielaData(adminPin: string): Promise<void> {
 export async function saveSpecialActuals(adminPin: string, actuals: SpecialActuals): Promise<void> {
   const data = await readData();
   if (data.adminPin !== adminPin) throw new Error("PIN d'admin incorrecte");
-  data.specialActuals = actuals;
+  data.specialActuals = { ...data.specialActuals, ...actuals };
   await writeData(data);
 }
 
