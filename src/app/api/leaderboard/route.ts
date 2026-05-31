@@ -24,6 +24,10 @@ export async function GET() {
     prizes,
     participantCount: data.participants.length,
     paidCount,
-    tournament: data.tournament.name,
+    tournament: {
+      name: data.tournament.name,
+      entryFee: data.tournament.entryFee,
+      maxParticipants: data.tournament.maxParticipants,
+    },
   });
 }

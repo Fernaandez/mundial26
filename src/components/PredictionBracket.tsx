@@ -31,8 +31,8 @@ export function PredictionBracket({
     <div>
       {!readOnly && (
         <p className="text-sm text-pitch-400 mb-4">
-          Clica la bandera de l&apos;equip que passa de ronda. Aquí es trien tots els classificats,
-          el campió (final) i el 3r lloc. Cada ronda només es pot omplir dins la seva finestra horària.{" "}
+          Clica la bandera de l&apos;equip que passa de ronda. El quadre sencer només es pot omplir
+          durant la finestra de Setzens. Cada ronda de marcadors té la seva finestra horària.{" "}
           {pickCount > 0 && `${pickCount}/${expectedPicks} tries.`}
         </p>
       )}

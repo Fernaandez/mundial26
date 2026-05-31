@@ -30,6 +30,9 @@ export interface Match {
   awayScore?: number;
   /** Guanyador en eliminatòria si el marcador és empat (pròrroga/penals) */
   knockoutWinner?: string;
+  /** Marcador després de pròrroga/penals (només quadre; la puntuació usa homeScore/awayScore a 90 min) */
+  etHomeScore?: number;
+  etAwayScore?: number;
   /** Hora d'inici ISO 8601 */
   date?: string;
   city?: string;

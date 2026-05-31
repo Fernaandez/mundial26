@@ -42,7 +42,11 @@ export async function POST(request: Request) {
         body.homeScore,
         body.awayScore,
         body.locked ?? true,
-        body.knockoutWinner
+        {
+          knockoutWinner: body.knockoutWinner,
+          etHomeScore: body.etHomeScore,
+          etAwayScore: body.etAwayScore,
+        }
       );
       return NextResponse.json({ success: true, match });
     }

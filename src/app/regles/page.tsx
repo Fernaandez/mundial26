@@ -89,7 +89,7 @@ export default function RulesPage() {
       <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
         <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">ELIMINATÒRIES — PARTITS</h2>
         <p className="text-pitch-300 mb-4 text-sm">
-          32ens → 16ens → Quarts → Semis → 3r lloc → Final. A la pestanya{" "}
+          Setzens → Vuitens → Quarts → Semis → 3r lloc → Final. A la pestanya{" "}
           <strong className="text-pitch-200">Marcadors</strong> introdueix el resultat a 90 minuts abans de cada ronda.
         </p>
         <RulesTable rows={[
@@ -104,7 +104,7 @@ export default function RulesPage() {
           (inclou final i partit del 3r lloc). D&apos;aquí es sumen els punts de classificació i podi.
         </p>
         <RulesTable rows={[
-          ["Per equip encertat que classifica a 16ens", `${s.round16Finalist} pt/equip`],
+          ["Per equip encertat que classifica a vuitens", `${s.round16Finalist} pt/equip`],
           ["Per equip encertat que classifica a quarts", `${s.quarterFinalist} pts/equip`],
           ["Per equip encertat que classifica a semis", `${s.semiFinalist} pts/equip`],
           ["Encertar guanyador del partit del 3r lloc", `${s.thirdPlace} pts`],

@@ -2,7 +2,7 @@ import { Match } from "@/types";
 import { getTeamInfo } from "@/data/world-cup-2026";
 import { TeamFlag } from "@/components/TeamFlag";
 import { MatchKickoff } from "@/components/MatchKickoff";
-import { getMatchWinner, isMatchFinished } from "@/lib/knockout";
+import { getMatchWinner, isMatchFinished, hasExtraTimeResult } from "@/lib/knockout";
 
 interface MatchScoreboardProps {
   match: Match;
@@ -28,7 +28,12 @@ export function MatchScoreboard({
   const drawAdvance =
     finished &&
     match.homeScore === match.awayScore &&
-    !!match.knockoutWinner;
+    !!match.knockoutWinner &&
+    !hasExtraTimeResult(match);
+  const showEtLine =
+    finished &&
+    hasExtraTimeResult(match) &&
+    (match.etHomeScore !== match.homeScore || match.etAwayScore !== match.awayScore);
 
   const isBracket = variant === "bracket";
   const isCompact = variant === "compact";
@@ -99,6 +104,12 @@ export function MatchScoreboard({
             large={variant === "card" && finished}
           />
         </>
+      )}
+
+      {showEtLine && (
+        <p className="text-[10px] text-pitch-400 text-center mt-1.5">
+          90 min: {match.homeScore}-{match.awayScore} · Final: {match.etHomeScore}-{match.etAwayScore}
+        </p>
       )}
 
       {drawAdvance && (

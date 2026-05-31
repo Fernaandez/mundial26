@@ -33,8 +33,8 @@ export function BestThirdsPanel({ entries, variant = "prediction" }: BestThirdsP
           <h3 className="font-display text-xl sm:text-2xl text-gold-500">8 MILLORS 3RS CLASSIFICATS</h3>
           <p className="text-sm text-pitch-400 mt-1">
             {variant === "prediction"
-              ? "Calculat dels teus marcadors · els 8 primers passen als 16ens"
-              : "Calculat dels resultats oficials · els 8 primers passen als 16ens"}
+              ? "Calculat dels teus marcadors · els 8 primers passen als setzens"
+              : "Calculat dels resultats oficials · els 8 primers passen als setzens"}
           </p>
         </div>
         <div className="text-right text-xs text-pitch-500">

@@ -1,8 +1,10 @@
 import { Match, Phase } from "@/types";
 import { compareMatchesByKickoff, formatMatchKickoff } from "@/lib/match-dates";
+import { PHASE_LABELS } from "@/data/phase-labels";
+import { FIXED_DEADLINES } from "@/data/rules-config";
 import { PredictionWindows, isKnockoutPhase } from "@/lib/phases";
 
-const KO_PREDICTION_ORDER: Phase[] = [
+const KO_MARCADORS_ORDER: Phase[] = [
   "round32",
   "round16",
   "quarter",
@@ -11,89 +13,94 @@ const KO_PREDICTION_ORDER: Phase[] = [
   "final",
 ];
 
-const PHASE_DEADLINE_LABELS: Record<Phase, string> = {
-  special: "Prediccions especials (Mundial)",
-  groups: "Grups",
-  round32: "32ens de final",
-  round16: "16ens de final",
-  quarter: "Quarts de final",
-  semi: "Semifinals",
-  third: "3r lloc",
-  final: "Final",
-};
-
 function phaseMatches(matches: Match[], phase: Phase): Match[] {
   return matches.filter((m) => m.phase === phase && m.date).sort(compareMatchesByKickoff);
 }
 
 function firstKickoff(matches: Match[], phase: Phase): Date | null {
   const list = phaseMatches(matches, phase);
-  if (list.length === 0) return null;
-  return new Date(list[0].date!);
+  return list.length ? new Date(list[0].date!) : null;
 }
 
 function lastKickoff(matches: Match[], phase: Phase): Date | null {
   const list = phaseMatches(matches, phase);
-  if (list.length === 0) return null;
-  return new Date(list[list.length - 1].date!);
+  return list.length ? new Date(list[list.length - 1].date!) : null;
 }
 
 function previousKnockoutPhase(phase: Phase): Phase | "groups" {
-  const idx = KO_PREDICTION_ORDER.indexOf(phase);
+  const idx = KO_MARCADORS_ORDER.indexOf(phase);
   if (idx <= 0) return "groups";
-  return KO_PREDICTION_ORDER[idx - 1];
+  return KO_MARCADORS_ORDER[idx - 1];
 }
 
-export interface PhaseEditWindow {
-  phase: Phase;
-  opens: Date | null;
-  closes: Date | null;
+function formatDeadline(d: Date): string {
+  return formatMatchKickoff(d.toISOString())?.full ?? d.toLocaleString("ca-ES");
 }
 
-export function getPhaseEditWindow(matches: Match[], phase: Phase): PhaseEditWindow {
-  if (phase === "groups" || phase === "special") {
-    return {
-      phase,
-      opens: null,
-      closes: firstKickoff(matches, "round32"),
-    };
+function isSetzensWindow(now: Date): boolean {
+  return now >= FIXED_DEADLINES.setzensOpen && now <= FIXED_DEADLINES.setzensClose;
+}
+
+/** Grups + prediccions especials (Mundial) */
+export function canEditGroupsOrSpecial(
+  windows: PredictionWindows,
+  now: Date = new Date()
+): boolean {
+  if (windows.groupsLocked) return false;
+  return now <= FIXED_DEADLINES.groupsSpecialClose;
+}
+
+/** Quadre sencer — només finestra Setzens (28 juny 04:00–20:59) */
+export function canEditFullBracket(
+  windows: PredictionWindows,
+  now: Date = new Date()
+): boolean {
+  if (!windows.knockoutOpen) return false;
+  return isSetzensWindow(now);
+}
+
+/** Marcadors per fase eliminatòria */
+export function canEditMarcadorsPhase(
+  phase: Phase,
+  matches: Match[],
+  windows: PredictionWindows,
+  now: Date = new Date()
+): boolean {
+  if (phase === "groups") return canEditGroupsOrSpecial(windows, now);
+  if (phase === "special") return canEditGroupsOrSpecial(windows, now);
+  if (!isKnockoutPhase(phase)) return false;
+  if (!windows.knockoutOpen) return false;
+
+  if (phase === "round32") {
+    return isSetzensWindow(now);
   }
 
   const prev = previousKnockoutPhase(phase);
   const opens =
     prev === "groups" ? lastKickoff(matches, "groups") : lastKickoff(matches, prev);
-
-  return {
-    phase,
-    opens,
-    closes: firstKickoff(matches, phase),
-  };
+  const closes = firstKickoff(matches, phase);
+  if (!opens || !closes) return false;
+  return now >= opens && now < closes;
 }
 
-function isWithinWindow(now: Date, opens: Date | null, closes: Date | null): boolean {
-  if (!closes) return opens ? now >= opens : true;
-  if (opens && now < opens) return false;
-  return now < closes;
-}
-
-/** Pot editar prediccions d'aquesta fase (horari + bloqueig admin) */
+/** Compat: predicció de partit */
 export function canEditPhasePredictions(
   phase: Phase,
   matches: Match[],
   windows: PredictionWindows,
   now: Date = new Date()
 ): boolean {
-  if (phase === "groups" || phase === "special") {
-    if (windows.groupsLocked) return false;
-    const { closes } = getPhaseEditWindow(matches, phase);
-    return closes ? now < closes : true;
-  }
+  return canEditMarcadorsPhase(phase, matches, windows, now);
+}
 
+export function canEditBracketPhase(
+  phase: Phase,
+  matches: Match[],
+  windows: PredictionWindows,
+  now: Date = new Date()
+): boolean {
   if (!isKnockoutPhase(phase)) return false;
-  if (!windows.knockoutOpen) return false;
-
-  const { opens, closes } = getPhaseEditWindow(matches, phase);
-  return isWithinWindow(now, opens, closes);
+  return canEditFullBracket(windows, now);
 }
 
 export function canEditMatchPrediction(
@@ -103,37 +110,32 @@ export function canEditMatchPrediction(
   now: Date = new Date()
 ): boolean {
   if (match.locked) return false;
-  return canEditPhasePredictions(match.phase, allMatches, windows, now);
-}
-
-function formatDeadline(iso: Date | null): string {
-  if (!iso) return "—";
-  return formatMatchKickoff(iso.toISOString())?.full ?? iso.toLocaleString("ca-ES");
+  return canEditMarcadorsPhase(match.phase, allMatches, windows, now);
 }
 
 export function buildSubmissionDeadlineRows(matches: Match[]): { phase: string; limit: string }[] {
   const rows: { phase: string; limit: string }[] = [];
 
-  const firstR32 = firstKickoff(matches, "round32");
   rows.push({
     phase: "Grups + prediccions especials (Mundial)",
-    limit: firstR32
-      ? `Abans del primer 32ens (${formatDeadline(firstR32)})`
-      : "Abans de començar els 32ens de final",
+    limit: `Abans del ${formatDeadline(FIXED_DEADLINES.groupsSpecialClose)}`,
   });
 
-  for (const phase of KO_PREDICTION_ORDER) {
-    const { opens, closes } = getPhaseEditWindow(matches, phase);
-    const label = PHASE_DEADLINE_LABELS[phase];
+  rows.push({
+    phase: "Marcadors Setzens + Quadre sencer",
+    limit: `Del ${formatDeadline(FIXED_DEADLINES.setzensOpen)} al ${formatDeadline(FIXED_DEADLINES.setzensClose)}`,
+  });
+
+  for (const phase of KO_MARCADORS_ORDER) {
+    if (phase === "round32") continue;
+    const prev = previousKnockoutPhase(phase);
+    const opens =
+      prev === "groups" ? lastKickoff(matches, "groups") : lastKickoff(matches, prev);
+    const closes = firstKickoff(matches, phase);
     if (opens && closes) {
       rows.push({
-        phase: `Marcadors + quadre — ${label}`,
+        phase: `Marcadors — ${PHASE_LABELS[phase]}`,
         limit: `Des del ${formatDeadline(opens)} fins al ${formatDeadline(closes)}`,
-      });
-    } else if (closes) {
-      rows.push({
-        phase: `Marcadors + quadre — ${label}`,
-        limit: `Abans del ${formatDeadline(closes)}`,
       });
     }
   }
@@ -146,5 +148,13 @@ export function getOpenKnockoutPhases(
   windows: PredictionWindows,
   now: Date = new Date()
 ): Phase[] {
-  return KO_PREDICTION_ORDER.filter((p) => canEditPhasePredictions(p, matches, windows, now));
+  return KO_MARCADORS_ORDER.filter((p) => canEditMarcadorsPhase(p, matches, windows, now));
+}
+
+export function getOpenBracketPhases(
+  windows: PredictionWindows,
+  now: Date = new Date()
+): Phase[] {
+  if (!canEditFullBracket(windows, now)) return [];
+  return KO_MARCADORS_ORDER;
 }

@@ -34,8 +34,8 @@ export default function HomePage() {
         <StatCard
           icon="👥"
           title="Participants"
-          value={stats ? `${stats.participantCount}/${stats.tournament.maxParticipants}` : "—"}
-          subtitle="8-12 jugadors"
+          value={stats ? `${stats.participantCount}` : "—"}
+          subtitle="registrats"
         />
         <StatCard
           icon="💰"
@@ -79,8 +79,8 @@ export default function HomePage() {
           <div className="space-y-3 text-pitch-200">
             <PhaseRow name="Fase de grups" desc="72 partits · classificació en viu" pts="4 pts max/partit" />
             <PhaseRow name="Mundial (general)" desc="MVP, golejador, sorpreses, totals…" pts="fins a 150+ pts" />
-            <PhaseRow name="32ens de final" desc="16 partits" pts="4 pts max/partit" />
-            <PhaseRow name="16ens → Final" desc="16 partits eliminatoris" pts="4 pts max/partit" />
+            <PhaseRow name="Setzens de final" desc="16 partits" pts="4 pts max/partit" />
+            <PhaseRow name="Vuitens → Final" desc="16 partits eliminatoris" pts="4 pts max/partit" />
           </div>
         </div>
       </div>

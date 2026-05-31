@@ -13,8 +13,15 @@ export const SUBMISSION_DEADLINES: { phase: string; limit: string }[] = [];
 
 export const DEADLINES = {
   groupsSubmit: "Dimecres 10 de juny de 2026, 23:59h",
-  groupsEndKnockoutOpen: "Dissabte 28 de juny de 2026, 04:00h (acaba fase de grups)",
-  knockoutSubmit: "Dissabte 28 de juny de 2026, 20:59h (comencen els 32ens de final)",
+  setzensOpen: "Dissabte 28 de juny de 2026, 04:00h",
+  setzensClose: "Dissabte 28 de juny de 2026, 20:59h",
+} as const;
+
+/** Dates fixes (Europe/Madrid) per finestres de predicció */
+export const FIXED_DEADLINES = {
+  groupsSpecialClose: new Date("2026-06-10T23:59:00+02:00"),
+  setzensOpen: new Date("2026-06-28T04:00:00+02:00"),
+  setzensClose: new Date("2026-06-28T20:59:00+02:00"),
 } as const;
 
 export const RULES_NOTES = {
@@ -23,7 +30,7 @@ export const RULES_NOTES = {
   surpriseTeam:
     "Selecció revelació: qualsevol selecció excepte el top 10 FIFA. Només compta si classifica com a mínim als quarts de final.",
   disappointmentTeam:
-    "Selecció decepció: tria entre el top 10 FIFA. Només compta si queda eliminada abans d'arribar als 16ens de final.",
+    "Selecció decepció: tria entre el top 10 FIFA. Només compta si queda eliminada abans d'arribar als vuitens de final.",
   topScorerTie: "Màxim golejador i assistent: en cas d'empat, es dona per vàlid.",
 } as const;
 

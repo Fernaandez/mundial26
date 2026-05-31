@@ -1,0 +1,17 @@
+---
+description: Font de veritat del producte — normes, fluxos i copy abans de canviar prediccions o reglament
+alwaysApply: true
+---
+
+# Especificació de producte
+
+Abans de modificar puntuació, prediccions, admin, reglament o copy relacionat:
+
+1. Llegeix `docs/ESPECIFICACIO.md` (objectiu, pestanyes Grups/Marcadors/Quadre/Mundial, finestres per ronda, admin).
+2. Separació fixa: **Marcadors KO** = punts de partit; **Quadre** = avancament + campió/3r.
+3. Campió/3r es trien al Quadre, no al formulari Mundial.
+4. Rondes: `round32` = 32ens, `round16` = 16ens.
+5. Empat KO a admin → cal `knockoutWinner`; es veu al quadre del torneig.
+6. Si canvies una norma, actualitza ESPECIFICACIO.md + codi + `/regles` junts.
+
+Veure també `AGENTS.md`.

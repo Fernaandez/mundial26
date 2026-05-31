@@ -45,7 +45,7 @@ export default function AdminPage() {
     matchId: string,
     homeScore: number,
     awayScore: number,
-    knockoutWinner?: string
+    options?: { knockoutWinner?: string; etHomeScore?: number; etAwayScore?: number }
   ) {
     setSuccess("");
     const res = await fetch("/api/admin", {
@@ -58,7 +58,9 @@ export default function AdminPage() {
         homeScore,
         awayScore,
         locked: true,
-        knockoutWinner,
+        knockoutWinner: options?.knockoutWinner,
+        etHomeScore: options?.etHomeScore,
+        etAwayScore: options?.etAwayScore,
       }),
     });
     if (res.ok) {
@@ -66,6 +68,11 @@ export default function AdminPage() {
       setMatches((prev) =>
         prev.map((m) => (m.id === matchId ? { ...m, ...data.match } : m))
       );
+      const refresh = await fetch(`/api/admin?pin=${pin}`);
+      if (refresh.ok) {
+        const refreshed = await refresh.json();
+        setMatches(refreshed.matches);
+      }
       setSuccess("Resultat desat!");
     } else {
       const data = await res.json();
@@ -140,32 +147,6 @@ export default function AdminPage() {
       setSuccess("Mode proves: grups i eliminatòries obertes!");
     } else {
       setError(data.error || "Error");
-    }
-  }
-
-  async function resetAll() {
-    if (
-      !window.confirm(
-        "Reset complet? S'esborraran TOTS els participants, prediccions i resultats. El torneig quedarà net per als teus col·legues."
-      )
-    ) {
-      return;
-    }
-    setSuccess("");
-    setError("");
-    const res = await fetch("/api/admin", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "resetQuiniela", adminPin: pin }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      setMatches(data.matches);
-      setParticipants(data.participants);
-      setPredictionWindows(data.predictionWindows);
-      setSuccess("Reset complet! Pots passar el link als teus col·legues.");
-    } else {
-      setError(data.error || "Error en el reset");
     }
   }
 
@@ -272,15 +253,11 @@ export default function AdminPage() {
           <div className="card-glass rounded-2xl p-5 sm:p-6 border border-gold-500/20">
             <h2 className="font-display text-xl text-gold-500 mb-3">Mode proves</h2>
             <p className="text-pitch-400 text-sm mb-4">
-              Obre grups i eliminatòries alhora per provar tot. Abans de passar el link als col·legues,
-              fes un reset complet per esborrar dades de prova.
+              Obre grups i eliminatòries alhora per provar tot abans de passar el link als col·legues.
             </p>
             <div className="flex flex-wrap gap-3">
               <button type="button" onClick={openForTesting} className="btn-primary text-sm">
                 Obrir tot (proves)
-              </button>
-              <button type="button" onClick={resetAll} className="btn-secondary text-sm border-red-700/50 text-red-300">
-                Reset complet
               </button>
             </div>
           </div>
@@ -319,7 +296,7 @@ export default function AdminPage() {
             <h2 className="font-display text-xl text-gold-500 mb-4">2. Eliminatòries</h2>
             <p className="text-pitch-400 text-sm mb-4">
               Obre aquesta fase quan la fase de grups hagi acabat i estigui puntuada.
-              Els jugadors podran predir 32ens, 16ens, quarts, semis i final (marcadors i quadre).
+              Els jugadors podran predir setzens, vuitens, quarts, semis i final (marcadors i quadre).
             </p>
             <div className="flex flex-wrap gap-3">
               {!predictionWindows.knockoutOpen ? (
@@ -524,22 +501,39 @@ function KnockoutRow({
   match: Match;
   teams: { code: string; name: string; iso: string }[];
   onUpdateTeams: (id: string, home: string, away: string) => void;
-  onSaveResult: (id: string, h: number, a: number, winner?: string) => void;
+  onSaveResult: (
+    id: string,
+    h: number,
+    a: number,
+    options?: { knockoutWinner?: string; etHomeScore?: number; etAwayScore?: number }
+  ) => void;
 }) {
   const [homeTeam, setHomeTeam] = useState(match.homeTeam);
   const [awayTeam, setAwayTeam] = useState(match.awayTeam);
   const [home, setHome] = useState(match.homeScore ?? 0);
   const [away, setAway] = useState(match.awayScore ?? 0);
+  const [etHome, setEtHome] = useState<number | "">(match.etHomeScore ?? "");
+  const [etAway, setEtAway] = useState<number | "">(match.etAwayScore ?? "");
+  const [useEt, setUseEt] = useState(match.etHomeScore !== undefined);
   const [winner, setWinner] = useState(match.knockoutWinner ?? "");
   const isDraw = home === away;
-  const needsWinner = isKnockoutPhase(match.phase) && isDraw && homeTeam !== "TBD" && awayTeam !== "TBD";
+  const needsWinner =
+    isKnockoutPhase(match.phase) &&
+    isDraw &&
+    homeTeam !== "TBD" &&
+    awayTeam !== "TBD" &&
+    !(useEt && etHome !== "" && etAway !== "" && etHome !== etAway);
 
   function handleSave() {
     if (needsWinner && !winner) {
-      alert("Selecciona qui passa de ronda en cas d'empat.");
+      alert("Selecciona qui passa de ronda en cas d'empat a 90 min, o introdueix el resultat final (pròrroga/penals).");
       return;
     }
-    onSaveResult(match.id, home, away, needsWinner ? winner : undefined);
+    onSaveResult(match.id, home, away, {
+      knockoutWinner: needsWinner ? winner : undefined,
+      etHomeScore: useEt && etHome !== "" ? Number(etHome) : undefined,
+      etAwayScore: useEt && etAway !== "" ? Number(etAway) : undefined,
+    });
   }
 
   return (
@@ -559,10 +553,54 @@ function KnockoutRow({
           Actualitzar equips
         </button>
       </div>
+      <div className="space-y-2">
+        <p className="text-xs text-pitch-400">Marcador a 90 min (puntuació de prediccions)</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <input type="number" min={0} max={20} value={home} onChange={(e) => setHome(+e.target.value)} className="score-input w-12" disabled={match.locked} />
+          <span>:</span>
+          <input type="number" min={0} max={20} value={away} onChange={(e) => setAway(+e.target.value)} className="score-input w-12" disabled={match.locked} />
+        </div>
+      </div>
+      {!match.locked && isKnockoutPhase(match.phase) && (
+        <div className="border border-pitch-700/50 rounded-xl p-3 space-y-2">
+          <label className="flex items-center gap-2 text-xs text-pitch-300 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={useEt}
+              onChange={(e) => setUseEt(e.target.checked)}
+              className="rounded"
+            />
+            Resultat final després de pròrroga/penals (actualitza el quadre)
+          </label>
+          {useEt && (
+            <div className="flex flex-wrap items-center gap-3">
+              <input
+                type="number"
+                min={0}
+                max={30}
+                value={etHome}
+                onChange={(e) => setEtHome(e.target.value === "" ? "" : +e.target.value)}
+                className="score-input w-12"
+                placeholder="ET"
+                aria-label="Gols local pròrroga/penals"
+              />
+              <span>:</span>
+              <input
+                type="number"
+                min={0}
+                max={30}
+                value={etAway}
+                onChange={(e) => setEtAway(e.target.value === "" ? "" : +e.target.value)}
+                className="score-input w-12"
+                placeholder="ET"
+                aria-label="Gols visitant pròrroga/penals"
+              />
+              <span className="text-xs text-pitch-500">Ex.: 1-1 a 90 min → 3-2 després de penals</span>
+            </div>
+          )}
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-3">
-        <input type="number" min={0} max={20} value={home} onChange={(e) => setHome(+e.target.value)} className="score-input w-12" disabled={match.locked} />
-        <span>:</span>
-        <input type="number" min={0} max={20} value={away} onChange={(e) => setAway(+e.target.value)} className="score-input w-12" disabled={match.locked} />
         {!match.locked && (
           <button onClick={handleSave} className="btn-primary text-sm py-2 px-4">
             Desar resultat
@@ -571,10 +609,15 @@ function KnockoutRow({
         {match.locked && match.knockoutWinner && (
           <span className="text-xs text-gold-400">Passa: {getTeamInfo(match.knockoutWinner).name}</span>
         )}
+        {match.locked && match.etHomeScore !== undefined && (
+          <span className="text-xs text-pitch-400">
+            Final: {match.etHomeScore}-{match.etAwayScore} (90 min: {match.homeScore}-{match.awayScore})
+          </span>
+        )}
       </div>
       {needsWinner && !match.locked && (
         <div className="border border-amber-700/40 rounded-xl p-3 bg-amber-900/10">
-          <p className="text-xs text-amber-100 mb-2">Empat a 90 min — qui passa de ronda?</p>
+          <p className="text-xs text-amber-100 mb-2">Empat a 90 min — qui passa de ronda? (si no hi ha resultat final)</p>
           <div className="flex items-center gap-3">
             <WinnerPick
               code={homeTeam}

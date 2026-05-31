@@ -12,7 +12,7 @@ import {
   canEditSpecialPredictions,
   isKnockoutPhase,
 } from "@/lib/phases";
-import { canEditPhasePredictions, getOpenKnockoutPhases } from "@/lib/prediction-deadlines";
+import { canEditPhasePredictions, getOpenKnockoutPhases, canEditFullBracket } from "@/lib/prediction-deadlines";
 import {
   computeBestThirdsRanking,
   computeThirdQualifierGroups,
@@ -73,6 +73,7 @@ export function PredictionsPanel({
   const groupsEditable = !readOnly && canEditGroupPredictions(windows) && canEditPhasePredictions("groups", matches, windows);
   const specialEditable = !readOnly && canEditSpecialPredictions(windows) && canEditPhasePredictions("special", matches, windows);
   const openKnockoutPhases = getOpenKnockoutPhases(matches, windows);
+  const bracketEditable = !readOnly && canEditFullBracket(windows);
   const knockoutEditable = !readOnly && openKnockoutPhases.length > 0;
   const showKnockout = readOnly || windows.knockoutOpen;
 
@@ -99,7 +100,7 @@ export function PredictionsPanel({
     !readOnly && (
       mainSection === "groups" ? groupsEditable :
       mainSection === "knockout" ? isPhaseEditable(activePhase) :
-      mainSection === "bracket" ? openKnockoutPhases.length > 0 :
+      mainSection === "bracket" ? bracketEditable :
       specialEditable
     );
 
@@ -237,7 +238,7 @@ export function PredictionsPanel({
               <div className="text-4xl mb-4">🔒</div>
               <h2 className="font-display text-2xl text-pitch-300 mb-3">Eliminatòries encara tancades</h2>
               <p className="text-pitch-400 text-sm max-w-md mx-auto">
-                Quan l&apos;admin obri aquesta fase podràs predir 32ens, 16ens, quarts, semis i final.
+                Quan l&apos;admin obri aquesta fase podràs predir setzens, vuitens, quarts, semis i final.
               </p>
             </div>
           ) : (
@@ -288,13 +289,21 @@ export function PredictionsPanel({
               </p>
             </div>
           ) : (
-            <PredictionBracket
+            <>
+              {!readOnly && !bracketEditable && (
+                <p className="text-sm text-amber-200/90 mb-4">
+                  El quadre sencer només es pot omplir durant la finestra de Setzens (28 juny, 04:00–20:59).
+                  Fora d&apos;aquesta finestra pots consultar les teves prediccions però no editar-les.
+                </p>
+              )}
+              <PredictionBracket
               matches={matches}
               bracketPicks={bracketPicks}
               onPick={handleBracketPick}
-              isPickEnabled={(phase) => isPhaseEditable(phase)}
+              isPickEnabled={() => bracketEditable}
               readOnly={readOnly}
             />
+            </>
           )}
         </>
       )}

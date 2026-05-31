@@ -2,7 +2,7 @@
 
 import { Match, Group, SpecialPredictions, Phase } from "@/types";
 import { getTeamInfo } from "@/data/world-cup-2026";
-import { PHASE_LABELS } from "@/data/world-cup-2026";
+import { PHASE_LABELS, PHASE_SHORT } from "@/data/phase-labels";
 import { TeamFlag } from "@/components/TeamFlag";
 import { MatchKickoff } from "@/components/MatchKickoff";
 import { MatchScoreboard } from "@/components/MatchScoreboard";
@@ -201,16 +201,7 @@ interface PhaseTabsProps {
   onChange: (phase: Phase) => void;
 }
 
-const SHORT_LABELS: Partial<Record<Phase, string>> = {
-  special: "Especials",
-  groups: "Grups",
-  round32: "32ens",
-  round16: "16ens",
-  quarter: "Quarts",
-  semi: "Semis",
-  third: "3r",
-  final: "Final",
-};
+const SHORT_LABELS = PHASE_SHORT;
 
 export function PhaseTabs({ phases, active, onChange }: PhaseTabsProps) {
   return (
@@ -362,7 +353,7 @@ export function MundialForm({
           </div>
           <div>
             <SelectTeam label="💥 Selecció decepció" value={current.disappointmentTeam} teams={top10Teams} onChange={(v) => update("disappointmentTeam", v)} disabled={disabled} />
-            <p className="text-[10px] text-pitch-500 mt-1">Només top 10 FIFA · ha de quedar fora abans dels 16ens</p>
+            <p className="text-[10px] text-pitch-500 mt-1">Només top 10 FIFA · ha de quedar fora abans dels vuitens</p>
           </div>
         </div>
       </div>

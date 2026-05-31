@@ -10,7 +10,8 @@ import {
   canEditSpecialPredictions,
   isKnockoutPhase,
 } from "@/lib/phases";
-import { canEditMatchPrediction, canEditPhasePredictions } from "@/lib/prediction-deadlines";
+import { canEditMatchPrediction, canEditPhasePredictions, canEditFullBracket } from "@/lib/prediction-deadlines";
+import { propagateKnockoutWinner } from "@/lib/bracket-tree";
 import { buildGroupPredictionsFromMatches, buildGroupStandingsActuals } from "@/lib/standings";
 import { DEFAULT_MUNDIAL_FIELDS, normalizeSpecialPredictions, applyBracketPodiumToSpecial } from "@/lib/mundial";
 import { computeGroupStageStats } from "@/lib/group-stats";
@@ -101,6 +102,8 @@ function mergeMatches(parsed: ExtendedAppData): ExtendedAppData {
           awayScore: existing.awayScore,
           locked: existing.locked,
           knockoutWinner: existing.knockoutWinner,
+          etHomeScore: existing.etHomeScore,
+          etAwayScore: existing.etAwayScore,
           homeTeam: existing.homeTeam !== "TBD" ? existing.homeTeam : m.homeTeam,
           awayTeam: existing.awayTeam !== "TBD" ? existing.awayTeam : m.awayTeam,
         }
@@ -233,7 +236,11 @@ export async function updateMatchResult(
   homeScore: number,
   awayScore: number,
   locked: boolean,
-  knockoutWinner?: string
+  options?: {
+    knockoutWinner?: string;
+    etHomeScore?: number;
+    etAwayScore?: number;
+  }
 ): Promise<Match> {
   const data = await readData();
   const match = data.tournament.matches.find((m) => m.id === matchId);
@@ -243,16 +250,42 @@ export async function updateMatchResult(
   match.awayScore = awayScore;
   match.locked = locked;
 
-  if (homeScore === awayScore && isKnockoutPhase(match.phase)) {
-    if (!knockoutWinner) {
-      throw new Error("En eliminatòria, indica qui passa de ronda en cas d'empat");
+  const knockoutWinner = options?.knockoutWinner;
+  const etHome = options?.etHomeScore;
+  const etAway = options?.etAwayScore;
+  const hasEt = etHome !== undefined && etAway !== undefined;
+
+  if (hasEt) {
+    match.etHomeScore = etHome;
+    match.etAwayScore = etAway;
+  } else {
+    match.etHomeScore = undefined;
+    match.etAwayScore = undefined;
+  }
+
+  if (isKnockoutPhase(match.phase)) {
+    if (hasEt && etHome !== etAway) {
+      match.knockoutWinner = etHome > etAway ? match.homeTeam : match.awayTeam;
+    } else if (homeScore === awayScore) {
+      if (!knockoutWinner) {
+        throw new Error("En eliminatòria, indica qui passa de ronda en cas d'empat a 90 min");
+      }
+      if (knockoutWinner !== match.homeTeam && knockoutWinner !== match.awayTeam) {
+        throw new Error("El guanyador ha de ser un dels dos equips del partit");
+      }
+      match.knockoutWinner = knockoutWinner;
+    } else {
+      match.knockoutWinner = undefined;
     }
-    if (knockoutWinner !== match.homeTeam && knockoutWinner !== match.awayTeam) {
-      throw new Error("El guanyador ha de ser un dels dos equips del partit");
-    }
-    match.knockoutWinner = knockoutWinner;
   } else {
     match.knockoutWinner = undefined;
+    match.etHomeScore = undefined;
+    match.etAwayScore = undefined;
+  }
+
+  const winner = getMatchWinner(match);
+  if (winner && winner !== "TBD") {
+    propagateKnockoutWinner(data.tournament.matches, matchId);
   }
 
   if (match.phase === "groups") {
@@ -335,8 +368,7 @@ export async function savePredictions(
     merged = { ...merged, ...special, groups: syncedGroups };
   }
 
-  const knockoutEditable = (phase: Phase) =>
-    canEditPhasePredictions(phase, allMatches, windows);
+  const bracketEditable = canEditFullBracket(windows);
 
   if (bracketPicks !== undefined) {
     const prevPicks = p.bracketPicks ?? {};
@@ -346,7 +378,7 @@ export async function savePredictions(
     for (const [matchId, pick] of Object.entries(bracketPicks)) {
       const match = allMatches.find((m) => m.id === matchId);
       if (!match || !isKnockoutPhase(match.phase)) continue;
-      if (knockoutEditable(match.phase)) {
+      if (bracketEditable) {
         mergedPicks[matchId] = pick;
       } else {
         bracketSkipped++;
@@ -359,7 +391,7 @@ export async function savePredictions(
     }
 
     if (bracketSkipped > 0) {
-      warnings.push(`${bracketSkipped} tria/es del quadre d'una fase tancada — no s'han actualitzat.`);
+      warnings.push(`${bracketSkipped} tria/es del quadre — el quadre sencer només es pot editar durant la finestra de Setzens.`);
     }
   }
 

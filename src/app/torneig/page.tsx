@@ -5,11 +5,12 @@ import { Match } from "@/types";
 import { GroupStanding, BestThirdEntry } from "@/lib/standings";
 import { AllGroupStandingsGrid } from "@/components/GroupStandingsTable";
 import { BestThirdsPanel } from "@/components/BestThirdsPanel";
-import { KnockoutPhaseList } from "@/components/KnockoutBracket";
+import { KnockoutPhaseList, KnockoutBracket } from "@/components/KnockoutBracket";
 import { Phase } from "@/types";
-import { PHASE_LABELS } from "@/data/world-cup-2026";
+import { PHASE_LABELS } from "@/data/phase-labels";
 
 type Tab = "groups" | "knockout";
+type KnockoutView = "list" | "bracket";
 
 interface TournamentData {
   matches: Match[];
@@ -29,6 +30,7 @@ const KNOCKOUT_TABS: Phase[] = ["round32", "round16", "quarter", "semi", "third"
 
 export default function TorneigPage() {
   const [tab, setTab] = useState<Tab>("groups");
+  const [knockoutView, setKnockoutView] = useState<KnockoutView>("list");
   const [knockoutPhase, setKnockoutPhase] = useState<Phase>("round32");
   const [data, setData] = useState<TournamentData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -114,7 +116,7 @@ export default function TorneigPage() {
           className={`p-4 rounded-xl text-left ${tab === "knockout" ? "tab-active" : "tab-inactive"}`}
         >
           <div className="font-display text-xl">Eliminatòries</div>
-          <div className="text-xs opacity-80 mt-1">Partits per fase</div>
+          <div className="text-xs opacity-80 mt-1">Partits i quadre</div>
         </button>
       </div>
 
@@ -134,26 +136,53 @@ export default function TorneigPage() {
 
       {tab === "knockout" && (
         <section>
-          <div className="phase-tabs-scroll -mx-3 px-3 sm:mx-0 sm:px-0 mb-6">
-            <div className="flex gap-2 min-w-max sm:flex-wrap">
-              {KNOCKOUT_TABS.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setKnockoutPhase(p)}
-                  className={`px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap ${
-                    knockoutPhase === p ? "tab-active" : "tab-inactive"
-                  }`}
-                >
-                  {PHASE_LABELS[p]}
-                </button>
-              ))}
-            </div>
+          <div className="flex gap-2 mb-6 max-w-md">
+            <button
+              type="button"
+              onClick={() => setKnockoutView("list")}
+              className={`flex-1 px-4 py-2 rounded-xl text-sm font-medium ${
+                knockoutView === "list" ? "tab-active" : "tab-inactive"
+              }`}
+            >
+              Partits per fase
+            </button>
+            <button
+              type="button"
+              onClick={() => setKnockoutView("bracket")}
+              className={`flex-1 px-4 py-2 rounded-xl text-sm font-medium ${
+                knockoutView === "bracket" ? "tab-active" : "tab-inactive"
+              }`}
+            >
+              Quadre sencer
+            </button>
           </div>
-          <h2 className="font-display text-2xl text-pitch-400 mb-4">
-            {PHASE_LABELS[knockoutPhase]}
-          </h2>
-          <KnockoutPhaseList matches={data.matches} phase={knockoutPhase} />
+
+          {knockoutView === "bracket" ? (
+            <KnockoutBracket matches={data.matches} />
+          ) : (
+            <>
+              <div className="phase-tabs-scroll -mx-3 px-3 sm:mx-0 sm:px-0 mb-6">
+                <div className="flex gap-2 min-w-max sm:flex-wrap">
+                  {KNOCKOUT_TABS.map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setKnockoutPhase(p)}
+                      className={`px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap ${
+                        knockoutPhase === p ? "tab-active" : "tab-inactive"
+                      }`}
+                    >
+                      {PHASE_LABELS[p]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <h2 className="font-display text-2xl text-pitch-400 mb-4">
+                {PHASE_LABELS[knockoutPhase]}
+              </h2>
+              <KnockoutPhaseList matches={data.matches} phase={knockoutPhase} />
+            </>
+          )}
         </section>
       )}
     </div>
