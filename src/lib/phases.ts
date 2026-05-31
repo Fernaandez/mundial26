@@ -5,11 +5,14 @@ export interface PredictionWindows {
   groupsLocked: boolean;
   /** Prediccions d'eliminatòries obertes */
   knockoutOpen: boolean;
+  /** Mode prova: ignora finestres de calendari (admin «Obrir tot») */
+  testMode?: boolean;
 }
 
 export const DEFAULT_PREDICTION_WINDOWS: PredictionWindows = {
   groupsLocked: false,
-  knockoutOpen: true,
+  knockoutOpen: false,
+  testMode: false,
 };
 
 const KNOCKOUT_PHASES: Phase[] = [
@@ -57,6 +60,7 @@ export function mergePredictionWindows(
   return {
     ...DEFAULT_PREDICTION_WINDOWS,
     ...stored,
+    testMode: stored?.testMode ?? false,
   };
 }
 

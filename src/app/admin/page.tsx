@@ -156,7 +156,11 @@ export default function AdminPage() {
     const res = await fetch("/api/admin", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "predictionWindows", adminPin: pin, windows: updates }),
+      body: JSON.stringify({
+        action: "predictionWindows",
+        adminPin: pin,
+        windows: { ...updates, testMode: false },
+      }),
     });
     const data = await res.json();
     if (res.ok) {
@@ -253,7 +257,8 @@ export default function AdminPage() {
           <div className="card-glass rounded-2xl p-5 sm:p-6 border border-gold-500/20">
             <h2 className="font-display text-xl text-gold-500 mb-3">Mode proves</h2>
             <p className="text-pitch-400 text-sm mb-4">
-              Obre grups i eliminatòries alhora per provar tot abans de passar el link als col·legues.
+              Obre grups i eliminatòries alhora per provar prediccions (Setzens, Vuitens, quadre…)
+              abans de les dates reals del torneig.
             </p>
             <div className="flex flex-wrap gap-3">
               <button type="button" onClick={openForTesting} className="btn-primary text-sm">
@@ -324,6 +329,7 @@ export default function AdminPage() {
             )}
             <p className={`text-sm mt-3 ${predictionWindows.knockoutOpen ? "text-gold-400" : "text-pitch-500"}`}>
               Estat: {predictionWindows.knockoutOpen ? "✅ Oberta" : "🔒 Tancada"}
+              {predictionWindows.testMode && " · mode proves actiu"}
             </p>
           </div>
         </div>

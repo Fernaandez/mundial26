@@ -41,12 +41,17 @@ function isSetzensWindow(now: Date): boolean {
   return now >= FIXED_DEADLINES.setzensOpen && now <= FIXED_DEADLINES.setzensClose;
 }
 
+function deadlinesApply(windows: PredictionWindows): boolean {
+  return !windows.testMode;
+}
+
 /** Grups + prediccions especials (Mundial) */
 export function canEditGroupsOrSpecial(
   windows: PredictionWindows,
   now: Date = new Date()
 ): boolean {
   if (windows.groupsLocked) return false;
+  if (!deadlinesApply(windows)) return true;
   return now <= FIXED_DEADLINES.groupsSpecialClose;
 }
 
@@ -56,6 +61,7 @@ export function canEditFullBracket(
   now: Date = new Date()
 ): boolean {
   if (!windows.knockoutOpen) return false;
+  if (!deadlinesApply(windows)) return true;
   return isSetzensWindow(now);
 }
 
@@ -70,6 +76,8 @@ export function canEditMarcadorsPhase(
   if (phase === "special") return canEditGroupsOrSpecial(windows, now);
   if (!isKnockoutPhase(phase)) return false;
   if (!windows.knockoutOpen) return false;
+
+  if (!deadlinesApply(windows)) return true;
 
   if (phase === "round32") {
     return isSetzensWindow(now);

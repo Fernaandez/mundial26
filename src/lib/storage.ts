@@ -435,7 +435,7 @@ export async function deleteParticipant(participantId: string, adminPin: string)
 
 /** Grups oberts + eliminatòries obertes (mode proves) */
 export async function openAllForTesting(adminPin: string): Promise<PredictionWindows> {
-  return updatePredictionWindows(adminPin, { groupsLocked: false, knockoutOpen: true });
+  return updatePredictionWindows(adminPin, { groupsLocked: false, knockoutOpen: true, testMode: true });
 }
 
 /** Esborra participants, resultats i prediccions; deixa el torneig net per compartir */

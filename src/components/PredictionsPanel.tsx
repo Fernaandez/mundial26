@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Match, Group, SpecialPredictions, Phase } from "@/types";
 import { MatchCard, GroupSection, PhaseTabs, MundialForm } from "@/components/PredictionForms";
@@ -76,6 +76,19 @@ export function PredictionsPanel({
   const bracketEditable = !readOnly && canEditFullBracket(windows);
   const knockoutEditable = !readOnly && openKnockoutPhases.length > 0;
   const showKnockout = readOnly || windows.knockoutOpen;
+
+  useEffect(() => {
+    if (mainSection !== "knockout" || openKnockoutPhases.length === 0) return;
+    if (!openKnockoutPhases.includes(activePhase)) {
+      setActivePhase(openKnockoutPhases[0]);
+    }
+  }, [mainSection, openKnockoutPhases, activePhase]);
+
+  function openMarcadors() {
+    setMainSection("knockout");
+    const firstOpen = openKnockoutPhases[0] ?? "round32";
+    setActivePhase(firstOpen);
+  }
 
   function isPhaseEditable(phase: Phase): boolean {
     if (readOnly) return false;
@@ -163,17 +176,17 @@ export function PredictionsPanel({
         />
         <SectionTab
           active={mainSection === "knockout"}
-          onClick={() => { setMainSection("knockout"); setActivePhase("round32"); }}
+          onClick={openMarcadors}
           title="Marcadors"
           subtitle={`${knockoutPredicted}/${knockoutMatchIds.length}`}
-          locked={!readOnly && openKnockoutPhases.length === 0}
+          locked={!readOnly && !showKnockout}
         />
         <SectionTab
           active={mainSection === "bracket"}
           onClick={() => setMainSection("bracket")}
           title="Quadre"
           subtitle={`${bracketFilled} tries`}
-          locked={!readOnly && openKnockoutPhases.length === 0}
+          locked={!readOnly && !showKnockout}
         />
         <SectionTab
           active={mainSection === "mundial"}
@@ -183,6 +196,12 @@ export function PredictionsPanel({
           locked={!readOnly && !specialEditable}
         />
       </div>
+
+      {windows.testMode && !readOnly && (
+        <div className="bg-gold-500/10 border border-gold-500/30 text-gold-200 px-4 py-3 rounded-xl mb-6 text-sm">
+          Mode proves actiu — totes les fases obertes per provar prediccions.
+        </div>
+      )}
 
       {saved && !readOnly && saveWarnings.length === 0 && (
         <div className="bg-pitch-700/30 border border-pitch-500 text-pitch-200 px-4 py-3 rounded-xl mb-6 text-sm">
@@ -245,17 +264,34 @@ export function PredictionsPanel({
             <>
               {!readOnly && !isPhaseEditable(activePhase) && (
                 <p className="text-sm text-amber-200/90 mb-4">
-                  Aquesta ronda està tancada. Pots predir durant la finestra entre el darrer partit de la fase
-                  anterior i l&apos;inici del primer partit d&apos;aquesta ronda (veure Regles).
+                  {activePhase === "round32" ? (
+                    <>
+                      Els marcadors de <strong>Setzens</strong> només es poden omplir del 28 juny (04:00) al 28 juny (20:59),
+                      o quan l&apos;admin activi el mode proves.
+                    </>
+                  ) : (
+                    <>
+                      Aquesta ronda està tancada. Pots predir durant la finestra entre el darrer partit de la fase
+                      anterior i l&apos;inici del primer partit d&apos;aquesta ronda (veure Regles).
+                    </>
+                  )}
                 </p>
               )}
               {!readOnly && (
                 <p className="text-sm text-pitch-400 mb-4">
                   Marcadors exactes a 90 minuts — sumen punts de resultat (1/X/2 i exacte).
                   Qui passa de ronda es tria al <strong className="text-pitch-200">Quadre</strong>.
+                  {openKnockoutPhases.length > 0 && (
+                    <span className="text-pitch-500"> Ronda oberta: {openKnockoutPhases.map((p) => PHASE_LABELS[p]).join(", ")}</span>
+                  )}
                 </p>
               )}
-              <PhaseTabs phases={KNOCKOUT_PHASE_LIST} active={activePhase} onChange={setActivePhase} />
+              <PhaseTabs
+                phases={KNOCKOUT_PHASE_LIST}
+                active={activePhase}
+                onChange={setActivePhase}
+                isOpen={(p) => readOnly || isPhaseEditable(p)}
+              />
               <div>
                 <h2 className="font-display text-xl sm:text-2xl text-pitch-400 mb-4">{PHASE_LABELS[activePhase]}</h2>
                 <div className="grid gap-3">

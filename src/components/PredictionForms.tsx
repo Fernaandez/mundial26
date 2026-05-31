@@ -199,27 +199,37 @@ interface PhaseTabsProps {
   phases: Phase[];
   active: Phase;
   onChange: (phase: Phase) => void;
+  isOpen?: (phase: Phase) => boolean;
 }
 
 const SHORT_LABELS = PHASE_SHORT;
 
-export function PhaseTabs({ phases, active, onChange }: PhaseTabsProps) {
+export function PhaseTabs({ phases, active, onChange, isOpen }: PhaseTabsProps) {
   return (
     <div className="phase-tabs-scroll -mx-4 px-4 sm:mx-0 sm:px-0 mb-6 sm:mb-8">
       <div className="flex gap-2 pb-1 min-w-max sm:min-w-0 sm:flex-wrap">
-        {phases.map((p) => (
-          <button
-            key={p}
-            type="button"
-            onClick={() => onChange(p)}
-            className={`px-3 sm:px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap shrink-0 ${
-              active === p ? "tab-active" : "tab-inactive"
-            }`}
-          >
-            <span className="sm:hidden">{SHORT_LABELS[p] ?? PHASE_LABELS[p]}</span>
-            <span className="hidden sm:inline">{PHASE_LABELS[p]}</span>
-          </button>
-        ))}
+        {phases.map((p) => {
+          const open = isOpen?.(p) ?? true;
+          return (
+            <button
+              key={p}
+              type="button"
+              onClick={() => onChange(p)}
+              className={`px-3 sm:px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap shrink-0 ${
+                active === p ? "tab-active" : open ? "tab-inactive" : "tab-inactive opacity-50"
+              }`}
+            >
+              <span className="sm:hidden">
+                {!open && "🔒 "}
+                {SHORT_LABELS[p] ?? PHASE_LABELS[p]}
+              </span>
+              <span className="hidden sm:inline">
+                {!open && "🔒 "}
+                {PHASE_LABELS[p]}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
