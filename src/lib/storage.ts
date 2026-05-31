@@ -13,6 +13,7 @@ import {
 import { canEditMatchPrediction, canEditPhasePredictions, canEditFullBracket } from "@/lib/prediction-deadlines";
 import { propagateKnockoutWinner } from "@/lib/bracket-tree";
 import { buildGroupPredictionsFromMatches, buildGroupStandingsActuals } from "@/lib/standings";
+import { assignRound32FromGroupResults } from "@/lib/assign-r32-from-groups";
 import { DEFAULT_MUNDIAL_FIELDS, normalizeSpecialPredictions, applyBracketPodiumToSpecial } from "@/lib/mundial";
 import { computeGroupStageStats } from "@/lib/group-stats";
 import { deriveAdvancementSets } from "@/lib/knockout-advancement";
@@ -109,6 +110,7 @@ function mergeMatches(parsed: ExtendedAppData): ExtendedAppData {
         }
       : m;
   });
+  assignRound32FromGroupResults(parsed.tournament.groups, parsed.tournament.matches);
   return parsed;
 }
 
@@ -289,6 +291,7 @@ export async function updateMatchResult(
   }
 
   if (match.phase === "groups") {
+    assignRound32FromGroupResults(data.tournament.groups, data.tournament.matches);
     data.specialActuals = {
       ...data.specialActuals,
       groupStandings: buildGroupStandingsActuals(data.tournament.groups, data.tournament.matches),
