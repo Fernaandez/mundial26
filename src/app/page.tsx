@@ -80,7 +80,7 @@ export default function HomePage() {
           <div className="space-y-3 text-pitch-200">
             <PhaseRow name="Prediccions especials" desc="Campió, subcampió, classificacions de grups..." pts="fins a 150+ pts" />
             <PhaseRow name="Fase de grups" desc="72 partits · 12 grups de 4" pts="4 pts max/partit" />
-            <PhaseRow name="32ens de final" desc="16 partits" pts="8 pts max/partit" />
+            <PhaseRow name="16ens de final" desc="16 partits" pts="8 pts max/partit" />
             <PhaseRow name="8ens → Final" desc="15 partits eliminatoris" pts="8 pts max/partit" />
           </div>
         </div>

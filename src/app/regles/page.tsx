@@ -44,7 +44,7 @@ export default function RulesPage() {
 
       <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
         <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">ELIMINATÒRIES</h2>
-        <p className="text-pitch-300 mb-4 text-sm sm:text-base">32ens → 8ens → Quarts → Semis → 3r lloc → Final (32 partits)</p>
+        <p className="text-pitch-300 mb-4 text-sm sm:text-base">16ens → 8ens → Quarts → Semis → 3r lloc → Final (32 partits)</p>
         <div className="overflow-x-auto -mx-2 px-2">
         <table className="w-full text-left min-w-[280px]">
           <thead>
@@ -81,7 +81,7 @@ export default function RulesPage() {
             <tr className="border-b border-pitch-800/50"><td className="py-3">Màxim golejador</td><td className="py-3 text-right font-bold text-gold-400">{s.topScorer} pts</td></tr>
             <tr className="border-b border-pitch-800/50"><td className="py-3">Total gols del torneig (exacte)</td><td className="py-3 text-right font-bold text-gold-400">{s.totalGoalsExact} pts</td></tr>
             <tr className="border-b border-pitch-800/50"><td className="py-3">Total gols (±5 gols)</td><td className="py-3 text-right font-bold text-gold-400">{s.totalGoalsWithin5} pts</td></tr>
-            <tr className="border-b border-pitch-800/50"><td className="py-3">Ordre exacte d&apos;un grup (1r-2n-3r-4t)</td><td className="py-3 text-right font-bold text-gold-400">{s.groupExactOrder} pts/grup</td></tr>
+            <tr className="border-b border-pitch-800/50"><td className="py-3">Ordre exacte d&apos;un grup (calculat dels teus marcadors)</td><td className="py-3 text-right font-bold text-gold-400">{s.groupExactOrder} pts/grup</td></tr>
             <tr className="border-b border-pitch-800/50"><td className="py-3">Equip classificat al top 2 (per grup, sense ordre)</td><td className="py-3 text-right font-bold text-gold-400">{s.groupTopTwo} pts/equip</td></tr>
             <tr><td className="py-3">3r classificat del grup passa d&apos;eliminatoria</td><td className="py-3 text-right font-bold text-gold-400">{s.groupThirdQualifies} pts/grup</td></tr>
           </tbody>

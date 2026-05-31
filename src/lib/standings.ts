@@ -91,3 +91,45 @@ export function computeGroupStanding(group: Group, matches: Match[]): GroupStand
 export function computeAllGroupStandings(groups: Group[], matches: Match[]): GroupStanding[] {
   return groups.map((g) => computeGroupStanding(g, matches));
 }
+
+/** Classificació prevista a partir dels marcadors predits (fase de grups) */
+export function computeGroupStandingFromPredictions(
+  group: Group,
+  matches: Match[],
+  predictions: Record<string, { home: number; away: number }>
+): GroupStanding {
+  const pseudoMatches = matches
+    .filter((m) => m.groupId === group.id && predictions[m.id])
+    .map((m) => ({
+      ...m,
+      homeScore: predictions[m.id].home,
+      awayScore: predictions[m.id].away,
+    }));
+  return computeGroupStanding(group, pseudoMatches);
+}
+
+export function computeAllPredictedStandings(
+  groups: Group[],
+  matches: Match[],
+  predictions: Record<string, { home: number; away: number }>
+): GroupStanding[] {
+  return groups.map((g) => computeGroupStandingFromPredictions(g, matches, predictions));
+}
+
+export function buildGroupPredictionsFromMatches(
+  groups: Group[],
+  matches: Match[],
+  predictions: Record<string, { home: number; away: number }>,
+  existingGroups?: { groupId: string; positions: [string, string, string, string]; thirdQualifies: boolean }[]
+) {
+  return groups.map((g) => {
+    const standing = computeGroupStandingFromPredictions(g, matches, predictions);
+    const positions = standing.teams.map((t) => t.code) as [string, string, string, string];
+    const existing = existingGroups?.find((x) => x.groupId === g.id);
+    return {
+      groupId: g.id,
+      positions,
+      thirdQualifies: existing?.thirdQualifies ?? false,
+    };
+  });
+}

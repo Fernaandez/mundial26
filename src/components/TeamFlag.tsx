@@ -6,7 +6,7 @@ interface TeamFlagProps {
   className?: string;
 }
 
-export function TeamFlag({ code, size = 28, className = "" }: TeamFlagProps) {
+export function TeamFlag({ code, size = 22, className = "" }: TeamFlagProps) {
   const iso = getTeamIso(code);
 
   if (!iso) {

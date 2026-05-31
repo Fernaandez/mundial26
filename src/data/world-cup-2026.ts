@@ -108,7 +108,7 @@ function ko(id: string, phase: Phase, home: string, away: string, label: string)
 
 export const KNOCKOUT_MATCHES: Match[] = [
   ...Array.from({ length: 16 }, (_, i) =>
-    ko(`r32-${i + 1}`, "round32", "TBD", "TBD", `32ens de final ${i + 1}`)
+    ko(`r32-${i + 1}`, "round32", "TBD", "TBD", `16ens de final ${i + 1}`)
   ),
   ...Array.from({ length: 8 }, (_, i) =>
     ko(`r16-${i + 1}`, "round16", "TBD", "TBD", `8ens de final ${i + 1}`)
@@ -125,7 +125,7 @@ export const KNOCKOUT_MATCHES: Match[] = [
 export const ALL_MATCHES = [...GROUP_MATCHES, ...KNOCKOUT_MATCHES];
 
 export const KNOCKOUT_ROUNDS = [
-  { phase: "round32" as Phase, name: "32ens de final", matchIds: KNOCKOUT_MATCHES.filter((m) => m.phase === "round32").map((m) => m.id) },
+  { phase: "round32" as Phase, name: "16ens de final", matchIds: KNOCKOUT_MATCHES.filter((m) => m.phase === "round32").map((m) => m.id) },
   { phase: "round16" as Phase, name: "8ens de final", matchIds: KNOCKOUT_MATCHES.filter((m) => m.phase === "round16").map((m) => m.id) },
   { phase: "quarter" as Phase, name: "Quarts de final", matchIds: KNOCKOUT_MATCHES.filter((m) => m.phase === "quarter").map((m) => m.id) },
   { phase: "semi" as Phase, name: "Semifinals", matchIds: KNOCKOUT_MATCHES.filter((m) => m.phase === "semi").map((m) => m.id) },
@@ -184,7 +184,7 @@ export const SCORING_RULES = {
 export const PHASE_LABELS: Record<Phase, string> = {
   special: "Prediccions especials",
   groups: "Fase de grups",
-  round32: "32ens de final",
+  round32: "16ens de final",
   round16: "8ens de final",
   quarter: "Quarts de final",
   semi: "Semifinals",

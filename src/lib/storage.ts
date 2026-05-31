@@ -11,6 +11,7 @@ import {
   canEditKnockoutPredictions,
   isKnockoutPhase,
 } from "@/lib/phases";
+import { buildGroupPredictionsFromMatches } from "@/lib/standings";
 
 const ROW_ID = 1;
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -287,7 +288,15 @@ export async function savePredictions(
   }
 
   if (special && canEditGroupPredictions(windows)) {
-    p.special = special;
+    p.special = {
+      ...special,
+      groups: buildGroupPredictionsFromMatches(
+        data.tournament.groups,
+        data.tournament.matches,
+        p.matches,
+        special.groups
+      ),
+    };
   }
 
   await writeData(data);

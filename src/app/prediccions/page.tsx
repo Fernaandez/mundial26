@@ -209,6 +209,7 @@ export default function PredictionsPage() {
             <SpecialForm
               groups={groups}
               matches={matches}
+              predictions={predictions}
               special={special}
               allTeams={getAllTeams()}
               onChange={(s) => { setSpecial(s); setSaved(false); }}
@@ -242,7 +243,7 @@ export default function PredictionsPage() {
               <h2 className="font-display text-2xl text-pitch-300 mb-3">Eliminatòries encara tancades</h2>
               <p className="text-pitch-400 text-sm max-w-md mx-auto">
                 Primer s&apos;ha de completar i puntuar la fase de grups. Quan l&apos;admin obri aquesta fase,
-                podràs predir 32ens, 8ens, quarts, semis i final.
+                podràs predir 16ens, 8ens, quarts, semis i final.
               </p>
             </div>
           ) : (
@@ -250,7 +251,7 @@ export default function PredictionsPage() {
               <div className="card-glass rounded-xl p-4 mb-6 border border-gold-500/30">
                 <p className="text-gold-400 font-medium text-sm">Fase d&apos;eliminatòries oberta</p>
                 <p className="text-pitch-400 text-xs mt-1">
-                  Prediu els partits de 32ens de final fins a la final.
+                  Prediu els partits de 16ens de final fins a la final.
                 </p>
               </div>
 
