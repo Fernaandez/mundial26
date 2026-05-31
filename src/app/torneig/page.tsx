@@ -2,8 +2,9 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { Match } from "@/types";
-import { GroupStanding } from "@/lib/standings";
+import { GroupStanding, BestThirdEntry } from "@/lib/standings";
 import { AllGroupStandingsGrid } from "@/components/GroupStandingsTable";
+import { BestThirdsPanel } from "@/components/BestThirdsPanel";
 import { KnockoutPhaseList } from "@/components/KnockoutBracket";
 import { Phase } from "@/types";
 import { PHASE_LABELS } from "@/data/world-cup-2026";
@@ -13,6 +14,8 @@ type Tab = "groups" | "knockout";
 interface TournamentData {
   matches: Match[];
   groupStandings: GroupStanding[];
+  bestThirds: BestThirdEntry[];
+  thirdQualifierGroups: string[];
   stats: {
     groupResultsCount: number;
     groupMatchesTotal: number;
@@ -119,9 +122,13 @@ export default function TorneigPage() {
         <section>
           <p className="text-sm text-pitch-400 mb-6">
             Les taules s&apos;actualitzen automàticament quan l&apos;admin introdueix resultats.
-            <span className="text-pitch-500"> Verd = classificat · Groc = possible 3r</span>
+            <span className="text-pitch-500"> Verd = 1r/2n classificat · Daurat = 3r que passa</span>
           </p>
-          <AllGroupStandingsGrid standings={data.groupStandings} />
+          <BestThirdsPanel entries={data.bestThirds ?? []} variant="results" />
+          <AllGroupStandingsGrid
+            standings={data.groupStandings}
+            thirdQualifierGroups={new Set(data.thirdQualifierGroups ?? [])}
+          />
         </section>
       )}
 

@@ -131,13 +131,21 @@ function StandingRow({
 
 interface AllGroupStandingsProps {
   standings: GroupStanding[];
+  thirdQualifierGroups?: Set<string>;
 }
 
-export function AllGroupStandingsGrid({ standings }: AllGroupStandingsProps) {
+export function AllGroupStandingsGrid({ standings, thirdQualifierGroups }: AllGroupStandingsProps) {
+  const showThird = !!thirdQualifierGroups && thirdQualifierGroups.size > 0;
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
       {standings.map((s) => (
-        <GroupStandingsTable key={s.groupId} standing={s} />
+        <GroupStandingsTable
+          key={s.groupId}
+          standing={s}
+          showThirdQualifier={showThird}
+          thirdQualifies={thirdQualifierGroups?.has(s.groupId)}
+        />
       ))}
     </div>
   );

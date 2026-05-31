@@ -43,6 +43,28 @@ export default function RulesPage() {
       </section>
 
       <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
+        <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">MILLORS 3RS CLASSIFICATS</h2>
+        <p className="text-pitch-300 mb-4 text-sm sm:text-base">
+          Del Mundial 2026 passen els <strong className="text-white">8 millors 3rs</strong> (12 grups → 8 passen, 4 queden fora).
+          Es calcula automàticament dels marcadors de grups (predicció o resultats reals): punts, diferència de gols i gols a favor.
+        </p>
+        <div className="overflow-x-auto -mx-2 px-2">
+        <table className="w-full text-left min-w-[280px]">
+          <thead>
+            <tr className="border-b border-pitch-700 text-pitch-400">
+              <th className="py-2">Encert</th>
+              <th className="py-2 text-right">Punts</th>
+            </tr>
+          </thead>
+          <tbody className="text-pitch-200">
+            <tr><td className="py-3">El 3r del grup passa o no (per grup complet)</td><td className="py-3 text-right font-bold text-gold-400">{s.groupThirdQualifies} pts/grup</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <p className="text-sm text-pitch-500 mt-4">Màxim teòric millors 3rs: 12 × {s.groupThirdQualifies} = {12 * s.groupThirdQualifies} punts</p>
+      </section>
+
+      <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
         <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">ELIMINATÒRIES</h2>
         <p className="text-pitch-300 mb-4 text-sm sm:text-base">16ens → 8ens → Quarts → Semis → 3r lloc → Final (32 partits)</p>
         <div className="overflow-x-auto -mx-2 px-2">
@@ -89,7 +111,6 @@ export default function RulesPage() {
             <tr className="border-b border-pitch-800/50"><td className="py-3">Primer favorit eliminat</td><td className="py-3 text-right font-bold text-gold-400">{s.firstEliminatedFavorite} pts</td></tr>
             <tr className="border-b border-pitch-800/50"><td className="py-3">Ordre exacte d&apos;un grup (dels teus marcadors)</td><td className="py-3 text-right font-bold text-gold-400">{s.groupExactOrder} pts/grup</td></tr>
             <tr className="border-b border-pitch-800/50"><td className="py-3">Equip al top 2 (per grup)</td><td className="py-3 text-right font-bold text-gold-400">{s.groupTopTwo} pts/equip</td></tr>
-            <tr><td className="py-3">3r classificat passa (calculat automàtic)</td><td className="py-3 text-right font-bold text-gold-400">{s.groupThirdQualifies} pts/grup</td></tr>
           </tbody>
         </table>
         </div>

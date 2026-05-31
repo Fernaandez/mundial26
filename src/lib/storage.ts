@@ -11,7 +11,7 @@ import {
   canEditKnockoutPredictions,
   isKnockoutPhase,
 } from "@/lib/phases";
-import { buildGroupPredictionsFromMatches } from "@/lib/standings";
+import { buildGroupPredictionsFromMatches, buildGroupStandingsActuals } from "@/lib/standings";
 import { DEFAULT_MUNDIAL_FIELDS } from "@/lib/mundial";
 
 const ROW_ID = 1;
@@ -29,7 +29,7 @@ export interface SpecialActuals {
   goldenGlove?: string;
   surpriseTeam?: string;
   firstEliminatedFavorite?: string;
-  groupStandings?: Record<string, { order: string[]; thirdQualifies: boolean }>;
+  groupStandings?: Record<string, { order: string[]; thirdQualifies: boolean; complete?: boolean }>;
 }
 
 export interface ExtendedAppData extends AppData {
@@ -250,6 +250,14 @@ export async function updateMatchResult(
   match.homeScore = homeScore;
   match.awayScore = awayScore;
   match.locked = locked;
+
+  if (match.phase === "groups") {
+    data.specialActuals = {
+      ...data.specialActuals,
+      groupStandings: buildGroupStandingsActuals(data.tournament.groups, data.tournament.matches),
+    };
+  }
+
   await writeData(data);
   return match;
 }
@@ -338,7 +346,15 @@ export async function saveSpecialActuals(adminPin: string, actuals: SpecialActua
 
 export async function getSpecialActuals(): Promise<SpecialActuals | undefined> {
   const data = await readData();
-  return data.specialActuals;
+  const computed = buildGroupStandingsActuals(data.tournament.groups, data.tournament.matches);
+  const hasComputed = Object.values(computed).some((g) => g.complete);
+
+  if (!data.specialActuals && !hasComputed) return undefined;
+
+  return {
+    ...data.specialActuals,
+    groupStandings: computed,
+  };
 }
 
 export async function updateKnockoutTeams(

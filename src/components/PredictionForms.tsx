@@ -180,13 +180,23 @@ interface GroupSectionProps {
   onChange: (matchId: string, home: number, away: number) => void;
   disabled?: boolean;
   predictionLabel?: string;
+  thirdQualifierGroups?: Set<string>;
 }
 
-export function GroupSection({ group, groups, matches, predictions, onChange, disabled, predictionLabel = "La teva predicció" }: GroupSectionProps) {
+export function GroupSection({
+  group,
+  groups,
+  matches,
+  predictions,
+  onChange,
+  disabled,
+  predictionLabel = "La teva predicció",
+  thirdQualifierGroups,
+}: GroupSectionProps) {
   const groupMatches = matches.filter((m) => m.groupId === group.id);
   const predictedStanding = computeGroupStandingFromPredictions(group, matches, predictions);
   const liveStanding = computeGroupStanding(group, matches);
-  const thirdQualifiers = computeThirdQualifierGroups(groups, matches, predictions);
+  const thirdQualifiers = thirdQualifierGroups ?? computeThirdQualifierGroups(groups, matches, predictions);
 
   return (
     <div className="mb-8 sm:mb-10">
@@ -203,7 +213,7 @@ export function GroupSection({ group, groups, matches, predictions, onChange, di
         <GroupStandingsTable
           standing={predictedStanding}
           showThirdQualifier
-          thirdQualifies={thirdQualifiers.has(group.id)}
+          thirdQualifies={thirdQualifiers.has(group.id) && predictedStanding.playedMatches === predictedStanding.totalMatches}
         />
       </div>
       <h3 className="font-display text-xl sm:text-2xl text-pitch-400 mb-3 sm:mb-4">Partits</h3>

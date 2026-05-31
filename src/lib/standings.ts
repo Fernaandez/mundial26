@@ -32,24 +32,73 @@ function compareTeams(a: TeamStanding, b: TeamStanding): number {
   return a.code.localeCompare(b.code);
 }
 
+export function isGroupStandingComplete(standing: GroupStanding): boolean {
+  return standing.totalMatches > 0 && standing.playedMatches === standing.totalMatches;
+}
+
+export interface BestThirdEntry {
+  rank: number;
+  groupId: string;
+  groupName: string;
+  team: TeamStanding;
+  qualifies: boolean;
+  groupComplete: boolean;
+}
+
+/** Rànquing dels 3rs de cada grup (els 8 primers passen d'eliminatoria) */
+export function computeBestThirdsRanking(
+  standings: GroupStanding[],
+  options: { requireComplete?: boolean } = {}
+): BestThirdEntry[] {
+  const { requireComplete = false } = options;
+  const entries: Omit<BestThirdEntry, "rank" | "qualifies">[] = [];
+
+  for (const standing of standings) {
+    const complete = isGroupStandingComplete(standing);
+    if (requireComplete && !complete) continue;
+
+    const third = standing.teams.find((t) => t.position === 3);
+    if (!third) continue;
+    if (!requireComplete && standing.playedMatches === 0) continue;
+
+    entries.push({
+      groupId: standing.groupId,
+      groupName: standing.groupName,
+      team: third,
+      groupComplete: complete,
+    });
+  }
+
+  entries.sort((a, b) => compareTeams(a.team, b.team));
+
+  return entries.map((entry, i) => ({
+    ...entry,
+    rank: i + 1,
+    qualifies: i < 8,
+  }));
+}
+
+export function computeThirdQualifierGroupsFromStandings(
+  standings: GroupStanding[],
+  requireComplete = true
+): Set<string> {
+  return new Set(
+    computeBestThirdsRanking(standings, { requireComplete })
+      .filter((e) => e.qualifies)
+      .map((e) => e.groupId)
+  );
+}
+
 /** Els 8 millors 3rs classificats (segons punts, DG, GF) */
 export function computeThirdQualifierGroups(
   groups: Group[],
   matches: Match[],
   predictions: Record<string, { home: number; away: number }>
 ): Set<string> {
-  const thirds: { groupId: string; stats: TeamStanding }[] = [];
-
-  for (const g of groups) {
-    const standing = computeGroupStandingFromPredictions(g, matches, predictions);
-    const third = standing.teams.find((t) => t.position === 3);
-    if (third && standing.playedMatches > 0) {
-      thirds.push({ groupId: g.id, stats: third });
-    }
-  }
-
-  thirds.sort((a, b) => compareTeams(a.stats, b.stats));
-  return new Set(thirds.slice(0, 8).map((x) => x.groupId));
+  const standings = groups.map((g) =>
+    computeGroupStandingFromPredictions(g, matches, predictions)
+  );
+  return computeThirdQualifierGroupsFromStandings(standings, false);
 }
 
 export function computeGroupStanding(group: Group, matches: Match[]): GroupStanding {
@@ -141,15 +190,40 @@ export function buildGroupPredictionsFromMatches(
   matches: Match[],
   predictions: Record<string, { home: number; away: number }>
 ) {
-  const qualifyingThirds = computeThirdQualifierGroups(groups, matches, predictions);
+  const standings = groups.map((g) =>
+    computeGroupStandingFromPredictions(g, matches, predictions)
+  );
+  const qualifyingThirds = computeThirdQualifierGroupsFromStandings(standings, false);
 
   return groups.map((g) => {
-    const standing = computeGroupStandingFromPredictions(g, matches, predictions);
+    const standing = standings.find((s) => s.groupId === g.id)!;
     const positions = standing.teams.map((t) => t.code) as [string, string, string, string];
+    const complete = isGroupStandingComplete(standing);
     return {
       groupId: g.id,
       positions,
-      thirdQualifies: qualifyingThirds.has(g.id),
+      thirdQualifies: complete && qualifyingThirds.has(g.id),
     };
   });
+}
+
+/** Resultats reals de grups per puntuació (ordre + si el 3r passa) */
+export function buildGroupStandingsActuals(
+  groups: Group[],
+  matches: Match[]
+): Record<string, { order: string[]; thirdQualifies: boolean; complete: boolean }> {
+  const standings = computeAllGroupStandings(groups, matches);
+  const qualifyingThirds = computeThirdQualifierGroupsFromStandings(standings, true);
+  const result: Record<string, { order: string[]; thirdQualifies: boolean; complete: boolean }> = {};
+
+  for (const s of standings) {
+    const complete = isGroupStandingComplete(s);
+    result[s.groupId] = {
+      order: s.teams.map((t) => t.code),
+      thirdQualifies: complete && qualifyingThirds.has(s.groupId),
+      complete,
+    };
+  }
+
+  return result;
 }

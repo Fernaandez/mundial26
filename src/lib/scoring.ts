@@ -61,7 +61,7 @@ function scoreSpecialPredictions(
     goldenGlove?: string;
     surpriseTeam?: string;
     firstEliminatedFavorite?: string;
-    groupStandings?: Record<string, { order: string[]; thirdQualifies: boolean }>;
+    groupStandings?: Record<string, { order: string[]; thirdQualifies: boolean; complete?: boolean }>;
   }
 ): number {
   if (!special) return 0;
@@ -101,7 +101,7 @@ function scoreSpecialPredictions(
       }
     }
 
-    if (gp.thirdQualifies === actual.thirdQualifies) {
+    if (gp.thirdQualifies === actual.thirdQualifies && actual.complete) {
       pts += r.groupThirdQualifies;
     }
   }

@@ -11,6 +11,12 @@ import {
   canEditGroupPredictions,
   canEditKnockoutPredictions,
 } from "@/lib/phases";
+import {
+  computeBestThirdsRanking,
+  computeThirdQualifierGroups,
+  computeAllPredictedStandings,
+} from "@/lib/standings";
+import { BestThirdsPanel } from "@/components/BestThirdsPanel";
 
 type MainSection = "groups" | "knockout" | "mundial";
 
@@ -76,6 +82,10 @@ export function PredictionsPanel({
   const mundialFilled = countMundialFilled(special);
 
   const phaseMatches = matches.filter((m) => m.phase === activePhase);
+
+  const predictedStandings = computeAllPredictedStandings(groups, matches, predictions);
+  const bestThirds = computeBestThirdsRanking(predictedStandings);
+  const thirdQualifierGroups = computeThirdQualifierGroups(groups, matches, predictions);
 
   const canSave =
     !readOnly && (
@@ -170,6 +180,7 @@ export function PredictionsPanel({
               La classificació s&apos;actualitza al moment en omplir cada marcador (GF, GC, DG, Pts).
             </p>
           )}
+          <BestThirdsPanel entries={bestThirds} variant="prediction" />
           <div>
             {groups.map((g) => (
               <GroupSection
@@ -181,6 +192,7 @@ export function PredictionsPanel({
                 onChange={onPredictionChange ?? noopChange}
                 disabled={readOnly || !groupsEditable}
                 predictionLabel={readOnly ? "Predicció" : "La teva predicció"}
+                thirdQualifierGroups={thirdQualifierGroups}
               />
             ))}
           </div>
