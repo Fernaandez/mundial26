@@ -9,20 +9,7 @@ export const FIFA_TOP_10_CODES = [
   "ESP", "FRA", "ENG", "GER", "POR", "ARG", "BRA", "MAR", "BEL", "NED",
 ] as const;
 
-export const SUBMISSION_DEADLINES: { phase: string; limit: string }[] = [
-  {
-    phase: "Grups + prediccions especials",
-    limit: "Dimecres 10 de juny de 2026, 23:59h",
-  },
-  {
-    phase: "Obertura eliminatòries",
-    limit: "Dissabte 28 de juny de 2026, 04:00h (acaba fase de grups)",
-  },
-  {
-    phase: "Eliminatòries (marcadors + quadre)",
-    limit: "Dissabte 28 de juny de 2026, 20:59h (comencen els 32ens de final)",
-  },
-];
+export const SUBMISSION_DEADLINES: { phase: string; limit: string }[] = [];
 
 export const DEADLINES = {
   groupsSubmit: "Dimecres 10 de juny de 2026, 23:59h",
@@ -31,8 +18,7 @@ export const DEADLINES = {
 } as const;
 
 export const RULES_NOTES = {
-  payment: "15€ a pagar/cobrar quan s'acabi la final.",
-  prizesNote: "El pot total és el nombre de participants × 15€ (màx. 12 jugadors).",
+  prizesNote: "El pot total és el nombre de participants × 15€.",
   youngPlayer: "MVP jove: jugadors nascuts l'1 de gener de 2005 o després (21 anys o menys el 2026).",
   surpriseTeam:
     "Selecció revelació: qualsevol selecció excepte el top 10 FIFA. Només compta si classifica com a mínim als quarts de final.",

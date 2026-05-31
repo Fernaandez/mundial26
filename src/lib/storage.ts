@@ -1,17 +1,16 @@
 import fs from "fs";
 import path from "path";
-import { AppData, Participant, Match, SpecialPredictions } from "@/types";
+import { AppData, Participant, Match, SpecialPredictions, Phase } from "@/types";
 import { TOURNAMENT_CONFIG, ALL_MATCHES } from "@/data/world-cup-2026";
 import { getSupabase, useSupabase, isCloudDeploy, getStorageConfigError } from "@/lib/supabase";
 import {
   PredictionWindows,
   DEFAULT_PREDICTION_WINDOWS,
   mergePredictionWindows,
-  canEditGroupPredictions,
-  canEditKnockoutPredictions,
   canEditSpecialPredictions,
   isKnockoutPhase,
 } from "@/lib/phases";
+import { canEditMatchPrediction, canEditPhasePredictions } from "@/lib/prediction-deadlines";
 import { buildGroupPredictionsFromMatches, buildGroupStandingsActuals } from "@/lib/standings";
 import { DEFAULT_MUNDIAL_FIELDS, normalizeSpecialPredictions, applyBracketPodiumToSpecial } from "@/lib/mundial";
 import { computeGroupStageStats } from "@/lib/group-stats";
@@ -101,6 +100,7 @@ function mergeMatches(parsed: ExtendedAppData): ExtendedAppData {
           homeScore: existing.homeScore,
           awayScore: existing.awayScore,
           locked: existing.locked,
+          knockoutWinner: existing.knockoutWinner,
           homeTeam: existing.homeTeam !== "TBD" ? existing.homeTeam : m.homeTeam,
           awayTeam: existing.awayTeam !== "TBD" ? existing.awayTeam : m.awayTeam,
         }
@@ -232,7 +232,8 @@ export async function updateMatchResult(
   matchId: string,
   homeScore: number,
   awayScore: number,
-  locked: boolean
+  locked: boolean,
+  knockoutWinner?: string
 ): Promise<Match> {
   const data = await readData();
   const match = data.tournament.matches.find((m) => m.id === matchId);
@@ -241,6 +242,18 @@ export async function updateMatchResult(
   match.homeScore = homeScore;
   match.awayScore = awayScore;
   match.locked = locked;
+
+  if (homeScore === awayScore && isKnockoutPhase(match.phase)) {
+    if (!knockoutWinner) {
+      throw new Error("En eliminatòria, indica qui passa de ronda en cas d'empat");
+    }
+    if (knockoutWinner !== match.homeTeam && knockoutWinner !== match.awayTeam) {
+      throw new Error("El guanyador ha de ser un dels dos equips del partit");
+    }
+    match.knockoutWinner = knockoutWinner;
+  } else {
+    match.knockoutWinner = undefined;
+  }
 
   if (match.phase === "groups") {
     data.specialActuals = {
@@ -288,23 +301,17 @@ export async function savePredictions(
   if (!p || p.pin !== pin) throw new Error("Accés denegat");
 
   const windows = getPredictionWindows(data);
+  const allMatches = data.tournament.matches;
   const warnings: string[] = [];
   let skippedLocked = 0;
   let skippedPhase = 0;
 
   for (const [matchId, pred] of Object.entries(matches)) {
-    const match = data.tournament.matches.find((m) => m.id === matchId);
+    const match = allMatches.find((m) => m.id === matchId);
     if (!match) continue;
-    if (match.locked) {
-      skippedLocked++;
-      continue;
-    }
-    if (match.phase === "groups" && !canEditGroupPredictions(windows)) {
-      skippedPhase++;
-      continue;
-    }
-    if (isKnockoutPhase(match.phase) && !canEditKnockoutPredictions(windows)) {
-      skippedPhase++;
+    if (!canEditMatchPrediction(match, allMatches, windows)) {
+      if (match.locked) skippedLocked++;
+      else skippedPhase++;
       continue;
     }
     p.matches[matchId] = pred;
@@ -328,11 +335,32 @@ export async function savePredictions(
     merged = { ...merged, ...special, groups: syncedGroups };
   }
 
-  if (bracketPicks !== undefined && canEditKnockoutPredictions(windows)) {
-    p.bracketPicks = { ...bracketPicks };
-    merged = applyBracketPodiumToSpecial(merged, bracketPicks);
-  } else if (bracketPicks !== undefined && !canEditKnockoutPredictions(windows)) {
-    warnings.push("El quadre eliminatori està tancat: no s'han desat les tries del quadre.");
+  const knockoutEditable = (phase: Phase) =>
+    canEditPhasePredictions(phase, allMatches, windows);
+
+  if (bracketPicks !== undefined) {
+    const prevPicks = p.bracketPicks ?? {};
+    const mergedPicks = { ...prevPicks };
+    let bracketSkipped = 0;
+
+    for (const [matchId, pick] of Object.entries(bracketPicks)) {
+      const match = allMatches.find((m) => m.id === matchId);
+      if (!match || !isKnockoutPhase(match.phase)) continue;
+      if (knockoutEditable(match.phase)) {
+        mergedPicks[matchId] = pick;
+      } else {
+        bracketSkipped++;
+      }
+    }
+
+    if (Object.keys(mergedPicks).length > 0 || Object.keys(prevPicks).length > 0) {
+      p.bracketPicks = mergedPicks;
+      merged = applyBracketPodiumToSpecial(merged, mergedPicks);
+    }
+
+    if (bracketSkipped > 0) {
+      warnings.push(`${bracketSkipped} tria/es del quadre d'una fase tancada — no s'han actualitzat.`);
+    }
   }
 
   p.special = normalizeSpecialPredictions(merged)!;

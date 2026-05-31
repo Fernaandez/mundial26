@@ -37,7 +37,13 @@ export async function POST(request: Request) {
     const { action, adminPin } = body;
 
     if (action === "result") {
-      const match = await updateMatchResult(body.matchId, body.homeScore, body.awayScore, body.locked ?? true);
+      const match = await updateMatchResult(
+        body.matchId,
+        body.homeScore,
+        body.awayScore,
+        body.locked ?? true,
+        body.knockoutWinner
+      );
       return NextResponse.json({ success: true, match });
     }
 

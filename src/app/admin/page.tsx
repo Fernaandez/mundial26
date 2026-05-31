@@ -6,6 +6,8 @@ import { getTeamInfo, getAllTeams } from "@/data/world-cup-2026";
 import { PredictionWindows } from "@/lib/phases";
 import { MatchScoreboard } from "@/components/MatchScoreboard";
 import { AdminSpecialActualsForm } from "@/components/AdminSpecialActualsForm";
+import { TeamFlag } from "@/components/TeamFlag";
+import { isKnockoutPhase } from "@/lib/phases";
 import type { SpecialActualsInput } from "@/lib/scoring";
 
 export default function AdminPage() {
@@ -39,18 +41,35 @@ export default function AdminPage() {
     setAuthenticated(true);
   }
 
-  async function saveResult(matchId: string, homeScore: number, awayScore: number) {
+  async function saveResult(
+    matchId: string,
+    homeScore: number,
+    awayScore: number,
+    knockoutWinner?: string
+  ) {
     setSuccess("");
     const res = await fetch("/api/admin", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "result", adminPin: pin, matchId, homeScore, awayScore, locked: true }),
+      body: JSON.stringify({
+        action: "result",
+        adminPin: pin,
+        matchId,
+        homeScore,
+        awayScore,
+        locked: true,
+        knockoutWinner,
+      }),
     });
     if (res.ok) {
+      const data = await res.json();
       setMatches((prev) =>
-        prev.map((m) => (m.id === matchId ? { ...m, homeScore, awayScore, locked: true } : m))
+        prev.map((m) => (m.id === matchId ? { ...m, ...data.match } : m))
       );
       setSuccess("Resultat desat!");
+    } else {
+      const data = await res.json();
+      setError(data.error ?? "Error desant resultat");
     }
   }
 
@@ -505,12 +524,23 @@ function KnockoutRow({
   match: Match;
   teams: { code: string; name: string; iso: string }[];
   onUpdateTeams: (id: string, home: string, away: string) => void;
-  onSaveResult: (id: string, h: number, a: number) => void;
+  onSaveResult: (id: string, h: number, a: number, winner?: string) => void;
 }) {
   const [homeTeam, setHomeTeam] = useState(match.homeTeam);
   const [awayTeam, setAwayTeam] = useState(match.awayTeam);
   const [home, setHome] = useState(match.homeScore ?? 0);
   const [away, setAway] = useState(match.awayScore ?? 0);
+  const [winner, setWinner] = useState(match.knockoutWinner ?? "");
+  const isDraw = home === away;
+  const needsWinner = isKnockoutPhase(match.phase) && isDraw && homeTeam !== "TBD" && awayTeam !== "TBD";
+
+  function handleSave() {
+    if (needsWinner && !winner) {
+      alert("Selecciona qui passa de ronda en cas d'empat.");
+      return;
+    }
+    onSaveResult(match.id, home, away, needsWinner ? winner : undefined);
+  }
 
   return (
     <div className="card-glass rounded-xl p-4 space-y-3">
@@ -529,16 +559,63 @@ function KnockoutRow({
           Actualitzar equips
         </button>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <input type="number" min={0} max={20} value={home} onChange={(e) => setHome(+e.target.value)} className="score-input w-12" disabled={match.locked} />
         <span>:</span>
         <input type="number" min={0} max={20} value={away} onChange={(e) => setAway(+e.target.value)} className="score-input w-12" disabled={match.locked} />
         {!match.locked && (
-          <button onClick={() => onSaveResult(match.id, home, away)} className="btn-primary text-sm py-2 px-4">
+          <button onClick={handleSave} className="btn-primary text-sm py-2 px-4">
             Desar resultat
           </button>
         )}
+        {match.locked && match.knockoutWinner && (
+          <span className="text-xs text-gold-400">Passa: {getTeamInfo(match.knockoutWinner).name}</span>
+        )}
       </div>
+      {needsWinner && !match.locked && (
+        <div className="border border-amber-700/40 rounded-xl p-3 bg-amber-900/10">
+          <p className="text-xs text-amber-100 mb-2">Empat a 90 min — qui passa de ronda?</p>
+          <div className="flex items-center gap-3">
+            <WinnerPick
+              code={homeTeam}
+              name={getTeamInfo(homeTeam).name}
+              selected={winner === homeTeam}
+              onClick={() => setWinner(homeTeam)}
+            />
+            <WinnerPick
+              code={awayTeam}
+              name={getTeamInfo(awayTeam).name}
+              selected={winner === awayTeam}
+              onClick={() => setWinner(awayTeam)}
+            />
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+function WinnerPick({
+  code,
+  name,
+  selected,
+  onClick,
+}: {
+  code: string;
+  name: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={name}
+      className={`rounded-lg p-2 transition-all ${
+        selected ? "bg-gold-500/25 ring-2 ring-gold-500" : "bg-pitch-950/50 hover:bg-pitch-800/80"
+      }`}
+    >
+      <TeamFlag code={code} size={28} />
+    </button>
   );
 }

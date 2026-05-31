@@ -25,6 +25,10 @@ export function MatchScoreboard({
   const winner = getMatchWinner(match);
   const homeWin = winner === home.code;
   const awayWin = winner === away.code;
+  const drawAdvance =
+    finished &&
+    match.homeScore === match.awayScore &&
+    !!match.knockoutWinner;
 
   const isBracket = variant === "bracket";
   const isCompact = variant === "compact";
@@ -95,6 +99,12 @@ export function MatchScoreboard({
             large={variant === "card" && finished}
           />
         </>
+      )}
+
+      {drawAdvance && (
+        <p className="text-[10px] text-gold-400 text-center mt-1.5">
+          Passa: {getTeamInfo(match.knockoutWinner!).name}
+        </p>
       )}
 
       {showPrediction && prediction && finished && (

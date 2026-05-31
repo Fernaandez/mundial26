@@ -22,6 +22,9 @@ export function getMatchWinner(match: Match): string | null {
   }
   if (match.homeScore > match.awayScore) return match.homeTeam;
   if (match.awayScore > match.homeScore) return match.awayTeam;
+  if (match.homeScore === match.awayScore && match.knockoutWinner) {
+    return match.knockoutWinner;
+  }
   return null;
 }
 

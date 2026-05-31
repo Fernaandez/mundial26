@@ -10,7 +10,7 @@ interface PredictionBracketProps {
   matches: Match[];
   bracketPicks: Record<string, string>;
   onPick: (matchId: string, teamCode: string) => void;
-  disabled?: boolean;
+  isPickEnabled?: (phase: Phase) => boolean;
   readOnly?: boolean;
 }
 
@@ -18,12 +18,11 @@ export function PredictionBracket({
   matches,
   bracketPicks,
   onPick,
-  disabled,
+  isPickEnabled,
   readOnly,
 }: PredictionBracketProps) {
   const byId = matchesByIdMap(matches);
   const rounds = getBracketRounds();
-  const locked = disabled || readOnly;
   const pickCount = Object.keys(bracketPicks).length;
   const expectedPicks = countExpectedBracketPicks(matches);
   const incomplete = pickCount > 0 && pickCount < expectedPicks;
@@ -33,7 +32,7 @@ export function PredictionBracket({
       {!readOnly && (
         <p className="text-sm text-pitch-400 mb-4">
           Clica la bandera de l&apos;equip que passa de ronda. Aquí es trien tots els classificats,
-          el campió (final) i el 3r lloc. Els marcadors exactes van a la pestanya Marcadors.{" "}
+          el campió (final) i el 3r lloc. Cada ronda només es pot omplir dins la seva finestra horària.{" "}
           {pickCount > 0 && `${pickCount}/${expectedPicks} tries.`}
         </p>
       )}
@@ -44,27 +43,33 @@ export function PredictionBracket({
       )}
 
       <div className="bracket-scroll">
-        {rounds.map((round) => (
-          <div key={round.phase} className="bracket-round">
-            <div className="bracket-round-title">{round.name}</div>
-            <div className="bracket-round-matches">
-              {round.matchIds.map((id) => {
-                const match = byId[id];
-                if (!match) return null;
-                return (
-                  <BracketMatchPick
-                    key={id}
-                    match={match}
-                    phase={round.phase}
-                    picked={bracketPicks[id]}
-                    onPick={(code) => onPick(id, code)}
-                    disabled={locked}
-                  />
-                );
-              })}
+        {rounds.map((round) => {
+          const roundOpen = readOnly || (isPickEnabled?.(round.phase) ?? true);
+          return (
+            <div key={round.phase} className="bracket-round">
+              <div className="bracket-round-title flex items-center gap-2">
+                {round.name}
+                {!roundOpen && !readOnly && <span className="text-xs opacity-70">🔒</span>}
+              </div>
+              <div className="bracket-round-matches">
+                {round.matchIds.map((id) => {
+                  const match = byId[id];
+                  if (!match) return null;
+                  return (
+                    <BracketMatchPick
+                      key={id}
+                      match={match}
+                      phase={round.phase}
+                      picked={bracketPicks[id]}
+                      onPick={(code) => onPick(id, code)}
+                      disabled={!roundOpen}
+                    />
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

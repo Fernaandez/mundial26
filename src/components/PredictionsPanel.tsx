@@ -9,9 +9,10 @@ import {
   PredictionWindows,
   KNOCKOUT_PHASE_LIST,
   canEditGroupPredictions,
-  canEditKnockoutPredictions,
   canEditSpecialPredictions,
+  isKnockoutPhase,
 } from "@/lib/phases";
+import { canEditPhasePredictions, getOpenKnockoutPhases } from "@/lib/prediction-deadlines";
 import {
   computeBestThirdsRanking,
   computeThirdQualifierGroups,
@@ -69,10 +70,16 @@ export function PredictionsPanel({
   const [activePhase, setActivePhase] = useState<Phase>("round32");
 
   const readOnly = mode === "view";
-  const groupsEditable = !readOnly && canEditGroupPredictions(windows);
-  const specialEditable = !readOnly && canEditSpecialPredictions(windows);
-  const knockoutEditable = !readOnly && canEditKnockoutPredictions(windows);
-  const showKnockout = readOnly || knockoutEditable;
+  const groupsEditable = !readOnly && canEditGroupPredictions(windows) && canEditPhasePredictions("groups", matches, windows);
+  const specialEditable = !readOnly && canEditSpecialPredictions(windows) && canEditPhasePredictions("special", matches, windows);
+  const openKnockoutPhases = getOpenKnockoutPhases(matches, windows);
+  const knockoutEditable = !readOnly && openKnockoutPhases.length > 0;
+  const showKnockout = readOnly || windows.knockoutOpen;
+
+  function isPhaseEditable(phase: Phase): boolean {
+    if (readOnly) return false;
+    return canEditPhasePredictions(phase, matches, windows);
+  }
 
   const groupMatchIds = matches.filter((m) => m.phase === "groups").map((m) => m.id);
   const knockoutMatchIds = matches.filter((m) => KNOCKOUT_PHASE_LIST.includes(m.phase)).map((m) => m.id);
@@ -91,8 +98,8 @@ export function PredictionsPanel({
   const canSave =
     !readOnly && (
       mainSection === "groups" ? groupsEditable :
-      mainSection === "knockout" ? knockoutEditable :
-      mainSection === "bracket" ? knockoutEditable :
+      mainSection === "knockout" ? isPhaseEditable(activePhase) :
+      mainSection === "bracket" ? openKnockoutPhases.length > 0 :
       specialEditable
     );
 
@@ -158,14 +165,14 @@ export function PredictionsPanel({
           onClick={() => { setMainSection("knockout"); setActivePhase("round32"); }}
           title="Marcadors"
           subtitle={`${knockoutPredicted}/${knockoutMatchIds.length}`}
-          locked={!readOnly && !knockoutEditable}
+          locked={!readOnly && openKnockoutPhases.length === 0}
         />
         <SectionTab
           active={mainSection === "bracket"}
           onClick={() => setMainSection("bracket")}
           title="Quadre"
           subtitle={`${bracketFilled} tries`}
-          locked={!readOnly && !knockoutEditable}
+          locked={!readOnly && openKnockoutPhases.length === 0}
         />
         <SectionTab
           active={mainSection === "mundial"}
@@ -235,9 +242,15 @@ export function PredictionsPanel({
             </div>
           ) : (
             <>
+              {!readOnly && !isPhaseEditable(activePhase) && (
+                <p className="text-sm text-amber-200/90 mb-4">
+                  Aquesta ronda està tancada. Pots predir durant la finestra entre el darrer partit de la fase
+                  anterior i l&apos;inici del primer partit d&apos;aquesta ronda (veure Regles).
+                </p>
+              )}
               {!readOnly && (
                 <p className="text-sm text-pitch-400 mb-4">
-                  Marcadors exactes abans de cada eliminatòria — sumen punts de resultat (1/X/2 i exacte).
+                  Marcadors exactes a 90 minuts — sumen punts de resultat (1/X/2 i exacte).
                   Qui passa de ronda es tria al <strong className="text-pitch-200">Quadre</strong>.
                 </p>
               )}
@@ -251,7 +264,7 @@ export function PredictionsPanel({
                       match={m}
                       prediction={predictions[m.id]}
                       onChange={(pred) => (onPredictionChange ?? noopChange)(m.id, pred)}
-                      disabled={readOnly || !knockoutEditable}
+                      disabled={readOnly || !isPhaseEditable(activePhase)}
                     />
                   ))}
                 </div>
@@ -279,7 +292,7 @@ export function PredictionsPanel({
               matches={matches}
               bracketPicks={bracketPicks}
               onPick={handleBracketPick}
-              disabled={!knockoutEditable}
+              isPickEnabled={(phase) => isPhaseEditable(phase)}
               readOnly={readOnly}
             />
           )}

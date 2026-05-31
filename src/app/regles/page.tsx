@@ -1,17 +1,17 @@
-import { SCORING_RULES } from "@/data/world-cup-2026";
+import { SCORING_RULES, ALL_MATCHES, getTeamInfo } from "@/data/world-cup-2026";
 import {
   ENTRY_FEE,
   FIFA_TOP_10_CODES,
   PRIZE_SPLIT,
   RULES_NOTES,
-  SUBMISSION_DEADLINES,
 } from "@/data/rules-config";
-import { getTeamInfo } from "@/data/world-cup-2026";
+import { buildSubmissionDeadlineRows } from "@/lib/prediction-deadlines";
 
 export default function RulesPage() {
   const g = SCORING_RULES.group;
   const k = SCORING_RULES.knockout;
   const s = SCORING_RULES.special;
+  const submissionDeadlines = buildSubmissionDeadlineRows(ALL_MATCHES);
 
   const top10Names = FIFA_TOP_10_CODES.map((c) => getTeamInfo(c).name).join(", ");
 
@@ -23,14 +23,18 @@ export default function RulesPage() {
       <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
         <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">GENERAL</h2>
         <ul className="space-y-2 text-pitch-200 text-sm sm:text-base mb-6">
-          <li>• Preu d&apos;entrada: <strong className="text-white">{ENTRY_FEE}€</strong> · {RULES_NOTES.payment}</li>
+          <li>• Preu d&apos;entrada: <strong className="text-white">{ENTRY_FEE}€</strong></li>
           <li>• Repartiment de premis: <strong className="text-white">{PRIZE_SPLIT.first}% · {PRIZE_SPLIT.second}% · {PRIZE_SPLIT.third}%</strong> (1r, 2n, 3r)</li>
           <li className="text-pitch-400 text-sm">{RULES_NOTES.prizesNote}</li>
           <li>• Cal predir el <strong className="text-white">marcador exacte</strong> de cada partit (90 minuts)</li>
         </ul>
 
         <h3 className="font-display text-lg text-pitch-300 mb-3">Límits d&apos;entrega</h3>
-        <DeadlineTable rows={SUBMISSION_DEADLINES.map((d) => [d.phase, d.limit])} />
+        <DeadlineTable rows={submissionDeadlines.map((d) => [d.phase, d.limit])} />
+        <p className="text-pitch-500 text-xs mt-3">
+          Cada ronda eliminatòria s&apos;ha de predir dins la finestra entre el darrer partit de la fase anterior
+          i l&apos;inici del primer partit de la ronda següent.
+        </p>
       </section>
 
       <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
@@ -86,16 +90,13 @@ export default function RulesPage() {
         <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">ELIMINATÒRIES — PARTITS</h2>
         <p className="text-pitch-300 mb-4 text-sm">
           32ens → 16ens → Quarts → Semis → 3r lloc → Final. A la pestanya{" "}
-          <strong className="text-pitch-200">Marcadors</strong> introdueix el resultat abans de cada eliminatòria.
+          <strong className="text-pitch-200">Marcadors</strong> introdueix el resultat a 90 minuts abans de cada ronda.
         </p>
         <RulesTable rows={[
           ["Resultat correcte (1 / X / 2)", `${k.outcome} pt`],
           ["Bonus marcador exacte (s'acumula)", `+${k.exact} pts`],
           ["Total si encertes l'exacte", `${k.outcome + k.exact} pts`],
         ]} />
-        <p className="text-pitch-500 text-xs mt-3">
-          Només compta el resultat a 90 minuts. En eliminatòria evita empatar als marcadors.
-        </p>
 
         <h3 className="font-display text-lg text-pitch-300 mb-3 mt-6">Classificats per ronda</h3>
         <p className="text-pitch-400 text-sm mb-3">

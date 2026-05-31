@@ -28,6 +28,8 @@ export interface Match {
   awayTeam: string;
   homeScore?: number;
   awayScore?: number;
+  /** Guanyador en eliminatòria si el marcador és empat (pròrroga/penals) */
+  knockoutWinner?: string;
   /** Hora d'inici ISO 8601 */
   date?: string;
   city?: string;
