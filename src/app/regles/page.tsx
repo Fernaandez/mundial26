@@ -50,10 +50,13 @@ export default function RulesPage() {
         </p>
         <RulesTable rows={[
           ["Ordre exacte d'un grup (4 posicions)", `${s.groupExactOrder} pts`],
-          ["Encertar un 3r que NO passa (dels 8 millors 3rs)", `${s.nonQualifyingThird} pts`],
+          ["Encertar un 3r que NO passa (dels 4 que queden fora)", `${s.nonQualifyingThird} pts`],
           ["Selecció amb més gols (GF) a fase de grups", `${s.mostGroupGoals} pts`],
           ["Selecció amb més gols encaixats (GC) a fase de grups", `${s.mostGroupGoalsConceded} pts`],
         ]} />
+        <p className="text-pitch-500 text-xs mt-3">
+          En cas d&apos;empat en GF o GC a grups, es desempata per ordre alfabètic del codi de selecció.
+        </p>
       </section>
 
       <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
@@ -82,23 +85,28 @@ export default function RulesPage() {
       <section className="card-glass rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
         <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">ELIMINATÒRIES — PARTITS</h2>
         <p className="text-pitch-300 mb-4 text-sm">
-          16ens → 8ens → Quarts → Semis → 3r lloc → Final. A la pestanya <strong className="text-pitch-200">Marcadors</strong> introdueix el resultat abans de cada eliminatòria.
+          32ens → 16ens → Quarts → Semis → 3r lloc → Final. A la pestanya{" "}
+          <strong className="text-pitch-200">Marcadors</strong> introdueix el resultat abans de cada eliminatòria.
         </p>
         <RulesTable rows={[
           ["Resultat correcte (1 / X / 2)", `${k.outcome} pt`],
           ["Bonus marcador exacte (s'acumula)", `+${k.exact} pts`],
           ["Total si encertes l'exacte", `${k.outcome + k.exact} pts`],
         ]} />
+        <p className="text-pitch-500 text-xs mt-3">
+          Només compta el resultat a 90 minuts. En eliminatòria evita empatar als marcadors.
+        </p>
 
         <h3 className="font-display text-lg text-pitch-300 mb-3 mt-6">Classificats per ronda</h3>
         <p className="text-pitch-400 text-sm mb-3">
-          A la pestanya <strong className="text-pitch-200">Quadre</strong>, clica la bandera de la selecció que creus que passarà de ronda. D&apos;aquí es sumen els punts de classificació (vuitens, quarts, semis, campió i 3r).
+          A la pestanya <strong className="text-pitch-200">Quadre</strong>, clica la bandera de qui passa de ronda
+          (inclou final i partit del 3r lloc). D&apos;aquí es sumen els punts de classificació i podi.
         </p>
         <RulesTable rows={[
-          ["Per equip encertat que classifica a vuitens (8ens)", `${s.round16Finalist} pt/equip`],
+          ["Per equip encertat que classifica a 16ens", `${s.round16Finalist} pt/equip`],
           ["Per equip encertat que classifica a quarts", `${s.quarterFinalist} pts/equip`],
           ["Per equip encertat que classifica a semis", `${s.semiFinalist} pts/equip`],
-          ["Encertar el 3r classificat", `${s.thirdPlace} pts`],
+          ["Encertar guanyador del partit del 3r lloc", `${s.thirdPlace} pts`],
           ["Encertar el campió", `${s.champion} pts`],
         ]} />
       </section>
@@ -106,9 +114,9 @@ export default function RulesPage() {
       <section className="card-glass rounded-2xl p-4 sm:p-8">
         <h2 className="font-display text-2xl sm:text-3xl text-gold-500 mb-4">PREMIS — EXEMPLES</h2>
         <div className="grid sm:grid-cols-3 gap-4 text-center">
+          <PrizeExample n={8} />
           <PrizeExample n={10} />
-          <PrizeExample n={15} />
-          <PrizeExample n={20} />
+          <PrizeExample n={12} />
         </div>
       </section>
     </div>
@@ -163,14 +171,17 @@ function DeadlineTable({ rows }: { rows: [string, string][] }) {
 
 function PrizeExample({ n }: { n: number }) {
   const pool = n * ENTRY_FEE;
+  const first = Math.round(pool * PRIZE_SPLIT.first / 100);
+  const second = Math.round(pool * PRIZE_SPLIT.second / 100);
+  const third = pool - first - second;
   return (
     <div className="bg-pitch-900/50 rounded-xl p-4">
       <div className="font-display text-2xl text-white">{n} jugadors</div>
       <div className="text-gold-400 font-bold text-xl">{pool}€ total</div>
       <div className="text-sm text-pitch-400 mt-2">
-        1r: {Math.round(pool * PRIZE_SPLIT.first / 100)}€<br />
-        2n: {Math.round(pool * PRIZE_SPLIT.second / 100)}€<br />
-        3r: {Math.round(pool * PRIZE_SPLIT.third / 100)}€
+        1r: {first}€<br />
+        2n: {second}€<br />
+        3r: {third}€
       </div>
     </div>
   );

@@ -28,8 +28,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const { participantId, pin, matches, special, bracketPicks } = await request.json();
-    const participant = await savePredictions(participantId, pin, matches, special, bracketPicks);
-    return NextResponse.json({ success: true, participant });
+    const { participant, warnings } = await savePredictions(participantId, pin, matches, special, bracketPicks);
+    return NextResponse.json({ success: true, participant, warnings });
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Error desconegut" },

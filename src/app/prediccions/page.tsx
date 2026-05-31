@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Match, Group, SpecialPredictions } from "@/types";
 import { PredictionsPanel } from "@/components/PredictionsPanel";
 import { useAuth } from "@/context/AuthContext";
-import { PredictionWindows } from "@/lib/phases";
+import { DEFAULT_PREDICTION_WINDOWS, PredictionWindows } from "@/lib/phases";
 
 export default function PredictionsPage() {
   const router = useRouter();
@@ -16,9 +16,11 @@ export default function PredictionsPage() {
   const [predictions, setPredictions] = useState<Record<string, { home: number; away: number }>>({});
   const [special, setSpecial] = useState<SpecialPredictions | undefined>();
   const [bracketPicks, setBracketPicks] = useState<Record<string, string>>({});
-  const [windows, setWindows] = useState<PredictionWindows>({ groupsLocked: false, knockoutOpen: false });
+  const [windows, setWindows] = useState<PredictionWindows>(DEFAULT_PREDICTION_WINDOWS);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveWarnings, setSaveWarnings] = useState<string[]>([]);
+  const [saveError, setSaveError] = useState("");
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
@@ -39,7 +41,7 @@ export default function PredictionsPage() {
       setPredictions(data.participant?.matches ?? {});
       setSpecial(data.participant?.special);
       setBracketPicks(data.participant?.bracketPicks ?? {});
-      setWindows(data.predictionWindows ?? { groupsLocked: false, knockoutOpen: false });
+      setWindows(data.predictionWindows ?? DEFAULT_PREDICTION_WINDOWS);
     } finally {
       setDataLoading(false);
     }
@@ -66,6 +68,8 @@ export default function PredictionsPage() {
     if (!user) return;
     setSaving(true);
     setSaved(false);
+    setSaveWarnings([]);
+    setSaveError("");
     try {
       const res = await fetch("/api/predictions", {
         method: "POST",
@@ -78,15 +82,33 @@ export default function PredictionsPage() {
           bracketPicks,
         }),
       });
-      if (res.ok) setSaved(true);
+      const data = await res.json();
+      if (res.ok) {
+        setSaved(true);
+        setSaveWarnings(data.warnings ?? []);
+        if (data.participant) {
+          setSpecial(data.participant.special);
+          setBracketPicks(data.participant.bracketPicks ?? {});
+          setPredictions(data.participant.matches ?? {});
+        }
+      } else {
+        setSaveError(data.error ?? "Error desant prediccions");
+      }
     } finally {
       setSaving(false);
     }
   }
 
-  function updatePrediction(matchId: string, home: number, away: number) {
-    setPredictions((prev) => ({ ...prev, [matchId]: { home, away } }));
+  function updatePrediction(matchId: string, pred: { home: number; away: number } | null) {
+    setPredictions((prev) => {
+      const next = { ...prev };
+      if (!pred) delete next[matchId];
+      else next[matchId] = pred;
+      return next;
+    });
     setSaved(false);
+    setSaveWarnings([]);
+    setSaveError("");
   }
 
   if (loading || !user) {
@@ -107,6 +129,11 @@ export default function PredictionsPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pb-28 md:pb-8">
+      {saveError && (
+        <div className="bg-red-900/30 border border-red-700 text-red-200 px-4 py-3 rounded-xl mb-6 text-sm">
+          {saveError}
+        </div>
+      )}
       <PredictionsPanel
         mode="edit"
         participantName={user.name}
@@ -117,11 +144,12 @@ export default function PredictionsPage() {
         bracketPicks={bracketPicks}
         windows={windows}
         onPredictionChange={updatePrediction}
-        onSpecialChange={(s) => { setSpecial(s); setSaved(false); }}
-        onBracketChange={(p) => { setBracketPicks(p); setSaved(false); }}
+        onSpecialChange={(s) => { setSpecial(s); setSaved(false); setSaveWarnings([]); }}
+        onBracketChange={(p) => { setBracketPicks(p); setSaved(false); setSaveWarnings([]); }}
         onSave={handleSave}
         saving={saving}
         saved={saved}
+        saveWarnings={saveWarnings}
       />
     </div>
   );

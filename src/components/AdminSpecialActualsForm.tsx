@@ -62,9 +62,12 @@ export function AdminSpecialActualsForm({ initial, adminPin, onSaved }: AdminSpe
 
       <div>
         <h3 className="font-display text-lg text-pitch-300 mb-3">Jugadors</h3>
+        <p className="text-xs text-pitch-500 mb-3">
+          Golejador i assistent: en cas d&apos;empat real, introdueix tots els noms separats per comes.
+        </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <TextInput label="Màxim golejador" value={form.topScorer ?? ""} onChange={(v) => setField("topScorer", v)} />
-          <TextInput label="Màxim assistent" value={form.topAssists ?? ""} onChange={(v) => setField("topAssists", v)} />
+          <TextInput label="Màxim golejador" value={form.topScorer ?? ""} onChange={(v) => setField("topScorer", v)} placeholder="Nom i Cognom (comes si empat)" />
+          <TextInput label="Màxim assistent" value={form.topAssists ?? ""} onChange={(v) => setField("topAssists", v)} placeholder="Nom i Cognom (comes si empat)" />
           <TextInput label="Millor jugador (MVP)" value={form.mvp ?? ""} onChange={(v) => setField("mvp", v)} />
           <TextInput label="Millor jugador jove" value={form.youngMvp ?? ""} onChange={(v) => setField("youngMvp", v)} />
           <TextInput label="Millor porter" value={form.goldenGlove ?? ""} onChange={(v) => setField("goldenGlove", v)} />
@@ -104,10 +107,12 @@ function TextInput({
   label,
   value,
   onChange,
+  placeholder = "Nom i Cognom",
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
+  placeholder?: string;
 }) {
   return (
     <div>
@@ -117,7 +122,7 @@ function TextInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="w-full px-4 py-2 bg-pitch-950 border border-pitch-700 rounded-xl text-sm"
-        placeholder="Nom i Cognom"
+        placeholder={placeholder}
       />
     </div>
   );

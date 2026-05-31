@@ -13,6 +13,7 @@ import {
   scoreAdvancementPoints,
   surpriseTeamQualifies,
 } from "@/lib/knockout-advancement";
+import { resolvePodiumPredictions } from "@/lib/mundial";
 
 function getOutcome(h: number, a: number): "H" | "D" | "A" {
   if (h > a) return "H";
@@ -52,6 +53,13 @@ function teamListMatch(predicted: string, actualRaw?: string): boolean {
   if (!predicted?.trim() || !actualRaw?.trim()) return false;
   const codes = actualRaw.split(/[,;]/).map((s) => s.trim().toUpperCase()).filter(Boolean);
   return codes.includes(predicted.trim().toUpperCase());
+}
+
+function playerMatch(predicted: string, actualRaw?: string): boolean {
+  if (!predicted?.trim() || !actualRaw?.trim()) return false;
+  const pred = norm(predicted);
+  const actuals = actualRaw.split(/[,;]/).map((s) => norm(s)).filter(Boolean);
+  return actuals.includes(pred);
 }
 
 function scoreGroupExtras(
@@ -97,20 +105,24 @@ function scoreGroupExtras(
 function scoreMundialFields(
   special: SpecialPredictions,
   actuals: SpecialActualsInput,
-  matches: Match[]
+  matches: Match[],
+  bracketPicks?: Record<string, string>
 ): number {
   let pts = 0;
   const r = SCORING_RULES.special;
+  const podium = resolvePodiumPredictions(special, bracketPicks);
 
-  if (actuals.topScorer && norm(special.topScorer) === norm(actuals.topScorer)) pts += r.topScorer;
-  if (actuals.topAssists && special.topAssists && norm(special.topAssists) === norm(actuals.topAssists)) {
+  if (actuals.topScorer && special.topScorer && playerMatch(special.topScorer, actuals.topScorer)) {
+    pts += r.topScorer;
+  }
+  if (actuals.topAssists && special.topAssists && playerMatch(special.topAssists, actuals.topAssists)) {
     pts += r.topAssists;
   }
-  if (actuals.mvp && special.mvp && norm(special.mvp) === norm(actuals.mvp)) pts += r.mvp;
-  if (actuals.youngMvp && special.youngMvp && norm(special.youngMvp) === norm(actuals.youngMvp)) {
+  if (actuals.mvp && special.mvp && playerMatch(special.mvp, actuals.mvp)) pts += r.mvp;
+  if (actuals.youngMvp && special.youngMvp && playerMatch(special.youngMvp, actuals.youngMvp)) {
     pts += r.youngMvp;
   }
-  if (actuals.goldenGlove && special.goldenGlove && norm(special.goldenGlove) === norm(actuals.goldenGlove)) {
+  if (actuals.goldenGlove && special.goldenGlove && playerMatch(special.goldenGlove, actuals.goldenGlove)) {
     pts += r.goldenGlove;
   }
 
@@ -134,10 +146,10 @@ function scoreMundialFields(
     pts += r.disappointmentTeam;
   }
 
-  if (actuals.champion && special.champion && special.champion === actuals.champion) {
+  if (actuals.champion && podium.champion && podium.champion === actuals.champion) {
     pts += r.champion;
   }
-  if (actuals.thirdPlace && special.thirdPlace && special.thirdPlace === actuals.thirdPlace) {
+  if (actuals.thirdPlace && podium.thirdPlace && podium.thirdPlace === actuals.thirdPlace) {
     pts += r.thirdPlace;
   }
 
@@ -222,7 +234,12 @@ export function calculateParticipantScore(
 
   if (special) {
     breakdown.groups += scoreGroupExtras(special, actuals);
-    breakdown.special = scoreMundialFields(special, actuals, matches);
+    breakdown.special = scoreMundialFields(
+      special,
+      actuals,
+      matches,
+      participant.bracketPicks
+    );
     breakdown.advancement = scoreKnockoutAdvancement(
       matches,
       participant.bracketPicks,
@@ -253,12 +270,10 @@ export function calculatePrizes(
   split: { first: number; second: number; third: number }
 ) {
   const pool = participantCount * entryFee;
-  return {
-    pool,
-    first: Math.round((pool * split.first) / 100),
-    second: Math.round((pool * split.second) / 100),
-    third: Math.round((pool * split.third) / 100),
-  };
+  const first = Math.round((pool * split.first) / 100);
+  const second = Math.round((pool * split.second) / 100);
+  const third = pool - first - second;
+  return { pool, first, second, third };
 }
 
 export { scoreMatchPrediction, getOutcome };

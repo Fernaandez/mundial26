@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { readData, addParticipant } from "@/lib/storage";
+import { hasMeaningfulMundialPredictions } from "@/lib/mundial";
 
 export async function GET() {
   const data = await readData();
@@ -10,7 +11,7 @@ export async function GET() {
       entryFeePaid: p.entryFeePaid,
       joinedAt: p.joinedAt,
       predictionsCount: Object.keys(p.matches ?? {}).length,
-      hasSpecial: !!p.special,
+      hasSpecial: hasMeaningfulMundialPredictions(p.special, p.bracketPicks),
     })),
     tournament: {
       name: data.tournament.name,

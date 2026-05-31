@@ -19,23 +19,10 @@ import {
 } from "@/lib/standings";
 import { BestThirdsPanel } from "@/components/BestThirdsPanel";
 import { PredictionBracket } from "@/components/PredictionBracket";
-import { DEFAULT_MUNDIAL_FIELDS } from "@/lib/mundial";
+import { countMundialFilled, MUNDIAL_TOTAL_FIELDS } from "@/lib/mundial";
+import { DEFAULT_PREDICTION_WINDOWS } from "@/lib/phases";
 
 type MainSection = "groups" | "knockout" | "bracket" | "mundial";
-
-const MUNDIAL_FIELDS: (keyof Omit<SpecialPredictions, "groups">)[] = [
-  "topScorer", "topAssists", "mvp", "youngMvp", "goldenGlove",
-  "surpriseTeam", "disappointmentTeam",
-  "nonQualifyingThird", "mostGroupGoals", "mostGroupGoalsConceded",
-  "champion", "thirdPlace",
-];
-
-function countMundialFilled(special?: SpecialPredictions) {
-  return MUNDIAL_FIELDS.filter((k) => {
-    const v = special?.[k];
-    return typeof v === "string" ? v.trim() !== "" : false;
-  }).length;
-}
 
 export interface PredictionsPanelProps {
   mode: "edit" | "view";
@@ -47,12 +34,13 @@ export interface PredictionsPanelProps {
   special?: SpecialPredictions;
   bracketPicks?: Record<string, string>;
   windows?: PredictionWindows;
-  onPredictionChange?: (matchId: string, home: number, away: number) => void;
+  onPredictionChange?: (matchId: string, pred: { home: number; away: number } | null) => void;
   onSpecialChange?: (special: SpecialPredictions) => void;
   onBracketChange?: (picks: Record<string, string>) => void;
   onSave?: () => void;
   saving?: boolean;
   saved?: boolean;
+  saveWarnings?: string[];
   backHref?: string;
   backLabel?: string;
 }
@@ -66,13 +54,14 @@ export function PredictionsPanel({
   predictions,
   special,
   bracketPicks = {},
-  windows = { groupsLocked: false, knockoutOpen: false },
+  windows = DEFAULT_PREDICTION_WINDOWS,
   onPredictionChange,
   onSpecialChange,
   onBracketChange,
   onSave,
   saving = false,
   saved = false,
+  saveWarnings = [],
   backHref = "/perfil",
   backLabel = "← Perfil",
 }: PredictionsPanelProps) {
@@ -90,7 +79,8 @@ export function PredictionsPanel({
   const groupPredicted = groupMatchIds.filter((id) => predictions[id]).length;
   const knockoutPredicted = knockoutMatchIds.filter((id) => predictions[id]).length;
   const bracketFilled = Object.keys(bracketPicks).length;
-  const mundialFilled = countMundialFilled(special);
+  const mundialFilled = countMundialFilled(special, bracketPicks);
+  const mundialTotal = MUNDIAL_TOTAL_FIELDS.length;
 
   const phaseMatches = matches.filter((m) => m.phase === activePhase);
 
@@ -110,18 +100,12 @@ export function PredictionsPanel({
     mainSection === "groups" ? `${groupPredicted}/${groupMatchIds.length} partits` :
     mainSection === "knockout" ? `${knockoutPredicted}/${knockoutMatchIds.length} marcadors` :
     mainSection === "bracket" ? `${bracketFilled} classificats` :
-    `${mundialFilled}/${MUNDIAL_FIELDS.length} prediccions`;
+    `${mundialFilled}/${mundialTotal} prediccions`;
 
   const noopChange = () => {};
 
   function handleBracketPick(matchId: string, teamCode: string) {
-    const next = { ...bracketPicks, [matchId]: teamCode };
-    onBracketChange?.(next);
-    if (onSpecialChange && special) {
-      const base = { ...DEFAULT_MUNDIAL_FIELDS, ...special, groups: special.groups ?? [] };
-      if (matchId === "final") onSpecialChange({ ...base, champion: teamCode });
-      else if (matchId === "third") onSpecialChange({ ...base, thirdPlace: teamCode });
-    }
+    onBracketChange?.({ ...bracketPicks, [matchId]: teamCode });
   }
 
   return (
@@ -187,14 +171,23 @@ export function PredictionsPanel({
           active={mainSection === "mundial"}
           onClick={() => setMainSection("mundial")}
           title="Mundial"
-          subtitle={`${mundialFilled}/${MUNDIAL_FIELDS.length}`}
+          subtitle={`${mundialFilled}/${mundialTotal}`}
           locked={!readOnly && !specialEditable}
         />
       </div>
 
-      {saved && !readOnly && (
+      {saved && !readOnly && saveWarnings.length === 0 && (
         <div className="bg-pitch-700/30 border border-pitch-500 text-pitch-200 px-4 py-3 rounded-xl mb-6 text-sm">
           Prediccions desades correctament!
+        </div>
+      )}
+
+      {saveWarnings.length > 0 && !readOnly && (
+        <div className="bg-amber-900/20 border border-amber-700/40 text-amber-100 px-4 py-3 rounded-xl mb-6 text-sm space-y-1">
+          <p className="font-medium">Desat amb avisos:</p>
+          {saveWarnings.map((w) => (
+            <p key={w}>• {w}</p>
+          ))}
         </div>
       )}
 
@@ -237,7 +230,7 @@ export function PredictionsPanel({
               <div className="text-4xl mb-4">🔒</div>
               <h2 className="font-display text-2xl text-pitch-300 mb-3">Eliminatòries encara tancades</h2>
               <p className="text-pitch-400 text-sm max-w-md mx-auto">
-                Quan l&apos;admin obri aquesta fase podràs predir 16ens, 8ens, quarts, semis i final.
+                Quan l&apos;admin obri aquesta fase podràs predir 32ens, 16ens, quarts, semis i final.
               </p>
             </div>
           ) : (
@@ -257,7 +250,7 @@ export function PredictionsPanel({
                       key={m.id}
                       match={m}
                       prediction={predictions[m.id]}
-                      onChange={(h, a) => (onPredictionChange ?? noopChange)(m.id, h, a)}
+                      onChange={(pred) => (onPredictionChange ?? noopChange)(m.id, pred)}
                       disabled={readOnly || !knockoutEditable}
                     />
                   ))}
@@ -306,6 +299,7 @@ export function PredictionsPanel({
             matches={matches}
             predictions={predictions}
             special={special}
+            bracketPicks={bracketPicks}
             allTeams={getAllTeams()}
             onChange={onSpecialChange ?? noopChange}
             disabled={readOnly || !specialEditable}

@@ -77,6 +77,19 @@ function AltresPredictionsContent() {
     if (selectedId && user) loadTarget(selectedId);
   }, [selectedId, user, loadTarget]);
 
+  useEffect(() => {
+    if (!user) return;
+    const refreshResults = async () => {
+      const res = await fetch("/api/tournament", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        setMatches(data.matches ?? []);
+      }
+    };
+    const interval = setInterval(refreshResults, 15000);
+    return () => clearInterval(interval);
+  }, [user]);
+
   function selectParticipant(id: string) {
     setSelectedId(id);
     if (id) {

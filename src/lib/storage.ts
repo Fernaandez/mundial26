@@ -13,7 +13,7 @@ import {
   isKnockoutPhase,
 } from "@/lib/phases";
 import { buildGroupPredictionsFromMatches, buildGroupStandingsActuals } from "@/lib/standings";
-import { DEFAULT_MUNDIAL_FIELDS, normalizeSpecialPredictions } from "@/lib/mundial";
+import { DEFAULT_MUNDIAL_FIELDS, normalizeSpecialPredictions, applyBracketPodiumToSpecial } from "@/lib/mundial";
 import { computeGroupStageStats } from "@/lib/group-stats";
 import { deriveAdvancementSets } from "@/lib/knockout-advancement";
 import { getMatchWinner } from "@/lib/knockout";
@@ -271,25 +271,42 @@ export async function updatePredictionWindows(
   return data.predictionWindows;
 }
 
+export interface SavePredictionsResult {
+  participant: Participant;
+  warnings: string[];
+}
+
 export async function savePredictions(
   participantId: string,
   pin: string,
   matches: Record<string, { home: number; away: number }>,
   special?: SpecialPredictions,
   bracketPicks?: Record<string, string>
-): Promise<Participant> {
+): Promise<SavePredictionsResult> {
   const data = await readData();
   const p = data.participants.find((x) => x.id === participantId);
   if (!p || p.pin !== pin) throw new Error("Accés denegat");
 
   const windows = getPredictionWindows(data);
+  const warnings: string[] = [];
+  let skippedLocked = 0;
+  let skippedPhase = 0;
 
   for (const [matchId, pred] of Object.entries(matches)) {
     const match = data.tournament.matches.find((m) => m.id === matchId);
     if (!match) continue;
-    if (match.locked) continue;
-    if (match.phase === "groups" && !canEditGroupPredictions(windows)) continue;
-    if (isKnockoutPhase(match.phase) && !canEditKnockoutPredictions(windows)) continue;
+    if (match.locked) {
+      skippedLocked++;
+      continue;
+    }
+    if (match.phase === "groups" && !canEditGroupPredictions(windows)) {
+      skippedPhase++;
+      continue;
+    }
+    if (isKnockoutPhase(match.phase) && !canEditKnockoutPredictions(windows)) {
+      skippedPhase++;
+      continue;
+    }
     p.matches[matchId] = pred;
   }
 
@@ -305,23 +322,34 @@ export async function savePredictions(
   };
 
   const prev = p.special ?? defaultSpecial;
+  let merged: SpecialPredictions = { ...prev, groups: syncedGroups };
 
   if (special && canEditSpecialPredictions(windows)) {
-    p.special = normalizeSpecialPredictions({
-      ...prev,
-      ...special,
-      groups: syncedGroups,
-    })!;
-  } else {
-    p.special = normalizeSpecialPredictions({ ...prev, groups: syncedGroups })!;
+    merged = { ...merged, ...special, groups: syncedGroups };
   }
 
   if (bracketPicks !== undefined && canEditKnockoutPredictions(windows)) {
     p.bracketPicks = { ...bracketPicks };
+    merged = applyBracketPodiumToSpecial(merged, bracketPicks);
+  } else if (bracketPicks !== undefined && !canEditKnockoutPredictions(windows)) {
+    warnings.push("El quadre eliminatori està tancat: no s'han desat les tries del quadre.");
+  }
+
+  p.special = normalizeSpecialPredictions(merged)!;
+
+  if (skippedLocked > 0) {
+    warnings.push(
+      `${skippedLocked} partit(s) ja tancat(s) per resultat oficial — no s'han actualitzat.`
+    );
+  }
+  if (skippedPhase > 0) {
+    warnings.push(
+      `${skippedPhase} partit(s) d'una fase tancada — no s'han actualitzat.`
+    );
   }
 
   await writeData(data);
-  return p;
+  return { participant: p, warnings };
 }
 
 export async function markParticipantAcknowledged(participantId: string, adminPin: string): Promise<void> {

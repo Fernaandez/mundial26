@@ -31,14 +31,23 @@ export function teamsWinningPhase(
 }
 
 export interface AdvancementSets {
-  /** Guanyadors dels 16ens → classifiquen a vuitens (8ens) */
+  /** Guanyadors dels 32ens → classifiquen a 16ens */
   toRound16: Set<string>;
-  /** Guanyadors dels vuitens → classifiquen a quarts */
+  /** Guanyadors dels 16ens → classifiquen a quarts */
   toQuarter: Set<string>;
   /** Guanyadors dels quarts → classifiquen a semis */
   toSemi: Set<string>;
   /** Guanyadors de semis → classifiquen a la final */
   toFinal: Set<string>;
+}
+
+export function emptyAdvancementSets(): AdvancementSets {
+  return {
+    toRound16: new Set(),
+    toQuarter: new Set(),
+    toSemi: new Set(),
+    toFinal: new Set(),
+  };
 }
 
 export function deriveAdvancementSetsFromBracket(
@@ -72,12 +81,15 @@ export function deriveAdvancementSets(
   if (bracketPicks && Object.keys(bracketPicks).length > 0) {
     return deriveAdvancementSetsFromBracket(matches, bracketPicks);
   }
-  return {
-    toRound16: teamsWinningPhase(matches, "round32", predictions),
-    toQuarter: teamsWinningPhase(matches, "round16", predictions),
-    toSemi: teamsWinningPhase(matches, "quarter", predictions),
-    toFinal: teamsWinningPhase(matches, "semi", predictions),
-  };
+  if (predictions && Object.keys(predictions).length > 0) {
+    return {
+      toRound16: teamsWinningPhase(matches, "round32", predictions),
+      toQuarter: teamsWinningPhase(matches, "round16", predictions),
+      toSemi: teamsWinningPhase(matches, "quarter", predictions),
+      toFinal: teamsWinningPhase(matches, "semi", predictions),
+    };
+  }
+  return emptyAdvancementSets();
 }
 
 /** Selecció revelació vàlida: fora del top 10 i arriba com a mínim a quarts */
@@ -127,4 +139,17 @@ export function scoreAdvancementPoints(
     if (predicted.toSemi.has(t)) pts += rules.semi;
   }
   return pts;
+}
+
+/** Partits eliminatoris amb tria al quadre (inclou final i 3r lloc) */
+export function countExpectedBracketPicks(matches: Match[]): number {
+  return matches.filter(
+    (m) =>
+      m.phase === "round32" ||
+      m.phase === "round16" ||
+      m.phase === "quarter" ||
+      m.phase === "semi" ||
+      m.phase === "third" ||
+      m.phase === "final"
+  ).length;
 }

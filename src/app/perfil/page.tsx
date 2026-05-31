@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { hasMeaningfulMundialPredictions } from "@/lib/mundial";
 
 interface ProfileStats {
   total: number;
@@ -36,7 +37,10 @@ export default function ProfilePage() {
       setStats({
         total: boardData.scores?.find((s: { participantId: string }) => s.participantId === user.id)?.total ?? 0,
         predictionsCount: Object.keys(predData.participant?.matches ?? {}).length,
-        hasSpecial: !!predData.participant?.special,
+        hasSpecial: hasMeaningfulMundialPredictions(
+          predData.participant?.special,
+          predData.participant?.bracketPicks
+        ),
         rank: rank >= 0 ? rank + 1 : 0,
         totalPlayers: boardData.participantCount ?? 0,
       });
@@ -119,7 +123,7 @@ export default function ProfilePage() {
         <div className="mt-8 card-glass rounded-2xl p-6 border border-gold-500/30">
           <p className="text-gold-400 font-medium">Pendent: Prediccions especials</p>
           <p className="text-pitch-300 text-sm mt-1">
-            Encara no has omplert campió, classificacions de grups, etc.{" "}
+            Encara no has omplert prediccions especials (jugadors, seleccions, quadre…).{" "}
             <Link href="/prediccions" className="underline text-pitch-200">Fes-ho ara</Link>
           </p>
         </div>

@@ -4,6 +4,7 @@ import { Match, Phase } from "@/types";
 import { getTeamInfo } from "@/data/world-cup-2026";
 import { TeamFlag } from "@/components/TeamFlag";
 import { getBracketRounds, matchesByIdMap } from "@/lib/knockout";
+import { countExpectedBracketPicks } from "@/lib/knockout-advancement";
 
 interface PredictionBracketProps {
   matches: Match[];
@@ -24,15 +25,22 @@ export function PredictionBracket({
   const rounds = getBracketRounds();
   const locked = disabled || readOnly;
   const pickCount = Object.keys(bracketPicks).length;
+  const expectedPicks = countExpectedBracketPicks(matches);
+  const incomplete = pickCount > 0 && pickCount < expectedPicks;
 
   return (
     <div>
       {!readOnly && (
         <p className="text-sm text-pitch-400 mb-4">
-          Clica la bandera de l&apos;equip que passa a la següent ronda. Això suma punts de classificats
-          (vuitens, quarts, semis). Campió i 3r es trien a Mundial.{" "}
-          {pickCount > 0 && `${pickCount} tria/es fetes.`}
+          Clica la bandera de l&apos;equip que passa de ronda. Aquí es trien tots els classificats,
+          el campió (final) i el 3r lloc. Els marcadors exactes van a la pestanya Marcadors.{" "}
+          {pickCount > 0 && `${pickCount}/${expectedPicks} tries.`}
         </p>
+      )}
+      {incomplete && !readOnly && (
+        <div className="bg-amber-900/20 border border-amber-700/40 text-amber-100 px-4 py-3 rounded-xl mb-4 text-sm">
+          Quadre incomplet: omple totes les rondes per puntuar bé els classificats.
+        </div>
       )}
 
       <div className="bracket-scroll">

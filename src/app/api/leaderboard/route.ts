@@ -12,7 +12,7 @@ export async function GET() {
   );
 
   const paidCount = data.participants.filter((p) => p.entryFeePaid).length;
-  const count = paidCount || data.participants.length;
+  const count = data.participants.length;
   const prizes = calculatePrizes(
     count,
     data.tournament.entryFee,

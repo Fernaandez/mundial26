@@ -8,15 +8,37 @@ import { MatchKickoff } from "@/components/MatchKickoff";
 import { MatchScoreboard } from "@/components/MatchScoreboard";
 import { GroupStandingsTable } from "@/components/GroupStandingsTable";
 import { computeGroupStanding, computeGroupStandingFromPredictions, computeThirdQualifierGroups } from "@/lib/standings";
-import { derivePodiumFromPredictions, DEFAULT_MUNDIAL_FIELDS } from "@/lib/mundial";
+import { derivePodiumFromPredictions, DEFAULT_MUNDIAL_FIELDS, resolvePodiumPredictions } from "@/lib/mundial";
 import { FIFA_TOP_10_CODES, RULES_NOTES } from "@/data/rules-config";
 import { isMatchFinished } from "@/lib/knockout";
 
 interface MatchCardProps {
   match: Match;
   prediction?: { home: number; away: number };
-  onChange: (home: number, away: number) => void;
+  onChange: (pred: { home: number; away: number } | null) => void;
   disabled?: boolean;
+}
+
+function parseScoreInput(value: string): number | null {
+  const trimmed = value.trim();
+  if (trimmed === "") return null;
+  const n = parseInt(trimmed, 10);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
+
+function mergeScoreChange(
+  side: "home" | "away",
+  raw: string,
+  prediction: { home: number; away: number } | undefined,
+  onChange: (pred: { home: number; away: number } | null) => void
+) {
+  const home = side === "home" ? parseScoreInput(raw) : (prediction?.home ?? null);
+  const away = side === "away" ? parseScoreInput(raw) : (prediction?.away ?? null);
+  if (home === null || away === null) {
+    onChange(null);
+    return;
+  }
+  onChange({ home, away });
 }
 
 export function MatchCard({ match, prediction, onChange, disabled }: MatchCardProps) {
@@ -56,7 +78,7 @@ export function MatchCard({ match, prediction, onChange, disabled }: MatchCardPr
             min={0}
             max={20}
             value={prediction?.home ?? ""}
-            onChange={(e) => onChange(parseInt(e.target.value) || 0, prediction?.away ?? 0)}
+            onChange={(e) => mergeScoreChange("home", e.target.value, prediction, onChange)}
             disabled={locked}
             className="score-input"
             placeholder="-"
@@ -69,7 +91,7 @@ export function MatchCard({ match, prediction, onChange, disabled }: MatchCardPr
             min={0}
             max={20}
             value={prediction?.away ?? ""}
-            onChange={(e) => onChange(prediction?.home ?? 0, parseInt(e.target.value) || 0)}
+            onChange={(e) => mergeScoreChange("away", e.target.value, prediction, onChange)}
             disabled={locked}
             className="score-input"
             placeholder="-"
@@ -90,7 +112,7 @@ export function MatchCard({ match, prediction, onChange, disabled }: MatchCardPr
               min={0}
               max={20}
               value={prediction?.home ?? ""}
-              onChange={(e) => onChange(parseInt(e.target.value) || 0, prediction?.away ?? 0)}
+              onChange={(e) => mergeScoreChange("home", e.target.value, prediction, onChange)}
               className="score-input w-12 h-10"
               placeholder="-"
             />
@@ -101,7 +123,7 @@ export function MatchCard({ match, prediction, onChange, disabled }: MatchCardPr
               min={0}
               max={20}
               value={prediction?.away ?? ""}
-              onChange={(e) => onChange(prediction?.home ?? 0, parseInt(e.target.value) || 0)}
+              onChange={(e) => mergeScoreChange("away", e.target.value, prediction, onChange)}
               className="score-input w-12 h-10"
               placeholder="-"
             />
@@ -118,7 +140,7 @@ interface GroupSectionProps {
   groups: Group[];
   matches: Match[];
   predictions: Record<string, { home: number; away: number }>;
-  onChange: (matchId: string, home: number, away: number) => void;
+  onChange: (matchId: string, pred: { home: number; away: number } | null) => void;
   disabled?: boolean;
   predictionLabel?: string;
   thirdQualifierGroups?: Set<string>;
@@ -164,7 +186,7 @@ export function GroupSection({
             key={m.id}
             match={m}
             prediction={predictions[m.id]}
-            onChange={(h, a) => onChange(m.id, h, a)}
+            onChange={(pred) => onChange(m.id, pred)}
             disabled={disabled}
           />
         ))}
@@ -182,8 +204,8 @@ interface PhaseTabsProps {
 const SHORT_LABELS: Partial<Record<Phase, string>> = {
   special: "Especials",
   groups: "Grups",
-  round32: "16ens",
-  round16: "8ens",
+  round32: "32ens",
+  round16: "16ens",
   quarter: "Quarts",
   semi: "Semis",
   third: "3r",
@@ -214,6 +236,7 @@ export function PhaseTabs({ phases, active, onChange }: PhaseTabsProps) {
 
 interface MundialFormProps {
   special?: SpecialPredictions;
+  bracketPicks?: Record<string, string>;
   allTeams: { code: string; name: string; iso: string }[];
   matches: Match[];
   predictions: Record<string, { home: number; away: number }>;
@@ -231,14 +254,25 @@ function emptyGroups(groups: Group[]) {
   }));
 }
 
-export function MundialForm({ special, allTeams, matches, predictions, onChange, disabled, readOnly, groups }: MundialFormProps) {
+export function MundialForm({
+  special,
+  bracketPicks = {},
+  allTeams,
+  matches,
+  predictions,
+  onChange,
+  disabled,
+  readOnly,
+  groups,
+}: MundialFormProps) {
   const current: SpecialPredictions = {
     ...DEFAULT_MUNDIAL_FIELDS,
     ...special,
     groups: special?.groups ?? emptyGroups(groups),
   };
 
-  const podium = derivePodiumFromPredictions(matches, predictions);
+  const savedPodium = resolvePodiumPredictions(special, bracketPicks);
+  const scoreSuggestion = derivePodiumFromPredictions(matches, predictions);
 
   const top10Teams = allTeams.filter((t) => (FIFA_TOP_10_CODES as readonly string[]).includes(t.code));
   const revelationTeams = allTeams.filter((t) => !(FIFA_TOP_10_CODES as readonly string[]).includes(t.code));
@@ -252,55 +286,39 @@ export function MundialForm({ special, allTeams, matches, predictions, onChange,
       {!readOnly && (
         <div className="card-glass rounded-xl p-4 border border-gold-500/20">
           <p className="text-sm text-pitch-300">
-            Prediccions especials: jugadors, seleccions, campió i 3r lloc del torneig.
+            Jugadors i seleccions especials. Campió i 3r lloc es trien a la pestanya <strong className="text-pitch-100">Quadre</strong>.
           </p>
         </div>
       )}
 
       <div className="card-glass rounded-2xl p-4 sm:p-6">
-        <h3 className="font-display text-xl sm:text-2xl text-gold-500 mb-4">PODI</h3>
-        {(podium.champion || podium.runnerUp || podium.thirdPlace) && !readOnly && (
-          <p className="text-xs text-pitch-500 mb-3">
-            Suggeriment segons les teves eliminatòries:{" "}
-            {podium.champion && getTeamInfo(podium.champion).name}
-            {podium.thirdPlace && ` · 3r: ${getTeamInfo(podium.thirdPlace).name}`}
+        <h3 className="font-display text-xl sm:text-2xl text-gold-500 mb-2">PODI</h3>
+        <p className="text-xs text-pitch-500 mb-4">
+          {readOnly
+            ? "Campió i 3r segons el quadre eliminatori guardat."
+            : "Tria campió i 3r lloc a la pestanya Quadre (final i partit del 3r)."}
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <PodiumPreview label="🏆 Campió" code={savedPodium.champion} />
+          <PodiumPreview label="🥉 3r lloc" code={savedPodium.thirdPlace} />
+        </div>
+        {!readOnly && (scoreSuggestion.champion || scoreSuggestion.thirdPlace) && (
+          <p className="text-xs text-pitch-500 mt-3">
+            Suggeriment segons marcadors (no puntua):{" "}
+            {scoreSuggestion.champion && getTeamInfo(scoreSuggestion.champion).name}
+            {scoreSuggestion.thirdPlace && ` · 3r: ${getTeamInfo(scoreSuggestion.thirdPlace).name}`}
           </p>
         )}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <SelectTeam
-            label="🏆 Campió"
-            value={current.champion}
-            teams={allTeams}
-            onChange={(v) => update("champion", v)}
-            disabled={disabled}
-          />
-          <SelectTeam
-            label="🥉 3r lloc"
-            value={current.thirdPlace}
-            teams={allTeams}
-            onChange={(v) => update("thirdPlace", v)}
-            disabled={disabled}
-          />
-        </div>
       </div>
-
-      {(podium.champion || podium.runnerUp || podium.thirdPlace) && readOnly && (
-        <div className="card-glass rounded-2xl p-4 sm:p-6 border border-pitch-600/30">
-          <h3 className="font-display text-lg text-pitch-400 mb-3">PODI (eliminatòries)</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
-            <PodiumPreview label="🏆 Campió" code={podium.champion} />
-            <PodiumPreview label="🥈 Subcampió" code={podium.runnerUp} />
-            <PodiumPreview label="🥉 3r lloc" code={podium.thirdPlace} />
-          </div>
-        </div>
-      )}
 
       <div className="card-glass rounded-2xl p-4 sm:p-6">
         <h3 className="font-display text-xl sm:text-2xl text-gold-500 mb-2">FASE DE GRUPS</h3>
-        <p className="text-xs text-pitch-500 mb-4">{RULES_NOTES.surpriseTeam.split(".")[0]}.</p>
+        <p className="text-xs text-pitch-500 mb-4">
+          Prediccions sobre la fase de grups (no confondre amb el podi del torneig).
+        </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <SelectTeam
-            label="🚫 3r que NO passa (1 dels 8 millors 3rs)"
+            label="🚫 3r que NO passa (dels 4 que queden fora)"
             value={current.nonQualifyingThird}
             teams={allTeams}
             onChange={(v) => update("nonQualifyingThird", v)}
@@ -325,7 +343,7 @@ export function MundialForm({ special, allTeams, matches, predictions, onChange,
 
       <div className="card-glass rounded-2xl p-4 sm:p-6">
         <h3 className="font-display text-xl sm:text-2xl text-gold-500 mb-4">MVP I JUGADORS</h3>
-        <p className="text-xs text-pitch-500 mb-4">{RULES_NOTES.youngPlayer}</p>
+        <p className="text-xs text-pitch-500 mb-4">{RULES_NOTES.youngPlayer} {RULES_NOTES.topScorerTie}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <TextField label="⭐ Millor jugador (MVP)" value={current.mvp} onChange={(v) => update("mvp", v)} disabled={disabled} placeholder="Nom i Cognom" />
           <TextField label="🌟 Millor jugador jove" value={current.youngMvp} onChange={(v) => update("youngMvp", v)} disabled={disabled} placeholder="Nom i Cognom" />
@@ -344,7 +362,7 @@ export function MundialForm({ special, allTeams, matches, predictions, onChange,
           </div>
           <div>
             <SelectTeam label="💥 Selecció decepció" value={current.disappointmentTeam} teams={top10Teams} onChange={(v) => update("disappointmentTeam", v)} disabled={disabled} />
-            <p className="text-[10px] text-pitch-500 mt-1">Només top 10 FIFA · ha de quedar fora abans dels vuitens (8ens)</p>
+            <p className="text-[10px] text-pitch-500 mt-1">Només top 10 FIFA · ha de quedar fora abans dels 16ens</p>
           </div>
         </div>
       </div>

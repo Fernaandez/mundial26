@@ -300,7 +300,7 @@ export default function AdminPage() {
             <h2 className="font-display text-xl text-gold-500 mb-4">2. Eliminatòries</h2>
             <p className="text-pitch-400 text-sm mb-4">
               Obre aquesta fase quan la fase de grups hagi acabat i estigui puntuada.
-              Els jugadors podran predir 16ens, 8ens, quarts, semis i final.
+              Els jugadors podran predir 32ens, 16ens, quarts, semis i final (marcadors i quadre).
             </p>
             <div className="flex flex-wrap gap-3">
               {!predictionWindows.knockoutOpen ? (

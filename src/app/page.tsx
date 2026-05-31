@@ -79,8 +79,8 @@ export default function HomePage() {
           <div className="space-y-3 text-pitch-200">
             <PhaseRow name="Fase de grups" desc="72 partits · classificació en viu" pts="4 pts max/partit" />
             <PhaseRow name="Mundial (general)" desc="MVP, golejador, sorpreses, totals…" pts="fins a 150+ pts" />
-            <PhaseRow name="16ens de final" desc="16 partits" pts="8 pts max/partit" />
-            <PhaseRow name="8ens → Final" desc="15 partits eliminatoris" pts="8 pts max/partit" />
+            <PhaseRow name="32ens de final" desc="16 partits" pts="4 pts max/partit" />
+            <PhaseRow name="16ens → Final" desc="16 partits eliminatoris" pts="4 pts max/partit" />
           </div>
         </div>
       </div>
