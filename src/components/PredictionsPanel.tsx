@@ -10,6 +10,7 @@ import {
   KNOCKOUT_PHASE_LIST,
   canEditGroupPredictions,
   canEditSpecialPredictions,
+  canEditKnockoutPredictions,
   isKnockoutPhase,
 } from "@/lib/phases";
 import { canEditPhasePredictions, getOpenKnockoutPhases, canEditFullBracket } from "@/lib/prediction-deadlines";
@@ -75,7 +76,7 @@ export function PredictionsPanel({
   const openKnockoutPhases = getOpenKnockoutPhases(matches, windows);
   const bracketEditable = !readOnly && canEditFullBracket(windows);
   const knockoutEditable = !readOnly && openKnockoutPhases.length > 0;
-  const showKnockout = readOnly || windows.knockoutOpen;
+  const showKnockout = readOnly || canEditKnockoutPredictions(windows);
 
   useEffect(() => {
     if (mainSection !== "knockout" || openKnockoutPhases.length === 0) return;

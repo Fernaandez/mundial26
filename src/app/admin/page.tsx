@@ -3,7 +3,16 @@
 import { useState } from "react";
 import { Match, Group, Participant } from "@/types";
 import { getTeamInfo, getAllTeams } from "@/data/world-cup-2026";
-import { PredictionWindows } from "@/lib/phases";
+import {
+  PredictionWindows,
+  DEFAULT_PREDICTION_WINDOWS,
+  KnockoutWindowPhase,
+  PredictionWindowsUpdate,
+  KNOCKOUT_WINDOW_PHASES,
+  KNOCKOUT_ADMIN_LABELS,
+  allKnockoutPhasesOpen,
+  canEditKnockoutPredictions,
+} from "@/lib/phases";
 import { MatchScoreboard } from "@/components/MatchScoreboard";
 import { AdminSpecialActualsForm } from "@/components/AdminSpecialActualsForm";
 import { TeamFlag } from "@/components/TeamFlag";
@@ -16,10 +25,9 @@ export default function AdminPage() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [groups] = useState<Group[]>([]);
-  const [predictionWindows, setPredictionWindows] = useState<PredictionWindows>({
-    groupsLocked: false,
-    knockoutOpen: true,
-  });
+  const [predictionWindows, setPredictionWindows] = useState<PredictionWindows>(
+    DEFAULT_PREDICTION_WINDOWS
+  );
   const [tab, setTab] = useState<"fases" | "results" | "participants" | "knockout" | "specials">("fases");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -36,7 +44,7 @@ export default function AdminPage() {
     const data = await res.json();
     setMatches(data.matches);
     setParticipants(data.participants);
-    setPredictionWindows(data.predictionWindows ?? { groupsLocked: false, knockoutOpen: false });
+    setPredictionWindows(data.predictionWindows ?? DEFAULT_PREDICTION_WINDOWS);
     setSpecialActuals(data.specialActuals ?? {});
     setAuthenticated(true);
   }
@@ -150,7 +158,7 @@ export default function AdminPage() {
     }
   }
 
-  async function updateWindows(updates: Partial<PredictionWindows>) {
+  async function updateWindows(updates: PredictionWindowsUpdate) {
     setSuccess("");
     setError("");
     const res = await fetch("/api/admin", {
@@ -159,7 +167,16 @@ export default function AdminPage() {
       body: JSON.stringify({
         action: "predictionWindows",
         adminPin: pin,
-        windows: { ...updates, testMode: false },
+        windows: {
+          ...updates,
+          knockoutPhasesOpen: updates.knockoutPhasesOpen
+            ? {
+                ...predictionWindows.knockoutPhasesOpen,
+                ...updates.knockoutPhasesOpen,
+              }
+            : undefined,
+          testMode: false,
+        },
       }),
     });
     const data = await res.json();
@@ -169,6 +186,16 @@ export default function AdminPage() {
     } else {
       setError(data.error || "Error");
     }
+  }
+
+  async function toggleKnockoutPhase(phase: KnockoutWindowPhase, open: boolean) {
+    await updateWindows({
+      knockoutPhasesOpen: { [phase]: open },
+    });
+  }
+
+  async function setAllKnockoutPhases(open: boolean) {
+    await updateWindows({ knockoutPhasesOpen: allKnockoutPhasesOpen(open) });
   }
 
   async function updateKnockoutMatch(matchId: string, homeTeam: string, awayTeam: string) {
@@ -300,37 +327,63 @@ export default function AdminPage() {
           <div className="card-glass rounded-2xl p-5 sm:p-6">
             <h2 className="font-display text-xl text-gold-500 mb-4">2. Eliminatòries</h2>
             <p className="text-pitch-400 text-sm mb-4">
-              Obre aquesta fase quan la fase de grups hagi acabat i estigui puntuada.
-              Els jugadors podran predir setzens, vuitens, quarts, semis i final (marcadors i quadre).
+              Obre o tanca cada ronda per separat. Els jugadors podran predir marcadors de les rondes
+              obertes. <strong className="text-pitch-200">Setzens (1/16)</strong> també desbloqueja la
+              pestanya Quadre.
             </p>
-            <div className="flex flex-wrap gap-3">
-              {!predictionWindows.knockoutOpen ? (
-                <button
-                  type="button"
-                  onClick={() => updateWindows({ knockoutOpen: true })}
-                  className="btn-primary text-sm"
-                >
-                  Obrir prediccions eliminatòries
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => updateWindows({ knockoutOpen: false })}
-                  className="btn-secondary text-sm"
-                >
-                  Tancar prediccions eliminatòries
-                </button>
-              )}
+            <div className="flex flex-wrap gap-2 mb-5">
+              <button
+                type="button"
+                onClick={() => setAllKnockoutPhases(true)}
+                className="btn-primary text-sm"
+              >
+                Obrir totes
+              </button>
+              <button
+                type="button"
+                onClick={() => setAllKnockoutPhases(false)}
+                className="btn-secondary text-sm"
+              >
+                Tancar totes
+              </button>
             </div>
-            {!predictionWindows.knockoutOpen && (
-              <p className="text-pitch-500 text-xs mt-3">
-                També pots usar «Obrir tot (proves)» a dalt per obrir grups i eliminatòries alhora.
+            <div className="space-y-3">
+              {KNOCKOUT_WINDOW_PHASES.map((phase) => {
+                const { title, hint } = KNOCKOUT_ADMIN_LABELS[phase];
+                const open = predictionWindows.knockoutPhasesOpen[phase];
+                return (
+                  <div
+                    key={phase}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-pitch-700/50 bg-pitch-950/30 px-4 py-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-medium text-pitch-100">{title}</p>
+                      <p className="text-xs text-pitch-500">{hint}</p>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className={`text-sm ${open ? "text-gold-400" : "text-pitch-500"}`}>
+                        {open ? "✅ Oberta" : "🔒 Tancada"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => toggleKnockoutPhase(phase, !open)}
+                        className={open ? "btn-secondary text-sm py-1.5 px-3" : "btn-primary text-sm py-1.5 px-3"}
+                      >
+                        {open ? "Tancar" : "Obrir"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {!canEditKnockoutPredictions(predictionWindows) && (
+              <p className="text-pitch-500 text-xs mt-4">
+                També pots usar «Obrir tot (proves)» a dalt per obrir grups i totes les rondes alhora.
               </p>
             )}
-            <p className={`text-sm mt-3 ${predictionWindows.knockoutOpen ? "text-gold-400" : "text-pitch-500"}`}>
-              Estat: {predictionWindows.knockoutOpen ? "✅ Oberta" : "🔒 Tancada"}
-              {predictionWindows.testMode && " · mode proves actiu"}
-            </p>
+            {predictionWindows.testMode && (
+              <p className="text-sm mt-4 text-gold-400">Mode proves actiu — finestres de calendari ignorades.</p>
+            )}
           </div>
         </div>
       )}

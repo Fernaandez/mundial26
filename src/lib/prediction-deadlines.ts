@@ -2,7 +2,7 @@ import { Match, Phase } from "@/types";
 import { compareMatchesByKickoff, formatMatchKickoff } from "@/lib/match-dates";
 import { PHASE_LABELS } from "@/data/phase-labels";
 import { FIXED_DEADLINES } from "@/data/rules-config";
-import { PredictionWindows, isKnockoutPhase } from "@/lib/phases";
+import { PredictionWindows, isKnockoutPhase, isKnockoutPhaseOpen } from "@/lib/phases";
 
 const KO_MARCADORS_ORDER: Phase[] = [
   "round32",
@@ -55,12 +55,12 @@ export function canEditGroupsOrSpecial(
   return now <= FIXED_DEADLINES.groupsSpecialClose;
 }
 
-/** Quadre sencer — només finestra Setzens (28 juny 04:00–20:59) */
+/** Quadre sencer — finestra Setzens + admin ha d'obrir setzens (1/16) */
 export function canEditFullBracket(
   windows: PredictionWindows,
   now: Date = new Date()
 ): boolean {
-  if (!windows.knockoutOpen) return false;
+  if (!isKnockoutPhaseOpen("round32", windows)) return false;
   if (!deadlinesApply(windows)) return true;
   return isSetzensWindow(now);
 }
@@ -75,7 +75,7 @@ export function canEditMarcadorsPhase(
   if (phase === "groups") return canEditGroupsOrSpecial(windows, now);
   if (phase === "special") return canEditGroupsOrSpecial(windows, now);
   if (!isKnockoutPhase(phase)) return false;
-  if (!windows.knockoutOpen) return false;
+  if (!isKnockoutPhaseOpen(phase, windows)) return false;
 
   if (!deadlinesApply(windows)) return true;
 

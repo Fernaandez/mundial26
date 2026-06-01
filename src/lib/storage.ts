@@ -5,8 +5,10 @@ import { TOURNAMENT_CONFIG, ALL_MATCHES } from "@/data/world-cup-2026";
 import { getSupabase, useSupabase, isCloudDeploy, getStorageConfigError } from "@/lib/supabase";
 import {
   PredictionWindows,
+  PredictionWindowsUpdate,
   DEFAULT_PREDICTION_WINDOWS,
   mergePredictionWindows,
+  allKnockoutPhasesOpen,
   canEditSpecialPredictions,
   isKnockoutPhase,
 } from "@/lib/phases";
@@ -308,13 +310,16 @@ export function getPredictionWindows(data: ExtendedAppData): PredictionWindows {
 
 export async function updatePredictionWindows(
   adminPin: string,
-  updates: Partial<PredictionWindows>
+  updates: PredictionWindowsUpdate
 ): Promise<PredictionWindows> {
   const data = await readData();
   if (data.adminPin !== adminPin) throw new Error("PIN d'admin incorrecte");
   data.predictionWindows = mergePredictionWindows({
     ...getPredictionWindows(data),
     ...updates,
+    knockoutPhasesOpen: updates.knockoutPhasesOpen
+      ? { ...getPredictionWindows(data).knockoutPhasesOpen, ...updates.knockoutPhasesOpen }
+      : getPredictionWindows(data).knockoutPhasesOpen,
   });
   await writeData(data);
   return data.predictionWindows;
@@ -438,7 +443,11 @@ export async function deleteParticipant(participantId: string, adminPin: string)
 
 /** Grups oberts + eliminatòries obertes (mode proves) */
 export async function openAllForTesting(adminPin: string): Promise<PredictionWindows> {
-  return updatePredictionWindows(adminPin, { groupsLocked: false, knockoutOpen: true, testMode: true });
+  return updatePredictionWindows(adminPin, {
+    groupsLocked: false,
+    knockoutPhasesOpen: allKnockoutPhasesOpen(true),
+    testMode: true,
+  });
 }
 
 /** Esborra participants, resultats i prediccions; deixa el torneig net per compartir */
