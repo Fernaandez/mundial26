@@ -67,7 +67,8 @@ function deadlinesApply(windows: PredictionWindows): boolean {
 
 function isInWindow(window: PredictionWindow, now: Date): boolean {
   const { opens, closes } = window;
-  if (!opens || !closes) return false;
+  if (!closes) return false;
+  if (!opens) return now < closes;
   return now >= opens && now < closes;
 }
 
@@ -77,8 +78,9 @@ export function getPredictionWindow(
   target: PredictionWindowTarget
 ): PredictionWindow {
   if (target === "groups") {
+    // Grups + Mundial: obert des d'ara fins al kickoff del primer 1/16 (Setzens)
     return {
-      opens: firstKickoff(matches, "groups"),
+      opens: null,
       closes: firstKickoff(matches, "round32"),
     };
   }
@@ -118,6 +120,39 @@ export function getPredictionCountdown(
 ): PredictionCountdown | null {
   const window = getPredictionWindow(matches, target);
   const { opens, closes } = window;
+
+  if (!closes) {
+    return {
+      status: "closed",
+      headline: `${label} — calendari pendent`,
+      detail: "Encara no hi ha dates de partits per calcular la finestra.",
+      msRemaining: 0,
+      opens,
+      closes,
+    };
+  }
+
+  if (target === "groups" && !opens) {
+    if (now >= closes) {
+      return {
+        status: "closed",
+        headline: `${label} — finestra tancada`,
+        detail: `Es va tancar el ${formatDeadline(closes)} (kickoff del primer partit de setzens / 1/16).`,
+        msRemaining: 0,
+        opens,
+        closes,
+      };
+    }
+    const ms = closes.getTime() - now.getTime();
+    return {
+      status: "open",
+      headline: `${label} — queden ${formatCountdown(ms)}`,
+      detail: `Obert des d'ara. Tancament: ${formatDeadline(closes)} (kickoff del primer 1/16).`,
+      msRemaining: ms,
+      opens,
+      closes,
+    };
+  }
 
   if (!opens || !closes) {
     return {
@@ -249,10 +284,10 @@ export function buildSubmissionDeadlineRows(matches: Match[]): { phase: string; 
   const rows: { phase: string; limit: string }[] = [];
 
   const groupsWin = getPredictionWindow(matches, "groups");
-  if (groupsWin.opens && groupsWin.closes) {
+  if (groupsWin.closes) {
     rows.push({
       phase: "Grups + prediccions especials (Mundial)",
-      limit: `Del ${formatDeadline(groupsWin.opens)} al ${formatDeadline(groupsWin.closes)}`,
+      limit: `Obert des d'ara fins al ${formatDeadline(groupsWin.closes)} (primer 1/16)`,
     });
   }
 
