@@ -201,7 +201,6 @@ export default function AdminPage() {
                 ...updates.knockoutPhasesOpen,
               }
             : undefined,
-          testMode: false,
         },
       }),
     });
@@ -308,16 +307,38 @@ export default function AdminPage() {
       {tab === "fases" && (
         <div className="space-y-6">
           <div className="card-glass rounded-2xl p-5 sm:p-6 border border-gold-500/20">
-            <h2 className="font-display text-xl text-gold-500 mb-3">Mode proves</h2>
+            <h2 className="font-display text-xl text-gold-500 mb-3">Control manual (proves)</h2>
             <p className="text-pitch-400 text-sm mb-4">
-              Obre grups i eliminatòries alhora per provar prediccions (Setzens, Vuitens, quadre…)
-              abans de les dates reals del torneig.
+              Amb el control manual actiu, les dates del calendari no limiten res. Obre o tanca grups i
+              cada ronda eliminatòria amb els botons de sota (Setzens, Vuitens…).
             </p>
-            <div className="flex flex-wrap gap-3">
-              <button type="button" onClick={openForTesting} className="btn-primary text-sm">
-                Obrir tot (proves)
+            <div className="flex flex-wrap gap-3 items-center">
+              {!predictionWindows.testMode ? (
+                <button
+                  type="button"
+                  onClick={() => updateWindows({ testMode: true })}
+                  className="btn-primary text-sm"
+                >
+                  Activar control manual
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => updateWindows({ testMode: false })}
+                  className="btn-secondary text-sm"
+                >
+                  Tornar al calendari real
+                </button>
+              )}
+              <button type="button" onClick={openForTesting} className="btn-secondary text-sm">
+                Obrir tot (proves ràpides)
               </button>
             </div>
+            <p className={`text-sm mt-3 ${predictionWindows.testMode ? "text-gold-400" : "text-pitch-500"}`}>
+              {predictionWindows.testMode
+                ? "✅ Control manual actiu — dates ignorades"
+                : "📅 Calendari actiu — les finestres per dates s'apliquen"}
+            </p>
           </div>
 
           <div className="card-glass rounded-2xl p-5 sm:p-6">
@@ -408,7 +429,9 @@ export default function AdminPage() {
               </p>
             )}
             {predictionWindows.testMode && (
-              <p className="text-sm mt-4 text-gold-400">Mode proves actiu — finestres de calendari ignorades.</p>
+              <p className="text-sm mt-4 text-gold-400">
+                Control manual actiu — obre o tanca cada ronda amb els botons de dalt.
+              </p>
             )}
           </div>
 

@@ -43,7 +43,7 @@ export const DEFAULT_KNOCKOUT_PHASES_OPEN: Record<KnockoutWindowPhase, boolean> 
 export const DEFAULT_PREDICTION_WINDOWS: PredictionWindows = {
   groupsLocked: false,
   knockoutPhasesOpen: { ...DEFAULT_KNOCKOUT_PHASES_OPEN },
-  testMode: false,
+  testMode: true,
 };
 
 /** Etiquetes admin — nomenclatura FIFA + UI català */

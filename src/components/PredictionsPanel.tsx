@@ -200,7 +200,7 @@ export function PredictionsPanel({
 
       {windows.testMode && !readOnly && (
         <div className="bg-gold-500/10 border border-gold-500/30 text-gold-200 px-4 py-3 rounded-xl mb-6 text-sm">
-          Mode proves actiu — finestres de calendari ignorades.
+          Control manual actiu — les dates del calendari no s&apos;apliquen. L&apos;admin obre o tanca cada fase.
         </div>
       )}
 
