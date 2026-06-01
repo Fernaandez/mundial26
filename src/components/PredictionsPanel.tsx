@@ -296,8 +296,8 @@ export function PredictionsPanel({
             <>
               {!readOnly && !bracketEditable && r32DrawReady && (
                 <p className="text-sm text-amber-200/90 mb-4">
-                  El quadre només es pot omplir durant la finestra de setzens: des de 2 h després
-                  del darrer partit de grups fins al kickoff del primer 1/16.
+                  El quadre només es pot omplir durant la finestra de Setzens: del kickoff del
+                  darrer partit de grups al kickoff del primer Setzens.
                 </p>
               )}
               <PredictionBracket

@@ -11,7 +11,7 @@ Quan codi i text divergeixin d’aquí, aquest document té prioritat sobre el c
 
 - Porra **privada** entre amics/coneguts per al Mundial 2026.
 - Idioma de la UI: **català** (`lang="ca"`).
-- 8–12 participants, entrada **15€**, repartiment **70% · 20% · 10%**.
+- Sense limit de participants, entrada **15€**, repartiment **70% · 20% · 10%**.
 - Stack: Next.js, dades JSON/Supabase, desplegament simple.
 
 ---
@@ -20,7 +20,7 @@ Quan codi i text divergeixin d’aquí, aquest document té prioritat sobre el c
 
 Cada participant ha de poder:
 
-1. Predir **marcadors exactes** (90 min) de tots els partits rellevants.
+1. Predir **marcadors exactes** (90 min) de tots els partits.
 2. Omplir **prediccions especials** (jugadors, seleccions, extras de grups).
 3. Omplir el **quadre eliminatori** (qui passa de ronda → punts d’avancament + campió/3r).
 4. Veure classificació, prediccions dels altres (només lectura) i reglament clar.
@@ -43,7 +43,7 @@ L’admin introdueix **resultats reals**, gestiona participants i fases.
 ### Separació crítica (no barregar)
 
 - **Marcadors KO** → només punts de resultat del partit.
-- **Quadre** → només punts d’**avancament** (16ens, quarts, semis, campió, 3r).
+- **Quadre** → només punts d’**avancament** (setzens, vuitens, quarts, semis, campió, 3r).
 - Sense quadre omplert **no** es poden sumar punts d’avancament mirant resultats reals.
 - Campió i 3r es trien al **Quadre** (final + partit del 3r); es sincronitzen a dades internes en desar.
 
@@ -59,20 +59,20 @@ Cada ronda es prediu **dins la finestra** entre:
 Exemples:
 
 
-| Ronda                       | Finestra                                      |
-| --------------------------- | --------------------------------------------- |
-| Grups + Mundial (especials) | Fins al primer **32ens**                      |
-| 32ens (marcadors + quadre)  | Darrer partit de **grups** → primer **32ens** |
-| 16ens                       | Darrer **32ens** → primer **16ens**           |
-| Quarts                      | Darrer **16ens** → primer quart               |
-| Semis                       | Darrer quart → primera semi                   |
-| 3r lloc                     | Darrera semi → partit del 3r                  |
-| Final                       | Darrera semi → final                          |
+| Ronda                           | Finestra                                        |
+| ------------------------------- | ----------------------------------------------- |
+| Grups + Mundial (especials)     | Fins al primer **partit de fase de grups**      |
+| **Setzens**(marcadors + quadre) | Darrer partit de **grups** → primer **Setzens** |
+| Vuitens                         | Darrer **Setzens** → primer Vuitens             |
+| Quarts                          | Darrer Vuitens→ primer quart                    |
+| Semis                           | Darrer quart → primera semi                     |
+| 3r lloc                         | Darrera semi → partit del 3r                    |
+| Final                           | Darrera semi → final                            |
 
 
 Les dates concretes surten del calendari (`match-schedule.ts`) i es mostren a **Regles** via `buildSubmissionDeadlineRows()`.
 
-**Override admin:** `groupsLocked` i `knockoutOpen` poden forçar tancat/obert (mode prova inclòs).
+**Override admin:** `groupsLocked` i `knockoutPhasesOpen` (per ronda) poden forçar tancat/obert (mode prova inclòs).
 
 ---
 
@@ -81,8 +81,8 @@ Les dates concretes surten del calendari (`match-schedule.ts`) i es mostren a **
 
 | Fase codi | Partits | Nom UI      |
 | --------- | ------- | ----------- |
-| `round32` | 16      | **Setzens** |
-| `round16` | 8       | **Vuitens** |
+| `round16` | 16      | **Setzens** |
+| `round8`  | 8       | **Vuitens** |
 | `quarter` | 4       | Quarts      |
 | `semi`    | 2       | Semifinals  |
 | `third`   | 1       | 3r lloc     |

@@ -13,14 +13,14 @@ export const SUBMISSION_DEADLINES: { phase: string; limit: string }[] = [];
 
 export const DEADLINES = {
   /** Text orientatiu — les dates reals surten del calendari (match-schedule.ts) */
-  groupsSubmit: "Fins al kickoff del primer Setzens (1/16)",
-  setzensBracket: "2 h després del darrer partit de grups → kickoff del primer 1/16",
+  groupsSubmit: "Fins al kickoff del primer partit de fase de grups",
+  setzensBracket: "Kickoff darrer partit de grups → kickoff primer Setzens",
 } as const;
 
 /** @deprecated Les finestres es calculen des del calendari a prediction-deadlines.ts */
 export const FIXED_DEADLINES = {
-  groupsSpecialClose: new Date("2026-06-28T21:00:00+02:00"),
-  setzensOpen: new Date("2026-06-28T06:00:00+02:00"),
+  groupsSpecialClose: new Date("2026-06-11T21:00:00+02:00"),
+  setzensOpen: new Date("2026-06-28T04:00:00+02:00"),
   setzensClose: new Date("2026-06-28T21:00:00+02:00"),
 } as const;
 

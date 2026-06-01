@@ -32,8 +32,9 @@ export default function RulesPage() {
         <h3 className="font-display text-lg text-pitch-300 mb-3">Límits d&apos;entrega</h3>
         <DeadlineTable rows={submissionDeadlines.map((d) => [d.phase, d.limit])} />
         <p className="text-pitch-500 text-xs mt-3">
-          Cada ronda eliminatòria s&apos;ha de predir dins la finestra entre el darrer partit de la fase anterior
-          i l&apos;inici del primer partit de la ronda següent.
+          Cada ronda es prediu entre el kickoff del darrer partit de la fase anterior i el kickoff
+          del primer partit de la ronda següent. Grups i Mundial es tanquen al primer partit de
+          fase de grups.
         </p>
       </section>
 

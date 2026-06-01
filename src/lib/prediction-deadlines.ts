@@ -4,9 +4,6 @@ import { PHASE_LABELS } from "@/data/phase-labels";
 import { PredictionWindows, isKnockoutPhase, isKnockoutPhaseOpen } from "@/lib/phases";
 import { isRound32DrawComplete } from "@/lib/predicted-bracket";
 
-/** Durada estimada d'un partit (90 min + descans + marge) per obrir la finestra següent */
-export const MATCH_DURATION_MS = 2 * 60 * 60 * 1000;
-
 const KO_MARCADORS_ORDER: Phase[] = [
   "round32",
   "round16",
@@ -46,10 +43,6 @@ function firstKickoff(matches: Match[], phase: Phase): Date | null {
 function lastKickoff(matches: Match[], phase: Phase): Date | null {
   const list = phaseMatches(matches, phase);
   return list.length ? new Date(list[list.length - 1].date!) : null;
-}
-
-function afterMatchEnd(kickoff: Date): Date {
-  return new Date(kickoff.getTime() + MATCH_DURATION_MS);
 }
 
 function previousKnockoutPhase(phase: Phase): Phase | "groups" {
@@ -92,31 +85,40 @@ function isInWindow(window: PredictionWindow, now: Date): boolean {
   return now >= opens && now < closes;
 }
 
-/** Finestra horària de predicció per fase (calendari real + 2 h després del darrer partit anterior) */
+/**
+ * Finestres d'entrega (ESPECIFICACIO §4):
+ * obertura = kickoff darrer partit fase anterior; tancament = kickoff primer partit ronda actual.
+ */
 export function getPredictionWindow(
   matches: Match[],
   target: PredictionWindowTarget
 ): PredictionWindow {
   if (target === "groups") {
-    // Grups + Mundial: obert des d'ara fins al kickoff del primer 1/16 (Setzens)
     return {
       opens: null,
-      closes: firstKickoff(matches, "round32"),
+      closes: firstKickoff(matches, "groups"),
     };
   }
 
   if (target === "round32") {
-    const lastGroup = lastKickoff(matches, "groups");
     return {
-      opens: lastGroup ? afterMatchEnd(lastGroup) : null,
+      opens: lastKickoff(matches, "groups"),
       closes: firstKickoff(matches, "round32"),
     };
   }
 
+  if (target === "final") {
+    return {
+      opens: lastKickoff(matches, "semi"),
+      closes: firstKickoff(matches, "final"),
+    };
+  }
+
   const prev = previousKnockoutPhase(target);
-  const lastPrev = lastKickoff(matches, prev);
+  const lastPrev =
+    prev === "groups" ? lastKickoff(matches, "groups") : lastKickoff(matches, prev);
   return {
-    opens: lastPrev ? afterMatchEnd(lastPrev) : null,
+    opens: lastPrev,
     closes: firstKickoff(matches, target),
   };
 }
@@ -142,17 +144,11 @@ export function getPredictionCountdown(
   }
 
   if (target === "groups" && !opens) {
-    const firstGroup = firstGroupKickoff(matches);
-    const lastGroup = lastGroupKickoff(matches);
-    const calendarNote = firstGroup
-      ? `Primer partit de grups: ${formatDeadline(firstGroup)}. Darrer: ${lastGroup ? formatDeadline(lastGroup) : "—"}.`
-      : "";
-
     if (now >= closes) {
       return {
         status: "closed",
         headline: `${label} — finestra tancada`,
-        detail: `Es va tancar el ${formatDeadline(closes)} (kickoff del primer Setzens / 1/16). ${calendarNote}`,
+        detail: `Es va tancar el ${formatDeadline(closes)} (kickoff del primer partit de grups).`,
         msRemaining: 0,
         opens,
         closes,
@@ -162,7 +158,7 @@ export function getPredictionCountdown(
     return {
       status: "open",
       headline: `${label} — obert fins al ${formatDeadline(closes)}`,
-      detail: `Queden ${formatCountdown(ms)} per omplir grups i Mundial. ${calendarNote} Es tanca abans del primer Setzens (1/16), no al primer partit de grups.`,
+      detail: `Queden ${formatCountdown(ms)}. Tancament al kickoff del primer partit de fase de grups (abans que comenci el Mundial).`,
       msRemaining: ms,
       opens,
       closes,
@@ -182,14 +178,10 @@ export function getPredictionCountdown(
 
   if (now < opens) {
     const ms = opens.getTime() - now.getTime();
-    const openDetail =
-      target === "groups"
-        ? `Obertura: ${formatDeadline(opens)} (kickoff del primer partit de grups).`
-        : `Obertura: ${formatDeadline(opens)} (2 h després del darrer partit de la fase anterior).`;
     return {
       status: "upcoming",
       headline: `${label} — s'obrirà en ${formatCountdown(ms)}`,
-      detail: openDetail,
+      detail: `Obertura: ${formatDeadline(opens)} (kickoff del darrer partit de la fase anterior). Tancament: ${formatDeadline(closes)}.`,
       msRemaining: ms,
       opens,
       closes,
@@ -197,14 +189,10 @@ export function getPredictionCountdown(
   }
 
   if (now >= closes) {
-    const closeDetail =
-      target === "groups"
-        ? `Es va tancar el ${formatDeadline(closes)} (kickoff del primer partit de setzens / 1/16).`
-        : `Es va tancar el ${formatDeadline(closes)} (kickoff del primer partit d'aquesta ronda).`;
     return {
       status: "closed",
       headline: `${label} — finestra tancada`,
-      detail: closeDetail,
+      detail: `Es va tancar el ${formatDeadline(closes)} (kickoff del primer partit d'aquesta ronda).`,
       msRemaining: 0,
       opens,
       closes,
@@ -212,21 +200,17 @@ export function getPredictionCountdown(
   }
 
   const ms = closes.getTime() - now.getTime();
-  const closeDetail =
-    target === "groups"
-      ? `Tancament: ${formatDeadline(closes)} (kickoff del primer Setzens / 1/16).`
-      : `Tancament: ${formatDeadline(closes)} (kickoff del primer partit d'aquesta ronda). Queden ${formatCountdown(ms)}.`;
   return {
     status: "open",
     headline: `${label} — obert fins al ${formatDeadline(closes)}`,
-    detail: closeDetail,
+    detail: `Queden ${formatCountdown(ms)}. Del kickoff del darrer partit anterior (${formatDeadline(opens)}) al kickoff del primer d'aquesta ronda.`,
     msRemaining: ms,
     opens,
     closes,
   };
 }
 
-/** Grups + Mundial: obert des d'ara fins al kickoff del primer 1/16 */
+/** Grups + Mundial: obert des d'ara fins al kickoff del primer partit de grups (§4) */
 export function canEditGroupsOrSpecial(
   windows: PredictionWindows,
   matches: Match[],
@@ -237,7 +221,7 @@ export function canEditGroupsOrSpecial(
   return isInWindow(getPredictionWindow(matches, "groups"), now);
 }
 
-/** Quadre simulat — 16/16 equips a 1/16 + finestra (darrer grup +2 h → primer 1/16) */
+/** Quadre simulat — finestra Setzens: darrer grup → primer Setzens (§4) */
 export function canEditFullBracket(
   windows: PredictionWindows,
   matches: Match[],
@@ -266,7 +250,6 @@ export function canEditMarcadorsPhase(
   return isInWindow(getPredictionWindow(matches, phase), now);
 }
 
-/** Compat: predicció de partit */
 export function canEditPhasePredictions(
   phase: Phase,
   matches: Match[],
@@ -299,32 +282,19 @@ export function canEditMatchPrediction(
 export function buildSubmissionDeadlineRows(matches: Match[]): { phase: string; limit: string }[] {
   const rows: { phase: string; limit: string }[] = [];
 
-  const firstGroup = firstGroupKickoff(matches);
-  const lastGroup = lastGroupKickoff(matches);
   const groupsWin = getPredictionWindow(matches, "groups");
   if (groupsWin.closes) {
     rows.push({
       phase: "Grups + prediccions especials (Mundial)",
-      limit: [
-        "Obert des d'ara",
-        firstGroup ? `Primer partit de grups: ${formatDeadline(firstGroup)}` : null,
-        lastGroup ? `Darrer partit de grups: ${formatDeadline(lastGroup)}` : null,
-        `Tancament: ${formatDeadline(groupsWin.closes)} (kickoff primer Setzens / 1/16)`,
-      ]
-        .filter(Boolean)
-        .join(" · "),
+      limit: `Fins al ${formatDeadline(groupsWin.closes)} (kickoff del primer partit de grups)`,
     });
   }
 
   const setzensWin = getPredictionWindow(matches, "round32");
   if (setzensWin.opens && setzensWin.closes) {
     rows.push({
-      phase: "Quadre (simulació eliminatòria)",
-      limit: `Del ${formatDeadline(setzensWin.opens)} al ${formatDeadline(setzensWin.closes)} (2 h després del darrer partit de grups → primer 1/16)`,
-    });
-    rows.push({
-      phase: "Marcadors — Setzens de final (1/16)",
-      limit: `Del ${formatDeadline(setzensWin.opens)} al ${formatDeadline(setzensWin.closes)}`,
+      phase: "Setzens — Marcadors + Quadre",
+      limit: `Del ${formatDeadline(setzensWin.opens)} (darrer partit de grups) al ${formatDeadline(setzensWin.closes)} (primer Setzens)`,
     });
   }
 
@@ -332,9 +302,12 @@ export function buildSubmissionDeadlineRows(matches: Match[]): { phase: string; 
     if (phase === "round32") continue;
     const win = getPredictionWindow(matches, phase);
     if (win.opens && win.closes) {
+      const prevPhase = phase === "final" ? "semi" : previousKnockoutPhase(phase);
+      const prevLabel =
+        prevPhase === "groups" ? "grups" : PHASE_LABELS[prevPhase as Phase];
       rows.push({
         phase: `Marcadors — ${PHASE_LABELS[phase]}`,
-        limit: `Del ${formatDeadline(win.opens)} al ${formatDeadline(win.closes)} (2 h després de la fase anterior → kickoff d'aquesta ronda)`,
+        limit: `Del ${formatDeadline(win.opens)} (darrer ${prevLabel}) al ${formatDeadline(win.closes)} (primer ${PHASE_LABELS[phase]})`,
       });
     }
   }
