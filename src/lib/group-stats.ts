@@ -4,29 +4,34 @@ import { computeAllGroupStandings, computeBestThirdsRanking, isGroupStandingComp
 export interface GroupStageStats {
   /** Seleccions 3es que NO passen entre els 8 millors 3rs */
   nonQualifyingThirds: string[];
-  /** Selecció amb més gols a favor a fase de grups */
-  mostGoals: string | null;
-  /** Selecció amb més gols en contra a fase de grups */
-  mostGoalsConceded: string | null;
+  /** Seleccions empatades com a màximes golejadores (GF) a fase de grups */
+  mostGoals: string[];
+  /** Seleccions empatades amb més gols encaixats (GC) a fase de grups */
+  mostGoalsConceded: string[];
 }
 
-function pickExtreme(
+function pickExtremes(
   standings: ReturnType<typeof computeAllGroupStandings>,
   field: "gf" | "ga"
-): string | null {
-  let best: { code: string; value: number } | null = null;
+): string[] {
+  let maxValue: number | null = null;
+  const tied: string[] = [];
 
   for (const s of standings) {
     if (!isGroupStandingComplete(s)) continue;
     for (const t of s.teams) {
       const value = field === "gf" ? t.gf : t.ga;
-      if (!best || value > best.value || (value === best.value && t.code < best.code)) {
-        best = { code: t.code, value };
+      if (maxValue === null || value > maxValue) {
+        maxValue = value;
+        tied.length = 0;
+        tied.push(t.code);
+      } else if (value === maxValue) {
+        tied.push(t.code);
       }
     }
   }
 
-  return best?.code ?? null;
+  return tied;
 }
 
 /** Estadístiques reals de la fase de grups (per puntuació) */
@@ -45,7 +50,7 @@ export function computeGroupStageStats(groups: Group[], matches: Match[]): Group
 
   return {
     nonQualifyingThirds,
-    mostGoals: pickExtreme(standings, "gf"),
-    mostGoalsConceded: pickExtreme(standings, "ga"),
+    mostGoals: pickExtremes(standings, "gf"),
+    mostGoalsConceded: pickExtremes(standings, "ga"),
   };
 }

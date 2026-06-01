@@ -486,8 +486,10 @@ export async function getSpecialActuals(): Promise<SpecialActuals | undefined> {
     nonQualifyingThird: groupStats.nonQualifyingThirds.length
       ? groupStats.nonQualifyingThirds
       : undefined,
-    mostGroupGoals: groupStats.mostGoals ?? undefined,
-    mostGroupGoalsConceded: groupStats.mostGoalsConceded ?? undefined,
+    mostGroupGoals: groupStats.mostGoals.length ? groupStats.mostGoals : undefined,
+    mostGroupGoalsConceded: groupStats.mostGoalsConceded.length
+      ? groupStats.mostGoalsConceded
+      : undefined,
     advancement,
     champion: finalMatch ? getMatchWinner(finalMatch) ?? undefined : data.specialActuals?.champion,
     thirdPlace: thirdMatch ? getMatchWinner(thirdMatch) ?? undefined : data.specialActuals?.thirdPlace,

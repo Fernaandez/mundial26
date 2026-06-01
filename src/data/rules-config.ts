@@ -32,6 +32,8 @@ export const RULES_NOTES = {
   disappointmentTeam:
     "Selecció decepció: tria entre el top 10 FIFA. Només compta si queda eliminada abans d'arribar als vuitens de final.",
   topScorerTie: "Màxim golejador i assistent: en cas d'empat, es dona per vàlid.",
+  groupGoalsTie:
+    "Més GF / més GC a grups: si hi ha empat, sumen punts tots els que hagin encertat qualsevol selecció empatada.",
 } as const;
 
 export function isFifaTop10(code: string): boolean {

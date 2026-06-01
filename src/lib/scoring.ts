@@ -88,15 +88,22 @@ function scoreGroupExtras(
     pts += r.nonQualifyingThird;
   }
 
-  if (actuals.mostGroupGoals && special.mostGroupGoals === actuals.mostGroupGoals) {
-    pts += r.mostGroupGoals;
+  if (actuals.mostGroupGoals && special.mostGroupGoals) {
+    const actualCodes = Array.isArray(actuals.mostGroupGoals)
+      ? actuals.mostGroupGoals.join(",")
+      : actuals.mostGroupGoals;
+    if (teamListMatch(special.mostGroupGoals, actualCodes)) {
+      pts += r.mostGroupGoals;
+    }
   }
 
-  if (
-    actuals.mostGroupGoalsConceded &&
-    special.mostGroupGoalsConceded === actuals.mostGroupGoalsConceded
-  ) {
-    pts += r.mostGroupGoalsConceded;
+  if (actuals.mostGroupGoalsConceded && special.mostGroupGoalsConceded) {
+    const actualCodes = Array.isArray(actuals.mostGroupGoalsConceded)
+      ? actuals.mostGroupGoalsConceded.join(",")
+      : actuals.mostGroupGoalsConceded;
+    if (teamListMatch(special.mostGroupGoalsConceded, actualCodes)) {
+      pts += r.mostGroupGoalsConceded;
+    }
   }
 
   return pts;
@@ -189,8 +196,8 @@ export interface SpecialActualsInput {
   surpriseTeamValid?: boolean;
   disappointmentTeamValid?: boolean;
   nonQualifyingThird?: string[];
-  mostGroupGoals?: string | null;
-  mostGroupGoalsConceded?: string | null;
+  mostGroupGoals?: string | string[] | null;
+  mostGroupGoalsConceded?: string | string[] | null;
   groupStandings?: Record<string, { order: string[]; thirdQualifies: boolean; complete?: boolean }>;
   advancement?: ReturnType<typeof deriveAdvancementSets>;
 }

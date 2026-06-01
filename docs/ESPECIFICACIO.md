@@ -102,7 +102,7 @@ Valors numèrics: `SCORING_RULES` a `world-cup-2026.ts` + text a `/regles`.
 - Partits: 1 + 3 exacte.
 - Ordre exacte grup: 7 pts.
 - 3r que **NO** passa (dels 4 que queden fora dels 8 millors 3rs): 10 pts.
-- Més GF / més GC a grups: 10 pts cadascun.
+- Més GF / més GC a grups: 10 pts cadascun. **Empat:** sumen punts tots els que hagin posat qualsevol selecció empatada (sense desempat).
 - Ordre de grups i millors 3rs: **automàtic** des dels marcadors (no manual).
 
 ### Especials (pestanya Mundial)

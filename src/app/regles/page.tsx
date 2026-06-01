@@ -60,7 +60,7 @@ export default function RulesPage() {
           ["Selecció amb més gols encaixats (GC) a fase de grups", `${s.mostGroupGoalsConceded} pts`],
         ]} />
         <p className="text-pitch-500 text-xs mt-3">
-          En cas d&apos;empat en GF o GC a grups, es desempata per ordre alfabètic del codi de selecció.
+          {RULES_NOTES.groupGoalsTie}
         </p>
       </section>
 
