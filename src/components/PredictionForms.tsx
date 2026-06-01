@@ -9,7 +9,7 @@ import { MatchKickoff } from "@/components/MatchKickoff";
 import { MatchScoreboard } from "@/components/MatchScoreboard";
 import { GroupStandingsTable } from "@/components/GroupStandingsTable";
 import { computeGroupStanding, computeGroupStandingFromPredictions, computeThirdQualifierGroups } from "@/lib/standings";
-import { derivePodiumFromPredictions, DEFAULT_MUNDIAL_FIELDS, resolvePodiumPredictions } from "@/lib/mundial";
+import { DEFAULT_MUNDIAL_FIELDS } from "@/lib/mundial";
 import { FIFA_TOP_10_CODES, RULES_NOTES } from "@/data/rules-config";
 import { isMatchFinished } from "@/lib/knockout";
 
@@ -269,10 +269,7 @@ export function PhaseTabs({ phases, active, onChange, isOpen }: PhaseTabsProps) 
 
 interface MundialFormProps {
   special?: SpecialPredictions;
-  bracketPicks?: Record<string, string>;
   allTeams: { code: string; name: string; iso: string }[];
-  matches: Match[];
-  predictions: Record<string, { home: number; away: number }>;
   onChange: (special: SpecialPredictions) => void;
   disabled?: boolean;
   readOnly?: boolean;
@@ -289,10 +286,7 @@ function emptyGroups(groups: Group[]) {
 
 export function MundialForm({
   special,
-  bracketPicks = {},
   allTeams,
-  matches,
-  predictions,
   onChange,
   disabled,
   readOnly,
@@ -303,9 +297,6 @@ export function MundialForm({
     ...special,
     groups: special?.groups ?? emptyGroups(groups),
   };
-
-  const savedPodium = resolvePodiumPredictions(special, bracketPicks);
-  const scoreSuggestion = derivePodiumFromPredictions(matches, predictions);
 
   const top10Teams = allTeams.filter((t) => (FIFA_TOP_10_CODES as readonly string[]).includes(t.code));
   const revelationTeams = allTeams.filter((t) => !(FIFA_TOP_10_CODES as readonly string[]).includes(t.code));
@@ -319,30 +310,11 @@ export function MundialForm({
       {!readOnly && (
         <div className="card-glass rounded-xl p-4 border border-gold-500/20">
           <p className="text-sm text-pitch-300">
-            Jugadors i seleccions especials. Campió i 3r lloc es trien a la pestanya <strong className="text-pitch-100">Quadre</strong>.
+            Jugadors i seleccions especials. Campió, 3r lloc i classificats per ronda es trien i
+            es puntuen a la pestanya <strong className="text-pitch-100">Quadre</strong>.
           </p>
         </div>
       )}
-
-      <div className="card-glass rounded-2xl p-4 sm:p-6">
-        <h3 className="font-display text-xl sm:text-2xl text-gold-500 mb-2">PODI</h3>
-        <p className="text-xs text-pitch-500 mb-4">
-          {readOnly
-            ? "Campió i 3r segons el quadre eliminatori guardat."
-            : "Tria campió i 3r lloc a la pestanya Quadre (final i partit del 3r)."}
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <PodiumPreview label="🏆 Campió" code={savedPodium.champion} />
-          <PodiumPreview label="🥉 3r lloc" code={savedPodium.thirdPlace} />
-        </div>
-        {!readOnly && (scoreSuggestion.champion || scoreSuggestion.thirdPlace) && (
-          <p className="text-xs text-pitch-500 mt-3">
-            Suggeriment segons marcadors (no puntua):{" "}
-            {scoreSuggestion.champion && getTeamInfo(scoreSuggestion.champion).name}
-            {scoreSuggestion.thirdPlace && ` · 3r: ${getTeamInfo(scoreSuggestion.thirdPlace).name}`}
-          </p>
-        )}
-      </div>
 
       <div className="card-glass rounded-2xl p-4 sm:p-6">
         <h3 className="font-display text-xl sm:text-2xl text-gold-500 mb-2">FASE DE GRUPS</h3>
@@ -398,19 +370,6 @@ export function MundialForm({
             <p className="text-[10px] text-pitch-500 mt-1">Només top 10 FIFA · ha de quedar fora abans dels vuitens</p>
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function PodiumPreview({ label, code }: { label: string; code: string }) {
-  const info = code ? getTeamInfo(code) : null;
-  return (
-    <div className="flex items-center gap-2 bg-pitch-950/50 rounded-xl p-3">
-      {code && <TeamFlag code={code} size={20} />}
-      <div>
-        <div className="text-pitch-500 text-xs">{label}</div>
-        <div className="text-pitch-100 font-medium">{info?.name ?? "—"}</div>
       </div>
     </div>
   );

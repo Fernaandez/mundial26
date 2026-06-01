@@ -16,7 +16,7 @@ import { canEditMatchPrediction, canEditPhasePredictions, canEditFullBracket } f
 import { propagateKnockoutWinner } from "@/lib/bracket-tree";
 import { buildGroupPredictionsFromMatches, buildGroupStandingsActuals } from "@/lib/standings";
 import { assignRound32FromGroupResults } from "@/lib/assign-r32-from-groups";
-import { DEFAULT_MUNDIAL_FIELDS, normalizeSpecialPredictions, applyBracketPodiumToSpecial } from "@/lib/mundial";
+import { DEFAULT_MUNDIAL_FIELDS, normalizeSpecialPredictions } from "@/lib/mundial";
 import { computeGroupStageStats } from "@/lib/group-stats";
 import { deriveAdvancementSets } from "@/lib/knockout-advancement";
 import { getMatchWinner } from "@/lib/knockout";
@@ -395,7 +395,6 @@ export async function savePredictions(
 
     if (Object.keys(mergedPicks).length > 0 || Object.keys(prevPicks).length > 0) {
       p.bracketPicks = mergedPicks;
-      merged = applyBracketPodiumToSpecial(merged, mergedPicks);
     }
 
     if (bracketSkipped > 0) {

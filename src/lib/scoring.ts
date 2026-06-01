@@ -10,10 +10,9 @@ import { isFifaTop10 } from "@/data/rules-config";
 import {
   deriveAdvancementSets,
   disappointmentTeamValid,
-  scoreAdvancementPoints,
   surpriseTeamQualifies,
 } from "@/lib/knockout-advancement";
-import { resolvePodiumPredictions } from "@/lib/mundial";
+import { scoreBracketPicks } from "@/lib/bracket-scoring";
 
 function getOutcome(h: number, a: number): "H" | "D" | "A" {
   if (h > a) return "H";
@@ -112,12 +111,10 @@ function scoreGroupExtras(
 function scoreMundialFields(
   special: SpecialPredictions,
   actuals: SpecialActualsInput,
-  matches: Match[],
-  bracketPicks?: Record<string, string>
+  matches: Match[]
 ): number {
   let pts = 0;
   const r = SCORING_RULES.special;
-  const podium = resolvePodiumPredictions(special, bracketPicks);
 
   if (actuals.topScorer && special.topScorer && playerMatch(special.topScorer, actuals.topScorer)) {
     pts += r.topScorer;
@@ -152,33 +149,6 @@ function scoreMundialFields(
   ) {
     pts += r.disappointmentTeam;
   }
-
-  if (actuals.champion && podium.champion && podium.champion === actuals.champion) {
-    pts += r.champion;
-  }
-  if (actuals.thirdPlace && podium.thirdPlace && podium.thirdPlace === actuals.thirdPlace) {
-    pts += r.thirdPlace;
-  }
-
-  return pts;
-}
-
-function scoreKnockoutAdvancement(
-  matches: Match[],
-  bracketPicks: Record<string, string> | undefined,
-  actuals: SpecialActualsInput
-): number {
-  let pts = 0;
-  const r = SCORING_RULES.special;
-
-  const predAdv = deriveAdvancementSets(matches, undefined, bracketPicks);
-  const actAdv = actuals.advancement ?? deriveAdvancementSets(matches);
-
-  pts += scoreAdvancementPoints(predAdv, actAdv, {
-    round16: r.round16Finalist,
-    quarter: r.quarterFinalist,
-    semi: r.semiFinalist,
-  });
 
   return pts;
 }
@@ -241,18 +211,10 @@ export function calculateParticipantScore(
 
   if (special) {
     breakdown.groups += scoreGroupExtras(special, actuals);
-    breakdown.special = scoreMundialFields(
-      special,
-      actuals,
-      matches,
-      participant.bracketPicks
-    );
-    breakdown.advancement = scoreKnockoutAdvancement(
-      matches,
-      participant.bracketPicks,
-      actuals
-    );
+    breakdown.special = scoreMundialFields(special, actuals, matches);
   }
+
+  breakdown.advancement = scoreBracketPicks(matches, participant.bracketPicks);
 
   const total = Object.values(breakdown).reduce((a, b) => a + b, 0);
   return { total, breakdown };

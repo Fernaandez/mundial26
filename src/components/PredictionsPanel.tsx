@@ -98,7 +98,7 @@ export function PredictionsPanel({
   const groupPredicted = groupMatchIds.filter((id) => predictions[id]).length;
   const knockoutPredicted = knockoutMatchIds.filter((id) => predictions[id]).length;
   const bracketFilled = Object.keys(bracketPicks).length;
-  const mundialFilled = countMundialFilled(special, bracketPicks);
+  const mundialFilled = countMundialFilled(special);
   const mundialTotal = MUNDIAL_TOTAL_FIELDS.length;
 
   const predictedStandings = computeAllPredictedStandings(groups, matches, predictions);
@@ -322,14 +322,11 @@ export function PredictionsPanel({
           )}
           <MundialForm
             groups={groups}
-            matches={matches}
-            predictions={predictions}
-            special={special}
-            bracketPicks={bracketPicks}
             allTeams={getAllTeams()}
             onChange={onSpecialChange ?? noopChange}
             disabled={readOnly || !specialEditable}
             readOnly={readOnly}
+            special={special}
           />
         </>
       )}

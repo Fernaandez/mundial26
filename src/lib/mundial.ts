@@ -83,27 +83,20 @@ export const MUNDIAL_USER_FIELDS: (keyof Omit<SpecialPredictions, "groups">)[] =
   "mostGroupGoalsConceded",
 ];
 
-export const MUNDIAL_TOTAL_FIELDS = [...MUNDIAL_USER_FIELDS, "champion", "thirdPlace"] as const;
+export const MUNDIAL_TOTAL_FIELDS = [...MUNDIAL_USER_FIELDS] as const;
 
-export function countMundialFilled(
-  special?: SpecialPredictions,
-  bracketPicks?: Record<string, string>
-): number {
-  let n = MUNDIAL_USER_FIELDS.filter((k) => {
+export function countMundialFilled(special?: SpecialPredictions): number {
+  return MUNDIAL_USER_FIELDS.filter((k) => {
     const v = special?.[k];
     return typeof v === "string" ? v.trim() !== "" : false;
   }).length;
-  const podium = resolvePodiumPredictions(special, bracketPicks);
-  if (podium.champion) n++;
-  if (podium.thirdPlace) n++;
-  return n;
 }
 
 export function hasMeaningfulMundialPredictions(
   special?: SpecialPredictions,
   bracketPicks?: Record<string, string>
 ): boolean {
-  return countMundialFilled(special, bracketPicks) > 0;
+  return countMundialFilled(special) > 0 || Object.keys(bracketPicks ?? {}).length > 0;
 }
 
 /** Compatibilitat amb dades antigues */

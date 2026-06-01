@@ -34,7 +34,7 @@ export const BRACKET_ROUND_HINTS: Partial<Record<Phase, string>> = {
 export const BREAKDOWN_LABELS: Record<keyof ScoreBreakdown, string> = {
   special: "Mundial (jugadors, seleccions, podi)",
   groups: "Grups (partits + extras)",
-  advancement: "Elim. (classificats)",
+  advancement: "Quadre (classificats)",
   round32: "Setzens de final",
   round16: "Vuitens de final",
   quarter: "Quarts de final",

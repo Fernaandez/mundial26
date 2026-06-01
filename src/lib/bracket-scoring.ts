@@ -110,3 +110,12 @@ export function summarizeBracketPickScore(
 
   return summary;
 }
+
+/** Punts totals del quadre per al rànquing (font única de veritat) */
+export function scoreBracketPicks(
+  realMatches: Match[],
+  bracketPicks: Record<string, string> | undefined
+): number {
+  if (!bracketPicks || Object.keys(bracketPicks).length === 0) return 0;
+  return summarizeBracketPickScore(realMatches, bracketPicks).totalPoints;
+}
