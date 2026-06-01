@@ -12,16 +12,16 @@ export const FIFA_TOP_10_CODES = [
 export const SUBMISSION_DEADLINES: { phase: string; limit: string }[] = [];
 
 export const DEADLINES = {
-  groupsSubmit: "Dimecres 10 de juny de 2026, 23:59h",
-  setzensOpen: "Dissabte 28 de juny de 2026, 04:00h",
-  setzensClose: "Dissabte 28 de juny de 2026, 20:59h",
+  /** Text orientatiu — les dates reals surten del calendari (match-schedule.ts) */
+  groupsSubmit: "Fins al kickoff del primer Setzens (1/16)",
+  setzensBracket: "2 h després del darrer partit de grups → kickoff del primer 1/16",
 } as const;
 
-/** Dates fixes (Europe/Madrid) per finestres de predicció */
+/** @deprecated Les finestres es calculen des del calendari a prediction-deadlines.ts */
 export const FIXED_DEADLINES = {
-  groupsSpecialClose: new Date("2026-06-10T23:59:00+02:00"),
-  setzensOpen: new Date("2026-06-28T04:00:00+02:00"),
-  setzensClose: new Date("2026-06-28T20:59:00+02:00"),
+  groupsSpecialClose: new Date("2026-06-28T21:00:00+02:00"),
+  setzensOpen: new Date("2026-06-28T06:00:00+02:00"),
+  setzensClose: new Date("2026-06-28T21:00:00+02:00"),
 } as const;
 
 export const RULES_NOTES = {
