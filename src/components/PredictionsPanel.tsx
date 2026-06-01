@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Match, Group, SpecialPredictions, Phase } from "@/types";
 import { MatchCard, GroupSection, PhaseTabs, MundialForm } from "@/components/PredictionForms";
 import { getAllTeams, PHASE_LABELS } from "@/data/world-cup-2026";
+import { PHASE_SHORT } from "@/data/phase-labels";
 import {
   PredictionWindows,
   KNOCKOUT_PHASE_LIST,
@@ -13,7 +14,13 @@ import {
   canEditKnockoutPredictions,
   isKnockoutPhase,
 } from "@/lib/phases";
-import { canEditPhasePredictions, getOpenKnockoutPhases, canEditFullBracket } from "@/lib/prediction-deadlines";
+import {
+  canEditPhasePredictions,
+  getOpenKnockoutPhases,
+  canEditFullBracket,
+  PredictionWindowTarget,
+} from "@/lib/prediction-deadlines";
+import { PredictionWindowCountdown } from "@/components/PredictionWindowCountdown";
 import {
   computeBestThirdsRanking,
   computeThirdQualifierGroups,
@@ -74,9 +81,11 @@ export function PredictionsPanel({
   const groupsEditable = !readOnly && canEditGroupPredictions(windows) && canEditPhasePredictions("groups", matches, windows);
   const specialEditable = !readOnly && canEditSpecialPredictions(windows) && canEditPhasePredictions("special", matches, windows);
   const openKnockoutPhases = getOpenKnockoutPhases(matches, windows);
-  const bracketEditable = !readOnly && canEditFullBracket(windows);
+  const bracketEditable = !readOnly && canEditFullBracket(windows, matches);
   const knockoutEditable = !readOnly && openKnockoutPhases.length > 0;
   const showKnockout = readOnly || canEditKnockoutPredictions(windows);
+  const showTimer = !readOnly && !windows.testMode;
+  const countdown = sectionCountdown(mainSection, activePhase);
 
   useEffect(() => {
     if (mainSection !== "knockout" || openKnockoutPhases.length === 0) return;
@@ -200,8 +209,17 @@ export function PredictionsPanel({
 
       {windows.testMode && !readOnly && (
         <div className="bg-gold-500/10 border border-gold-500/30 text-gold-200 px-4 py-3 rounded-xl mb-6 text-sm">
-          Mode proves actiu — totes les fases obertes per provar prediccions.
+          Mode proves actiu — finestres de calendari ignorades.
         </div>
+      )}
+
+      {countdown && (
+        <PredictionWindowCountdown
+          matches={matches}
+          target={countdown.target}
+          label={countdown.label}
+          hidden={!showTimer}
+        />
       )}
 
       {saved && !readOnly && saveWarnings.length === 0 && (
@@ -265,17 +283,8 @@ export function PredictionsPanel({
             <>
               {!readOnly && !isPhaseEditable(activePhase) && (
                 <p className="text-sm text-amber-200/90 mb-4">
-                  {activePhase === "round32" ? (
-                    <>
-                      Els marcadors de <strong>Setzens</strong> només es poden omplir del 28 juny (04:00) al 28 juny (20:59),
-                      o quan l&apos;admin activi el mode proves.
-                    </>
-                  ) : (
-                    <>
-                      Aquesta ronda està tancada. Pots predir durant la finestra entre el darrer partit de la fase
-                      anterior i l&apos;inici del primer partit d&apos;aquesta ronda (veure Regles).
-                    </>
-                  )}
+                  Aquesta ronda està tancada. Es pot predir des de 2 h després del darrer partit de la fase
+                  anterior fins al kickoff del primer partit d&apos;aquesta ronda (veure temporitzador i Regles).
                 </p>
               )}
               {!readOnly && (
@@ -329,8 +338,8 @@ export function PredictionsPanel({
             <>
               {!readOnly && !bracketEditable && (
                 <p className="text-sm text-amber-200/90 mb-4">
-                  El quadre sencer només es pot omplir durant la finestra de Setzens (28 juny, 04:00–20:59).
-                  Fora d&apos;aquesta finestra pots consultar les teves prediccions però no editar-les.
+                  El quadre només es pot omplir durant la finestra de Setzens (1/16): des de 2 h després
+                  del darrer partit de grups fins al kickoff del primer partit de setzens.
                 </p>
               )}
               <PredictionBracket
@@ -383,6 +392,28 @@ export function PredictionsPanel({
       )}
     </>
   );
+}
+
+function sectionCountdown(
+  mainSection: MainSection,
+  activePhase: Phase
+): { target: PredictionWindowTarget; label: string } | null {
+  switch (mainSection) {
+    case "groups":
+      return { target: "groups", label: "Grups" };
+    case "mundial":
+      return { target: "groups", label: "Grups + Mundial" };
+    case "bracket":
+      return { target: "round32", label: "Quadre (Setzens)" };
+    case "knockout":
+      if (!isKnockoutPhase(activePhase)) return null;
+      return {
+        target: activePhase,
+        label: PHASE_SHORT[activePhase] ?? PHASE_LABELS[activePhase] ?? activePhase,
+      };
+    default:
+      return null;
+  }
 }
 
 function SectionTab({

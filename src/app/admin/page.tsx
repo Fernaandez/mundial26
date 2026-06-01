@@ -158,6 +158,32 @@ export default function AdminPage() {
     }
   }
 
+  async function resetQuiniela() {
+    if (
+      !window.confirm(
+        "Netejar tot el torneig?\n\nEsborrarà participants, prediccions, resultats i estat de fases. El torneig tornarà a zero.\n\nAquesta acció no es pot desfer."
+      )
+    ) {
+      return;
+    }
+    setSuccess("");
+    setError("");
+    const res = await fetch("/api/admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "resetQuiniela", adminPin: pin }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setMatches(data.matches);
+      setParticipants(data.participants);
+      setPredictionWindows(data.predictionWindows ?? DEFAULT_PREDICTION_WINDOWS);
+      setSuccess("Torneig netejat — pots començar de nou!");
+    } else {
+      setError(data.error || "Error en netejar");
+    }
+  }
+
   async function updateWindows(updates: PredictionWindowsUpdate) {
     setSuccess("");
     setError("");
@@ -384,6 +410,21 @@ export default function AdminPage() {
             {predictionWindows.testMode && (
               <p className="text-sm mt-4 text-gold-400">Mode proves actiu — finestres de calendari ignorades.</p>
             )}
+          </div>
+
+          <div className="card-glass rounded-2xl p-5 sm:p-6 border border-red-800/40">
+            <h2 className="font-display text-xl text-red-400 mb-3">Netejar torneig</h2>
+            <p className="text-pitch-400 text-sm mb-4">
+              Esborra participants, prediccions, resultats i torna les fases al valor inicial.
+              Útil per començar la porra de zero. El PIN d&apos;admin es manté.
+            </p>
+            <button
+              type="button"
+              onClick={resetQuiniela}
+              className="text-sm py-2 px-4 rounded-xl border border-red-700/60 text-red-300 hover:bg-red-900/20 transition-colors"
+            >
+              Netejar tot
+            </button>
           </div>
         </div>
       )}

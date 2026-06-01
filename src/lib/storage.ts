@@ -376,7 +376,7 @@ export async function savePredictions(
     merged = { ...merged, ...special, groups: syncedGroups };
   }
 
-  const bracketEditable = canEditFullBracket(windows);
+  const bracketEditable = canEditFullBracket(windows, allMatches);
 
   if (bracketPicks !== undefined) {
     const prevPicks = p.bracketPicks ?? {};
