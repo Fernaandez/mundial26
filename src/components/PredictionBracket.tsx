@@ -1,14 +1,20 @@
 "use client";
 
 import { Match, Phase } from "@/types";
-import { getTeamInfo, getAllTeams } from "@/data/world-cup-2026";
-import { TeamFlag } from "@/components/TeamFlag";
+import { getTeamInfo } from "@/data/world-cup-2026";
 import { getBracketRounds, matchesByIdMap } from "@/lib/knockout";
-import { countExpectedBracketPicks } from "@/lib/knockout-advancement";
-import { getRealKnockoutMatchesForBracket } from "@/lib/predicted-bracket";
+import { getBracketCascadeClearIds } from "@/lib/bracket-tree";
+import {
+  buildSimulatedKnockoutMatches,
+  bothTeamsReady,
+  countFilledBracketPicks,
+  expectedSimulatedBracketPicks,
+  isRound32DrawComplete,
+} from "@/lib/predicted-bracket";
 import { PHASE_SHORT, BRACKET_ROUND_HINTS } from "@/data/phase-labels";
 import { BracketLayout } from "@/components/BracketLayout";
 import { BracketRoundMatches } from "@/components/BracketRoundMatches";
+import { TeamFlag } from "@/components/TeamFlag";
 
 interface PredictionBracketProps {
   matches: Match[];
@@ -25,26 +31,32 @@ export function PredictionBracket({
   isPickEnabled,
   readOnly,
 }: PredictionBracketProps) {
-  const displayMatches = getRealKnockoutMatchesForBracket(matches);
-  const byId = matchesByIdMap(displayMatches);
+  const r32Ready = isRound32DrawComplete(matches);
+  const simulated = buildSimulatedKnockoutMatches(matches, bracketPicks);
+  const byId = matchesByIdMap(simulated);
   const rounds = getBracketRounds();
-  const pickCount = Object.keys(bracketPicks).length;
-  const expectedPicks = countExpectedBracketPicks(matches);
+  const pickCount = countFilledBracketPicks(simulated, bracketPicks);
+  const expectedPicks = expectedSimulatedBracketPicks(simulated);
   const incomplete = pickCount > 0 && pickCount < expectedPicks;
-  const allTeams = getAllTeams();
 
   return (
     <div className="min-w-0">
       <BracketLayout
         header={
           <>
-            {!readOnly && (
+            {!readOnly && !r32Ready && (
+              <div className="bg-pitch-800/40 border border-pitch-600/40 text-pitch-200 px-4 py-3 rounded-xl mb-4 text-sm">
+                El quadre s&apos;obrirà quan l&apos;admin assigni els 16 partits de setzens (1/16)
+                amb tots els equips definits.
+              </div>
+            )}
+            {!readOnly && r32Ready && (
               <p className="text-sm text-pitch-400 mb-4">
-                Equips i marcadors oficials del torneig. Tria qui passa cada partit: a{" "}
-                <strong className="text-pitch-200">Setzens</strong> tries els 16 classificats a
-                vuitens (1 pt/equip); a <strong className="text-pitch-200">Vuitens</strong> tries
-                els 8 guanyadors cap a quarts (5 pts/equip). Marcadors es prediuen a Marcadors.{" "}
-                {pickCount > 0 && `${pickCount}/${expectedPicks} tries al quadre.`}
+                Simula tota l&apos;eliminatòria a partir del sorteig real de setzens. Tria qui passa
+                a cada enfrontament — la teva predicció es propaga a vuitens, quarts, semis, 3r i
+                final (punts d&apos;avancament). Marcadors del torneig real es posen a{" "}
+                <strong className="text-pitch-200">Marcadors</strong>.{" "}
+                {pickCount > 0 && `${pickCount}/${expectedPicks} tries.`}
               </p>
             )}
             {incomplete && !readOnly && (
@@ -81,8 +93,7 @@ export function PredictionBracket({
                       phase={round.phase}
                       picked={bracketPicks[id]}
                       onPick={(code) => onPick(id, code)}
-                      disabled={!roundOpen}
-                      allTeams={allTeams}
+                      disabled={!roundOpen || !bothTeamsReady(match)}
                     />
                   );
                 }}
@@ -101,83 +112,45 @@ function BracketMatchPick({
   picked,
   onPick,
   disabled,
-  allTeams,
 }: {
   match: Match;
   phase: Phase;
   picked?: string;
   onPick: (code: string) => void;
   disabled?: boolean;
-  allTeams: { code: string; name: string; iso: string }[];
 }) {
   const home = getTeamInfo(match.homeTeam);
   const away = getTeamInfo(match.awayTeam);
-  const homeReady = home.code !== "TBD";
-  const awayReady = away.code !== "TBD";
-  const bothReady = homeReady && awayReady;
+  const ready = bothTeamsReady(match);
 
   return (
     <div
       className={`bracket-match card-glass rounded-lg sm:rounded-xl p-2 sm:p-2.5 min-w-0 ${
         phase === "final" ? "bracket-match-final" : ""
-      } ${picked ? "border border-gold-500/30" : ""}`}
+      } ${picked ? "border border-gold-500/30" : ""} ${!ready ? "opacity-45" : ""}`}
     >
-      {bothReady ? (
-        <div className="space-y-1">
-          <div className="flex items-center justify-center gap-1 sm:gap-1.5">
-            <PickFlag
-              code={home.code}
-              name={home.name}
-              selected={picked === home.code}
-              onClick={() => onPick(home.code)}
-              disabled={disabled}
-              size={22}
-            />
-            <span className="text-pitch-500 text-[10px] font-bold shrink-0">vs</span>
-            <PickFlag
-              code={away.code}
-              name={away.name}
-              selected={picked === away.code}
-              onClick={() => onPick(away.code)}
-              disabled={disabled}
-              size={22}
-            />
-          </div>
-          {match.homeScore !== undefined && match.awayScore !== undefined && (
-            <div className="text-center text-[10px] tabular-nums text-pitch-500">
-              Resultat oficial: {match.homeScore}–{match.awayScore}
-            </div>
-          )}
+      {ready ? (
+        <div className="flex items-center justify-center gap-1 sm:gap-1.5">
+          <PickFlag
+            code={home.code}
+            name={home.name}
+            selected={picked === home.code}
+            onClick={() => onPick(home.code)}
+            disabled={disabled}
+            size={22}
+          />
+          <span className="text-pitch-500 text-[10px] font-bold shrink-0">vs</span>
+          <PickFlag
+            code={away.code}
+            name={away.name}
+            selected={picked === away.code}
+            onClick={() => onPick(away.code)}
+            disabled={disabled}
+            size={22}
+          />
         </div>
       ) : (
-        <div className="space-y-1 min-w-0">
-          {(homeReady || awayReady) && (
-            <div className="flex items-center justify-center gap-1.5 text-xs text-pitch-400">
-              {homeReady && <TeamFlag code={home.code} size={18} />}
-              {homeReady && awayReady && <span className="text-[10px]">vs</span>}
-              {awayReady && <TeamFlag code={away.code} size={18} />}
-            </div>
-          )}
-          <select
-            value={picked ?? ""}
-            onChange={(e) => e.target.value && onPick(e.target.value)}
-            disabled={disabled}
-            className="w-full max-w-full min-w-0 box-border px-1 py-1.5 bg-pitch-950 border border-pitch-700 rounded-lg text-[10px] sm:text-xs"
-            aria-label={`Guanyador ${match.label ?? match.id}`}
-          >
-            <option value="">— Tria —</option>
-            {allTeams.map((t) => (
-              <option key={t.code} value={t.code}>
-                {t.name}
-              </option>
-            ))}
-          </select>
-          {picked && (
-            <div className="flex justify-center pt-0.5">
-              <TeamFlag code={picked} size={20} />
-            </div>
-          )}
-        </div>
+        <div className="text-center text-[10px] text-pitch-500 py-2">Per definir</div>
       )}
     </div>
   );
@@ -213,4 +186,17 @@ function PickFlag({
       <TeamFlag code={code} size={size} />
     </button>
   );
+}
+
+/** Neteja tries avalsallades quan canvia un guanyador upstream */
+export function applyBracketPickWithCascade(
+  bracketPicks: Record<string, string>,
+  matchId: string,
+  teamCode: string
+): Record<string, string> {
+  const next = { ...bracketPicks, [matchId]: teamCode };
+  for (const id of getBracketCascadeClearIds(matchId)) {
+    delete next[id];
+  }
+  return next;
 }

@@ -2,6 +2,7 @@ import { Match, Phase } from "@/types";
 import { compareMatchesByKickoff, formatMatchKickoff } from "@/lib/match-dates";
 import { PHASE_LABELS } from "@/data/phase-labels";
 import { PredictionWindows, isKnockoutPhase, isKnockoutPhaseOpen } from "@/lib/phases";
+import { isRound32DrawComplete } from "@/lib/predicted-bracket";
 
 /** Durada estimada d'un partit (90 min + descans + marge) per obrir la finestra següent */
 export const MATCH_DURATION_MS = 2 * 60 * 60 * 1000;
@@ -222,13 +223,14 @@ export function canEditGroupsOrSpecial(
   return isInWindow(getPredictionWindow(matches, "groups"), now);
 }
 
-/** Quadre sencer — mateixa finestra que marcadors Setzens (1/16) */
+/** Quadre simulat — 16/16 equips a 1/16 + finestra (darrer grup +2 h → primer 1/16) */
 export function canEditFullBracket(
   windows: PredictionWindows,
   matches: Match[],
   now: Date = new Date()
 ): boolean {
   if (!isKnockoutPhaseOpen("round32", windows)) return false;
+  if (!isRound32DrawComplete(matches)) return false;
   if (!deadlinesApply(windows)) return true;
   return isInWindow(getPredictionWindow(matches, "round32"), now);
 }

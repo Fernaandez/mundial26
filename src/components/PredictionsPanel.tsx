@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Match, Group, SpecialPredictions, Phase } from "@/types";
-import { MatchCard, GroupSection, PhaseTabs, MundialForm } from "@/components/PredictionForms";
+import { GroupSection, MundialForm } from "@/components/PredictionForms";
 import { getAllTeams, PHASE_LABELS } from "@/data/world-cup-2026";
 import { PHASE_SHORT } from "@/data/phase-labels";
 import {
   PredictionWindows,
-  KNOCKOUT_PHASE_LIST,
   canEditGroupPredictions,
   canEditSpecialPredictions,
   canEditKnockoutPredictions,
@@ -16,6 +15,7 @@ import {
 } from "@/lib/phases";
 import {
   canEditPhasePredictions,
+  canEditMatchPrediction,
   getOpenKnockoutPhases,
   canEditFullBracket,
   PredictionWindowTarget,
@@ -27,7 +27,9 @@ import {
   computeAllPredictedStandings,
 } from "@/lib/standings";
 import { BestThirdsPanel } from "@/components/BestThirdsPanel";
-import { PredictionBracket } from "@/components/PredictionBracket";
+import { PredictionBracket, applyBracketPickWithCascade } from "@/components/PredictionBracket";
+import { KnockoutMarcadoresBracket } from "@/components/KnockoutMarcadoresBracket";
+import { isRound32DrawComplete } from "@/lib/predicted-bracket";
 import { countMundialFilled, MUNDIAL_TOTAL_FIELDS } from "@/lib/mundial";
 import { DEFAULT_PREDICTION_WINDOWS } from "@/lib/phases";
 
@@ -75,38 +77,24 @@ export function PredictionsPanel({
   backLabel = "← Perfil",
 }: PredictionsPanelProps) {
   const [mainSection, setMainSection] = useState<MainSection>("groups");
-  const [activePhase, setActivePhase] = useState<Phase>("round32");
 
   const readOnly = mode === "view";
   const groupsEditable = !readOnly && canEditGroupPredictions(windows) && canEditPhasePredictions("groups", matches, windows);
   const specialEditable = !readOnly && canEditSpecialPredictions(windows) && canEditPhasePredictions("special", matches, windows);
   const openKnockoutPhases = getOpenKnockoutPhases(matches, windows);
   const bracketEditable = !readOnly && canEditFullBracket(windows, matches);
+  const r32DrawReady = isRound32DrawComplete(matches);
   const knockoutEditable = !readOnly && openKnockoutPhases.length > 0;
   const showKnockout = readOnly || canEditKnockoutPredictions(windows);
   const showTimer = !readOnly && !windows.testMode;
-  const countdown = sectionCountdown(mainSection, activePhase);
-
-  useEffect(() => {
-    if (mainSection !== "knockout" || openKnockoutPhases.length === 0) return;
-    if (!openKnockoutPhases.includes(activePhase)) {
-      setActivePhase(openKnockoutPhases[0]);
-    }
-  }, [mainSection, openKnockoutPhases, activePhase]);
+  const countdown = sectionCountdown(mainSection, openKnockoutPhases);
 
   function openMarcadors() {
     setMainSection("knockout");
-    const firstOpen = openKnockoutPhases[0] ?? "round32";
-    setActivePhase(firstOpen);
-  }
-
-  function isPhaseEditable(phase: Phase): boolean {
-    if (readOnly) return false;
-    return canEditPhasePredictions(phase, matches, windows);
   }
 
   const groupMatchIds = matches.filter((m) => m.phase === "groups").map((m) => m.id);
-  const knockoutMatchIds = matches.filter((m) => KNOCKOUT_PHASE_LIST.includes(m.phase)).map((m) => m.id);
+  const knockoutMatchIds = matches.filter((m) => isKnockoutPhase(m.phase)).map((m) => m.id);
   const groupPredicted = groupMatchIds.filter((id) => predictions[id]).length;
   const knockoutPredicted = knockoutMatchIds.filter((id) => predictions[id]).length;
   const bracketFilled = Object.keys(bracketPicks).length;
@@ -117,12 +105,10 @@ export function PredictionsPanel({
   const bestThirds = computeBestThirdsRanking(predictedStandings);
   const thirdQualifierGroups = computeThirdQualifierGroups(groups, matches, predictions);
 
-  const phaseMatches = matches.filter((m) => m.phase === activePhase);
-
   const canSave =
     !readOnly && (
       mainSection === "groups" ? groupsEditable :
-      mainSection === "knockout" ? isPhaseEditable(activePhase) :
+      mainSection === "knockout" ? openKnockoutPhases.length > 0 :
       mainSection === "bracket" ? bracketEditable :
       specialEditable
     );
@@ -136,7 +122,12 @@ export function PredictionsPanel({
   const noopChange = () => {};
 
   function handleBracketPick(matchId: string, teamCode: string) {
-    onBracketChange?.({ ...bracketPicks, [matchId]: teamCode });
+    onBracketChange?.(applyBracketPickWithCascade(bracketPicks, matchId, teamCode));
+  }
+
+  function isKnockoutMatchEditable(match: Match) {
+    if (readOnly) return false;
+    return canEditMatchPrediction(match, matches, windows);
   }
 
   return (
@@ -276,50 +267,17 @@ export function PredictionsPanel({
               <div className="text-4xl mb-4">🔒</div>
               <h2 className="font-display text-2xl text-pitch-300 mb-3">Eliminatòries encara tancades</h2>
               <p className="text-pitch-400 text-sm max-w-md mx-auto">
-                Quan l&apos;admin obri aquesta fase podràs predir setzens, vuitens, quarts, semis i final.
+                Quan l&apos;admin obri una ronda eliminatòria podràs predir marcadors aquí.
               </p>
             </div>
           ) : (
-            <>
-              {!readOnly && !isPhaseEditable(activePhase) && (
-                <p className="text-sm text-amber-200/90 mb-4">
-                  Aquesta ronda està tancada. Es pot predir des de 2 h després del darrer partit de la fase
-                  anterior fins al kickoff del primer partit d&apos;aquesta ronda (veure temporitzador i Regles).
-                </p>
-              )}
-              {!readOnly && (
-                <p className="text-sm text-pitch-400 mb-4">
-                  Marcadors exactes a 90 minuts — sumen punts de resultat (1/X/2 i exacte).
-                  Qui passa de ronda es tria al <strong className="text-pitch-200">Quadre</strong>.
-                  {openKnockoutPhases.length > 0 && (
-                    <span className="text-pitch-500"> Ronda oberta: {openKnockoutPhases.map((p) => PHASE_LABELS[p]).join(", ")}</span>
-                  )}
-                </p>
-              )}
-              <PhaseTabs
-                phases={KNOCKOUT_PHASE_LIST}
-                active={activePhase}
-                onChange={setActivePhase}
-                isOpen={(p) => readOnly || isPhaseEditable(p)}
-              />
-              <div>
-                <h2 className="font-display text-xl sm:text-2xl text-pitch-400 mb-4">{PHASE_LABELS[activePhase]}</h2>
-                <div className="grid gap-3">
-                  {phaseMatches.map((m) => (
-                    <MatchCard
-                      key={m.id}
-                      match={m}
-                      prediction={predictions[m.id]}
-                      onChange={(pred) => (onPredictionChange ?? noopChange)(m.id, pred)}
-                      disabled={readOnly || !isPhaseEditable(activePhase)}
-                    />
-                  ))}
-                </div>
-                {readOnly && phaseMatches.length > 0 && phaseMatches.every((m) => !predictions[m.id]) && (
-                  <p className="text-pitch-500 text-sm text-center mt-4">Encara no ha predit partits d&apos;aquesta fase.</p>
-                )}
-              </div>
-            </>
+            <KnockoutMarcadoresBracket
+              matches={matches.filter((m) => isKnockoutPhase(m.phase))}
+              predictions={predictions}
+              onChange={(id, pred) => (onPredictionChange ?? noopChange)(id, pred)}
+              isMatchEditable={isKnockoutMatchEditable}
+              readOnly={readOnly}
+            />
           )}
         </>
       )}
@@ -336,10 +294,10 @@ export function PredictionsPanel({
             </div>
           ) : (
             <>
-              {!readOnly && !bracketEditable && (
+              {!readOnly && !bracketEditable && r32DrawReady && (
                 <p className="text-sm text-amber-200/90 mb-4">
-                  El quadre només es pot omplir durant la finestra de Setzens (1/16): des de 2 h després
-                  del darrer partit de grups fins al kickoff del primer partit de setzens.
+                  El quadre només es pot omplir durant la finestra de setzens: des de 2 h després
+                  del darrer partit de grups fins al kickoff del primer 1/16.
                 </p>
               )}
               <PredictionBracket
@@ -396,7 +354,7 @@ export function PredictionsPanel({
 
 function sectionCountdown(
   mainSection: MainSection,
-  activePhase: Phase
+  openKnockoutPhases: Phase[]
 ): { target: PredictionWindowTarget; label: string } | null {
   switch (mainSection) {
     case "groups":
@@ -405,12 +363,14 @@ function sectionCountdown(
       return { target: "groups", label: "Grups + Mundial" };
     case "bracket":
       return { target: "round32", label: "Quadre (Setzens)" };
-    case "knockout":
-      if (!isKnockoutPhase(activePhase)) return null;
+    case "knockout": {
+      if (openKnockoutPhases.length === 0) return null;
+      const phase = openKnockoutPhases[0];
       return {
-        target: activePhase,
-        label: PHASE_SHORT[activePhase] ?? PHASE_LABELS[activePhase] ?? activePhase,
+        target: phase,
+        label: `Marcadors — ${PHASE_SHORT[phase] ?? PHASE_LABELS[phase] ?? phase}`,
       };
+    }
     default:
       return null;
   }

@@ -50,21 +50,20 @@ export function emptyAdvancementSets(): AdvancementSets {
   };
 }
 
+import { buildSimulatedKnockoutMatches } from "@/lib/predicted-bracket";
+
 export function deriveAdvancementSetsFromBracket(
   matches: Match[],
   bracketPicks: Record<string, string>
 ): AdvancementSets {
+  const sim = buildSimulatedKnockoutMatches(matches, bracketPicks);
+
   function winnersOfPhase(phase: Phase): Set<string> {
     const teams = new Set<string>();
-    for (const m of matches.filter((x) => x.phase === phase)) {
+    for (const m of sim.filter((x) => x.phase === phase)) {
       const pick = bracketPicks[m.id];
       if (!pick || pick === "TBD") continue;
-      if (
-        m.homeTeam === pick ||
-        m.awayTeam === pick ||
-        m.homeTeam === "TBD" ||
-        m.awayTeam === "TBD"
-      ) {
+      if (m.homeTeam === pick || m.awayTeam === pick) {
         teams.add(pick);
       }
     }

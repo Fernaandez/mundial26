@@ -27,7 +27,7 @@ function parseScoreInput(value: string): number | null {
   return Number.isFinite(n) && n >= 0 ? n : null;
 }
 
-function ScoreInputs({
+export function ScoreInputs({
   homeCode,
   awayCode,
   homeName,
