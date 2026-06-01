@@ -19,6 +19,9 @@ import { TeamFlag } from "@/components/TeamFlag";
 import { isKnockoutPhase } from "@/lib/phases";
 import type { SpecialActualsInput } from "@/lib/scoring";
 
+/** Posar a true per mostrar «Netejar tot» a l'admin (la lògica API es manté) */
+const ADMIN_RESET_VISIBLE = false;
+
 export default function AdminPage() {
   const [pin, setPin] = useState("");
   const [authenticated, setAuthenticated] = useState(false);
@@ -435,20 +438,22 @@ export default function AdminPage() {
             )}
           </div>
 
-          <div className="card-glass rounded-2xl p-5 sm:p-6 border border-red-800/40">
-            <h2 className="font-display text-xl text-red-400 mb-3">Netejar torneig</h2>
-            <p className="text-pitch-400 text-sm mb-4">
-              Esborra participants, prediccions, resultats i torna les fases al valor inicial.
-              Útil per començar la porra de zero. El PIN d&apos;admin es manté.
-            </p>
-            <button
-              type="button"
-              onClick={resetQuiniela}
-              className="text-sm py-2 px-4 rounded-xl border border-red-700/60 text-red-300 hover:bg-red-900/20 transition-colors"
-            >
-              Netejar tot
-            </button>
-          </div>
+          {ADMIN_RESET_VISIBLE && (
+            <div className="card-glass rounded-2xl p-5 sm:p-6 border border-red-800/40">
+              <h2 className="font-display text-xl text-red-400 mb-3">Netejar torneig</h2>
+              <p className="text-pitch-400 text-sm mb-4">
+                Esborra participants, prediccions, resultats i torna les fases al valor inicial.
+                Útil per començar la porra de zero. El PIN d&apos;admin es manté.
+              </p>
+              <button
+                type="button"
+                onClick={resetQuiniela}
+                className="text-sm py-2 px-4 rounded-xl border border-red-700/60 text-red-300 hover:bg-red-900/20 transition-colors"
+              >
+                Netejar tot
+              </button>
+            </div>
+          )}
         </div>
       )}
 
