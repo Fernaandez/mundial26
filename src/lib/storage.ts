@@ -88,6 +88,7 @@ function normalizeAppData(stored: unknown): ExtendedAppData {
         ...(parsed.tournament && typeof parsed.tournament === "object" ? parsed.tournament : {}),
         groups: parsed.tournament?.groups ?? base.tournament.groups,
         matches: Array.isArray(parsed.tournament?.matches) ? parsed.tournament.matches : [],
+        maxParticipants: null,
       },
     })
   );
@@ -198,7 +199,8 @@ export async function addParticipant(name: string, pin: string): Promise<Partici
   const data = await readData();
   const participants = data.participants ?? [];
 
-  if (participants.length >= data.tournament.maxParticipants) {
+  const max = data.tournament.maxParticipants;
+  if (max != null && max > 0 && participants.length >= max) {
     throw new Error("S'ha assolit el màxim de participants");
   }
   if (participants.some((p) => p.name.toLowerCase() === name.toLowerCase())) {

@@ -153,7 +153,8 @@ export const TOURNAMENT_CONFIG = {
   currency: "€",
   prizeSplit: { first: PRIZE_SPLIT.first, second: PRIZE_SPLIT.second, third: PRIZE_SPLIT.third },
   minParticipants: 8,
-  maxParticipants: 12,
+  /** null = sense límit de participants */
+  maxParticipants: null,
   groups: GROUPS,
   matches: ALL_MATCHES,
   knockoutBracket: KNOCKOUT_ROUNDS,

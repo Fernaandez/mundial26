@@ -107,7 +107,7 @@ export interface TournamentConfig {
   currency: string;
   prizeSplit: { first: number; second: number; third: number };
   minParticipants: number;
-  maxParticipants: number;
+  maxParticipants: number | null;
   groups: Group[];
   matches: Match[];
   knockoutBracket: KnockoutRound[];

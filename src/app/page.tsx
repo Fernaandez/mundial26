@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 interface Stats {
   participantCount: number;
   paidCount: number;
-  tournament: { name: string; entryFee: number; maxParticipants: number };
+  tournament: { name: string; entryFee: number; maxParticipants: number | null };
   prizes: { pool: number; first: number; second: number; third: number };
 }
 
