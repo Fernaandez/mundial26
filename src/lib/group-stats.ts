@@ -37,6 +37,14 @@ function pickExtremes(
 /** Estadístiques reals de la fase de grups (per puntuació) */
 export function computeGroupStageStats(groups: Group[], matches: Match[]): GroupStageStats {
   const standings = computeAllGroupStandings(groups, matches);
+
+  // GF, GC i 3r-que-no-passa només es poden saber quan TOTA la fase de grups ha acabat.
+  // Abans, qualsevol comparació entre grups seria parcial i podria canviar.
+  const allGroupsComplete = standings.length > 0 && standings.every(isGroupStandingComplete);
+  if (!allGroupsComplete) {
+    return { nonQualifyingThirds: [], mostGoals: [], mostGoalsConceded: [] };
+  }
+
   const bestThirds = computeBestThirdsRanking(standings, { requireComplete: true });
   const qualifyingGroups = new Set(bestThirds.filter((e) => e.qualifies).map((e) => e.groupId));
 

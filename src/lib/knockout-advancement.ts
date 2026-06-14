@@ -50,7 +50,7 @@ export function emptyAdvancementSets(): AdvancementSets {
   };
 }
 
-import { buildSimulatedKnockoutMatches } from "@/lib/predicted-bracket";
+import { buildSimulatedKnockoutMatches, isRound32DrawComplete } from "@/lib/predicted-bracket";
 
 export function deriveAdvancementSetsFromBracket(
   matches: Match[],
@@ -107,11 +107,13 @@ export function surpriseTeamQualifies(team: string, matches: Match[]): boolean {
 export function disappointmentTeamValid(team: string, matches: Match[]): boolean {
   if (!team) return false;
 
+  // Ja és a vuitens (round16): ha passat els Setzens, no és decepció.
   const inR16 = matches.some(
     (m) => m.phase === "round16" && (m.homeTeam === team || m.awayTeam === team)
   );
   if (inR16) return false;
 
+  // Juga els Setzens (round32): decepció només si el partit s'ha jugat i no passa.
   const r32Match = matches.find(
     (m) => m.phase === "round32" && (m.homeTeam === team || m.awayTeam === team)
   );
@@ -119,6 +121,10 @@ export function disappointmentTeamValid(team: string, matches: Match[]): boolean
     if (r32Match.homeScore === undefined) return false;
     return !teamsWinningPhase(matches, "round32").has(team);
   }
+
+  // No és als Setzens. Només pot ser decepció (eliminada a la fase de grups)
+  // quan el sorteig de Setzens ja està fet; abans, encara no se sap → esperar.
+  if (!isRound32DrawComplete(matches)) return false;
 
   return matches.some(
     (m) =>
