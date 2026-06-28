@@ -61,7 +61,8 @@ function playerMatch(predicted: string, actualRaw?: string): boolean {
   return actuals.includes(pred);
 }
 
-function scoreGroupExtras(
+/** Ordre exacte de grup (7 pts) — es prediu a la pestanya Grups → compta a "Grups" */
+function scoreGroupOrder(
   special: SpecialPredictions,
   actuals: SpecialActualsInput
 ): number {
@@ -78,6 +79,19 @@ function scoreGroupExtras(
       pts += r.groupExactOrder;
     }
   }
+
+  return pts;
+}
+
+/**
+ * GF, GC i 3r-que-no-passa: es trien a la pestanya Mundial → compten a "Mundial".
+ */
+function scoreGroupTeamSpecials(
+  special: SpecialPredictions,
+  actuals: SpecialActualsInput
+): number {
+  let pts = 0;
+  const r = SCORING_RULES.special;
 
   if (
     actuals.nonQualifyingThird &&
@@ -210,8 +224,11 @@ export function calculateParticipantScore(
   }
 
   if (special) {
-    breakdown.groups += scoreGroupExtras(special, actuals);
-    breakdown.special = scoreMundialFields(special, actuals, matches);
+    // Ordre exacte de grup → Grups; GF/GC/3r-no-passa i la resta d'especials → Mundial
+    breakdown.groups += scoreGroupOrder(special, actuals);
+    breakdown.special =
+      scoreMundialFields(special, actuals, matches) +
+      scoreGroupTeamSpecials(special, actuals);
   }
 
   breakdown.advancement = scoreBracketPicks(matches, participant.bracketPicks);
