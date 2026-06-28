@@ -468,6 +468,15 @@ export async function saveSpecialActuals(adminPin: string, actuals: SpecialActua
   await writeData(data);
 }
 
+/** Codis de selecció des d'un valor manual (string "ESP, ENG") o array. */
+function splitTeamCodes(v: unknown): string[] {
+  if (Array.isArray(v)) return v.map((s) => String(s).trim().toUpperCase()).filter(Boolean);
+  if (typeof v === "string") {
+    return v.split(/[,;]/).map((s) => s.trim().toUpperCase()).filter(Boolean);
+  }
+  return [];
+}
+
 export async function getSpecialActuals(): Promise<SpecialActuals | undefined> {
   const data = await readData();
   const { groups, matches } = data.tournament;
@@ -481,16 +490,29 @@ export async function getSpecialActuals(): Promise<SpecialActuals | undefined> {
 
   if (!data.specialActuals && !hasGroupData) return undefined;
 
+  // Valors manuals de l'admin (tenen PRIORITAT); l'automàtic és només reserva.
+  const manualMostGoals = splitTeamCodes(data.specialActuals?.mostGroupGoals);
+  const manualMostConceded = splitTeamCodes(data.specialActuals?.mostGroupGoalsConceded);
+  const manualNonQualThird = splitTeamCodes(data.specialActuals?.nonQualifyingThird);
+
   return {
     ...data.specialActuals,
     groupStandings: computed,
-    nonQualifyingThird: groupStats.nonQualifyingThirds.length
-      ? groupStats.nonQualifyingThirds
-      : undefined,
-    mostGroupGoals: groupStats.mostGoals.length ? groupStats.mostGoals : undefined,
-    mostGroupGoalsConceded: groupStats.mostGoalsConceded.length
-      ? groupStats.mostGoalsConceded
-      : undefined,
+    nonQualifyingThird: manualNonQualThird.length
+      ? manualNonQualThird
+      : groupStats.nonQualifyingThirds.length
+        ? groupStats.nonQualifyingThirds
+        : undefined,
+    mostGroupGoals: manualMostGoals.length
+      ? manualMostGoals
+      : groupStats.mostGoals.length
+        ? groupStats.mostGoals
+        : undefined,
+    mostGroupGoalsConceded: manualMostConceded.length
+      ? manualMostConceded
+      : groupStats.mostGoalsConceded.length
+        ? groupStats.mostGoalsConceded
+        : undefined,
     advancement,
     champion: finalMatch ? getMatchWinner(finalMatch) ?? undefined : data.specialActuals?.champion,
     thirdPlace: thirdMatch ? getMatchWinner(thirdMatch) ?? undefined : data.specialActuals?.thirdPlace,

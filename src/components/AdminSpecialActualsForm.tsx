@@ -9,6 +9,12 @@ interface AdminSpecialActualsFormProps {
   onSaved: () => void;
 }
 
+function codesToString(v: unknown): string {
+  if (Array.isArray(v)) return v.join(", ");
+  if (typeof v === "string") return v;
+  return "";
+}
+
 export function AdminSpecialActualsForm({ initial, adminPin, onSaved }: AdminSpecialActualsFormProps) {
   const [form, setForm] = useState<SpecialActualsInput>({
     topScorer: initial.topScorer ?? "",
@@ -19,6 +25,10 @@ export function AdminSpecialActualsForm({ initial, adminPin, onSaved }: AdminSpe
     surpriseTeam: initial.surpriseTeam ?? "",
     disappointmentTeam: initial.disappointmentTeam ?? "",
   });
+  // Camps de grups manuals (codis de selecció, comes per empats)
+  const [mostGoals, setMostGoals] = useState(codesToString(initial.mostGroupGoals));
+  const [mostConceded, setMostConceded] = useState(codesToString(initial.mostGroupGoalsConceded));
+  const [nonQualThirds, setNonQualThirds] = useState(codesToString(initial.nonQualifyingThird));
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -30,12 +40,16 @@ export function AdminSpecialActualsForm({ initial, adminPin, onSaved }: AdminSpe
     e.preventDefault();
     setSaving(true);
     setMessage("");
-    const actuals: SpecialActualsInput = {};
+    const actuals: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(form)) {
       if (typeof v === "string" && v.trim()) {
-        (actuals as Record<string, string>)[k] = v.trim();
+        actuals[k] = v.trim();
       }
     }
+    // Sempre incloure els camps de grups (cadena buida = torna a l'automàtic)
+    actuals.mostGroupGoals = mostGoals.trim();
+    actuals.mostGroupGoalsConceded = mostConceded.trim();
+    actuals.nonQualifyingThird = nonQualThirds.trim();
     const res = await fetch("/api/admin", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -71,6 +85,35 @@ export function AdminSpecialActualsForm({ initial, adminPin, onSaved }: AdminSpe
           <TextInput label="Millor jugador (MVP)" value={form.mvp ?? ""} onChange={(v) => setField("mvp", v)} />
           <TextInput label="Millor jugador jove" value={form.youngMvp ?? ""} onChange={(v) => setField("youngMvp", v)} />
           <TextInput label="Millor porter" value={form.goldenGlove ?? ""} onChange={(v) => setField("goldenGlove", v)} />
+        </div>
+      </div>
+
+      <div>
+        <h3 className="font-display text-lg text-pitch-300 mb-3">Grups (manual)</h3>
+        <p className="text-xs text-pitch-500 mb-3">
+          Introdueix els <strong className="text-pitch-300">codis de selecció</strong> reals. En cas
+          d&apos;empat, separa&apos;ls per comes i puntuaran <strong className="text-pitch-300">tots</strong>{" "}
+          els qui n&apos;hagin encertat qualsevol. Si ho deixes buit, s&apos;usa el càlcul automàtic.
+        </p>
+        <div className="grid grid-cols-1 gap-4">
+          <TeamListInput
+            label="Selecció amb més gols a favor (GF)"
+            hint="Ex: IRQ, TUN (empat). 10 punts a qui n'encerti una."
+            value={mostGoals}
+            onChange={setMostGoals}
+          />
+          <TeamListInput
+            label="Selecció amb més gols encaixats (GC)"
+            hint="Ex: IRQ, TUN (empat). 10 punts a qui n'encerti una."
+            value={mostConceded}
+            onChange={setMostConceded}
+          />
+          <TeamListInput
+            label="3rs que NO passen (els 4 que queden fora)"
+            hint="Ex: SCO, HAI, CIV, UZB. 10 punts a qui n'encerti un."
+            value={nonQualThirds}
+            onChange={setNonQualThirds}
+          />
         </div>
       </div>
 
