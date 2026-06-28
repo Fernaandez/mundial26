@@ -129,23 +129,34 @@ export function buildRound32Pairings(
     return thirdTeam(posicionesGrupos, fromGroup);
   };
 
+  // Estructura OFICIAL del quadre FIFA 2026 (partits 73–88), ordenada de dalt a baix
+  // del quadre perquè l'arbre (r32-1+r32-2→r16-1, …) reprodueixi els emparellaments reals.
+  // El número FIFA va al costat per referència; l'ordre que mana és el de l'id (r32-1 = dalt).
   return [
-    { matchNumber: 1, id: "r32-1", homeTeam: teamAt(posicionesGrupos, "A", 1), awayTeam: teamAt(posicionesGrupos, "B", 1) },
-    { matchNumber: 2, id: "r32-2", homeTeam: teamAt(posicionesGrupos, "C", 0), awayTeam: teamAt(posicionesGrupos, "F", 1) },
-    { matchNumber: 3, id: "r32-3", homeTeam: teamAt(posicionesGrupos, "E", 0), awayTeam: thirdAway("E") },
-    { matchNumber: 4, id: "r32-4", homeTeam: teamAt(posicionesGrupos, "F", 0), awayTeam: teamAt(posicionesGrupos, "C", 1) },
-    { matchNumber: 5, id: "r32-5", homeTeam: teamAt(posicionesGrupos, "E", 1), awayTeam: teamAt(posicionesGrupos, "I", 1) },
-    { matchNumber: 6, id: "r32-6", homeTeam: teamAt(posicionesGrupos, "I", 0), awayTeam: thirdAway("I") },
-    { matchNumber: 7, id: "r32-7", homeTeam: teamAt(posicionesGrupos, "A", 0), awayTeam: thirdAway("A") },
-    { matchNumber: 8, id: "r32-8", homeTeam: teamAt(posicionesGrupos, "L", 0), awayTeam: thirdAway("L") },
-    { matchNumber: 9, id: "r32-9", homeTeam: teamAt(posicionesGrupos, "G", 0), awayTeam: thirdAway("G") },
-    { matchNumber: 10, id: "r32-10", homeTeam: teamAt(posicionesGrupos, "D", 0), awayTeam: thirdAway("D") },
-    { matchNumber: 11, id: "r32-11", homeTeam: teamAt(posicionesGrupos, "H", 0), awayTeam: teamAt(posicionesGrupos, "J", 1) },
-    { matchNumber: 12, id: "r32-12", homeTeam: teamAt(posicionesGrupos, "K", 1), awayTeam: teamAt(posicionesGrupos, "L", 1) },
-    { matchNumber: 13, id: "r32-13", homeTeam: teamAt(posicionesGrupos, "B", 0), awayTeam: thirdAway("B") },
-    { matchNumber: 14, id: "r32-14", homeTeam: teamAt(posicionesGrupos, "D", 1), awayTeam: teamAt(posicionesGrupos, "G", 1) },
-    { matchNumber: 15, id: "r32-15", homeTeam: teamAt(posicionesGrupos, "J", 0), awayTeam: teamAt(posicionesGrupos, "H", 1) },
-    { matchNumber: 16, id: "r32-16", homeTeam: teamAt(posicionesGrupos, "K", 0), awayTeam: thirdAway("K") },
+    // r16-1 (QF sup. esq.)
+    { matchNumber: 74, id: "r32-1", homeTeam: teamAt(posicionesGrupos, "E", 0), awayTeam: thirdAway("E") }, // 1E v 3r
+    { matchNumber: 77, id: "r32-2", homeTeam: teamAt(posicionesGrupos, "I", 0), awayTeam: thirdAway("I") }, // 1I v 3r
+    // r16-2
+    { matchNumber: 73, id: "r32-3", homeTeam: teamAt(posicionesGrupos, "A", 1), awayTeam: teamAt(posicionesGrupos, "B", 1) }, // 2A v 2B
+    { matchNumber: 75, id: "r32-4", homeTeam: teamAt(posicionesGrupos, "F", 0), awayTeam: teamAt(posicionesGrupos, "C", 1) }, // 1F v 2C
+    // r16-3
+    { matchNumber: 83, id: "r32-5", homeTeam: teamAt(posicionesGrupos, "K", 1), awayTeam: teamAt(posicionesGrupos, "L", 1) }, // 2K v 2L
+    { matchNumber: 84, id: "r32-6", homeTeam: teamAt(posicionesGrupos, "H", 0), awayTeam: teamAt(posicionesGrupos, "J", 1) }, // 1H v 2J
+    // r16-4
+    { matchNumber: 81, id: "r32-7", homeTeam: teamAt(posicionesGrupos, "D", 0), awayTeam: thirdAway("D") }, // 1D v 3r
+    { matchNumber: 82, id: "r32-8", homeTeam: teamAt(posicionesGrupos, "G", 0), awayTeam: thirdAway("G") }, // 1G v 3r
+    // r16-5
+    { matchNumber: 76, id: "r32-9", homeTeam: teamAt(posicionesGrupos, "C", 0), awayTeam: teamAt(posicionesGrupos, "F", 1) }, // 1C v 2F
+    { matchNumber: 78, id: "r32-10", homeTeam: teamAt(posicionesGrupos, "E", 1), awayTeam: teamAt(posicionesGrupos, "I", 1) }, // 2E v 2I
+    // r16-6
+    { matchNumber: 79, id: "r32-11", homeTeam: teamAt(posicionesGrupos, "A", 0), awayTeam: thirdAway("A") }, // 1A v 3r
+    { matchNumber: 80, id: "r32-12", homeTeam: teamAt(posicionesGrupos, "L", 0), awayTeam: thirdAway("L") }, // 1L v 3r
+    // r16-7
+    { matchNumber: 86, id: "r32-13", homeTeam: teamAt(posicionesGrupos, "J", 0), awayTeam: teamAt(posicionesGrupos, "H", 1) }, // 1J v 2H
+    { matchNumber: 88, id: "r32-14", homeTeam: teamAt(posicionesGrupos, "D", 1), awayTeam: teamAt(posicionesGrupos, "G", 1) }, // 2D v 2G
+    // r16-8
+    { matchNumber: 85, id: "r32-15", homeTeam: teamAt(posicionesGrupos, "B", 0), awayTeam: thirdAway("B") }, // 1B v 3r
+    { matchNumber: 87, id: "r32-16", homeTeam: teamAt(posicionesGrupos, "K", 0), awayTeam: thirdAway("K") }, // 1K v 3r
   ];
 }
 
