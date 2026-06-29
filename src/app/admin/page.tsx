@@ -596,6 +596,8 @@ function AddParticipantForm({ onAdd }: { onAdd: (name: string, pin: string) => P
 function ResultRow({ match, onSave }: { match: Match; onSave: (id: string, h: number, a: number) => void }) {
   const [home, setHome] = useState(match.homeScore ?? 0);
   const [away, setAway] = useState(match.awayScore ?? 0);
+  const [editing, setEditing] = useState(false);
+  const editable = !match.locked || editing;
 
   return (
     <div className="card-glass rounded-xl p-4 space-y-3">
@@ -606,15 +608,24 @@ function ResultRow({ match, onSave }: { match: Match; onSave: (id: string, h: nu
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-3 justify-end">
-        <input type="number" min={0} max={20} value={home} onChange={(e) => setHome(+e.target.value)} className="score-input w-12" disabled={match.locked} aria-label="Gols local" />
+        <input type="number" min={0} max={20} value={home} onChange={(e) => setHome(+e.target.value)} className="score-input w-12" disabled={!editable} aria-label="Gols local" />
         <span>:</span>
-        <input type="number" min={0} max={20} value={away} onChange={(e) => setAway(+e.target.value)} className="score-input w-12" disabled={match.locked} aria-label="Gols visitant" />
-        {!match.locked && (
-          <button onClick={() => onSave(match.id, home, away)} className="btn-primary text-sm py-2 px-4">
+        <input type="number" min={0} max={20} value={away} onChange={(e) => setAway(+e.target.value)} className="score-input w-12" disabled={!editable} aria-label="Gols visitant" />
+        {editable && (
+          <button onClick={() => { onSave(match.id, home, away); setEditing(false); }} className="btn-primary text-sm py-2 px-4">
             Desar
           </button>
         )}
-        {match.locked && <span className="text-pitch-500 text-sm">🔒</span>}
+        {match.locked && editing && (
+          <button onClick={() => setEditing(false)} className="btn-secondary text-sm py-2 px-3">
+            Cancel·lar
+          </button>
+        )}
+        {match.locked && !editing && (
+          <button onClick={() => setEditing(true)} className="text-sm py-1.5 px-3 rounded-lg border border-pitch-600 text-pitch-200 hover:bg-pitch-800/60">
+            🔒 Editar
+          </button>
+        )}
       </div>
     </div>
   );
@@ -644,6 +655,8 @@ function KnockoutRow({
   const [etAway, setEtAway] = useState<number | "">(match.etAwayScore ?? "");
   const [useEt, setUseEt] = useState(match.etHomeScore !== undefined);
   const [winner, setWinner] = useState(match.knockoutWinner ?? "");
+  const [editing, setEditing] = useState(false);
+  const editable = !match.locked || editing;
   const isDraw = home === away;
   const needsWinner =
     isKnockoutPhase(match.phase) &&
@@ -662,6 +675,7 @@ function KnockoutRow({
       etHomeScore: useEt && etHome !== "" ? Number(etHome) : undefined,
       etAwayScore: useEt && etAway !== "" ? Number(etAway) : undefined,
     });
+    setEditing(false);
   }
 
   return (
@@ -684,12 +698,12 @@ function KnockoutRow({
       <div className="space-y-2">
         <p className="text-xs text-pitch-400">Marcador a 90 min (puntuació de prediccions)</p>
         <div className="flex flex-wrap items-center gap-3">
-          <input type="number" min={0} max={20} value={home} onChange={(e) => setHome(+e.target.value)} className="score-input w-12" disabled={match.locked} />
+          <input type="number" min={0} max={20} value={home} onChange={(e) => setHome(+e.target.value)} className="score-input w-12" disabled={!editable} />
           <span>:</span>
-          <input type="number" min={0} max={20} value={away} onChange={(e) => setAway(+e.target.value)} className="score-input w-12" disabled={match.locked} />
+          <input type="number" min={0} max={20} value={away} onChange={(e) => setAway(+e.target.value)} className="score-input w-12" disabled={!editable} />
         </div>
       </div>
-      {!match.locked && isKnockoutPhase(match.phase) && (
+      {editable && isKnockoutPhase(match.phase) && (
         <div className="border border-pitch-700/50 rounded-xl p-3 space-y-2">
           <label className="flex items-center gap-2 text-xs text-pitch-300 cursor-pointer">
             <input
@@ -729,21 +743,31 @@ function KnockoutRow({
         </div>
       )}
       <div className="flex flex-wrap items-center gap-3">
-        {!match.locked && (
+        {editable && (
           <button onClick={handleSave} className="btn-primary text-sm py-2 px-4">
             Desar resultat
           </button>
         )}
-        {match.locked && match.knockoutWinner && (
+        {match.locked && editing && (
+          <button onClick={() => setEditing(false)} className="btn-secondary text-sm py-2 px-4">
+            Cancel·lar
+          </button>
+        )}
+        {match.locked && !editing && (
+          <button onClick={() => setEditing(true)} className="text-sm py-2 px-4 rounded-lg border border-pitch-600 text-pitch-200 hover:bg-pitch-800/60">
+            Editar resultat
+          </button>
+        )}
+        {!editable && match.knockoutWinner && (
           <span className="text-xs text-gold-400">Passa: {getTeamInfo(match.knockoutWinner).name}</span>
         )}
-        {match.locked && match.etHomeScore !== undefined && (
+        {!editable && match.etHomeScore !== undefined && (
           <span className="text-xs text-pitch-400">
             Final: {match.etHomeScore}-{match.etAwayScore} (90 min: {match.homeScore}-{match.awayScore})
           </span>
         )}
       </div>
-      {needsWinner && !match.locked && (
+      {needsWinner && editable && (
         <div className="border border-amber-700/40 rounded-xl p-3 bg-amber-900/10">
           <p className="text-xs text-amber-100 mb-2">Empat a 90 min — qui passa de ronda? (si no hi ha resultat final)</p>
           <div className="flex items-center gap-3">
