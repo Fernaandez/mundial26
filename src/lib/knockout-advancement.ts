@@ -100,6 +100,17 @@ export function deriveAdvancementSets(
 /** Selecció revelació vàlida: fora del top 10 i arriba com a mínim a quarts */
 export function surpriseTeamQualifies(team: string, matches: Match[]): boolean {
   if (!team) return false;
+
+  // Senyal directe: l'equip apareix com a participant en un partit de quarts,
+  // semis o final. Això indica que ha arribat (com a mínim) als quarts,
+  // independentment de com s'hagi registrat el resultat dels vuitens.
+  const reachedQuarterOrBeyond = matches.some(
+    (m) =>
+      (m.phase === "quarter" || m.phase === "semi" || m.phase === "final") &&
+      (m.homeTeam === team || m.awayTeam === team)
+  );
+  if (reachedQuarterOrBeyond) return true;
+
   const actual = deriveAdvancementSets(matches);
   return actual.toQuarter.has(team) || actual.toSemi.has(team) || actual.toFinal.has(team);
 }
