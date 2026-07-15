@@ -517,6 +517,7 @@ export default function AdminPage() {
       {tab === "specials" && (
         <AdminSpecialActualsForm
           initial={specialActuals}
+          participants={participants}
           adminPin={pin}
           onSaved={async () => {
             setSuccess("Resultats especials actualitzats!");

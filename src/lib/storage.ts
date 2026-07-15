@@ -20,7 +20,11 @@ import { DEFAULT_MUNDIAL_FIELDS, normalizeSpecialPredictions } from "@/lib/mundi
 import { computeGroupStageStats } from "@/lib/group-stats";
 import { deriveAdvancementSets } from "@/lib/knockout-advancement";
 import { getMatchWinner } from "@/lib/knockout";
-import type { SpecialActuals } from "@/lib/scoring";
+import {
+  PLAYER_AWARD_FIELDS,
+  type PlayerAwardField,
+  type SpecialActuals,
+} from "@/lib/scoring";
 
 const ROW_ID = 1;
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -464,7 +468,25 @@ export async function resetQuinielaData(adminPin: string): Promise<void> {
 export async function saveSpecialActuals(adminPin: string, actuals: SpecialActuals): Promise<void> {
   const data = await readData();
   if (data.adminPin !== adminPin) throw new Error("PIN d'admin incorrecte");
-  data.specialActuals = { ...data.specialActuals, ...actuals };
+  const incomingAwards = actuals.awardedParticipantIds;
+  let awardedParticipantIds: Partial<Record<PlayerAwardField, string[]>> | undefined;
+
+  if (incomingAwards && typeof incomingAwards === "object") {
+    const validParticipantIds = new Set(data.participants.map((participant) => participant.id));
+    awardedParticipantIds = {};
+    for (const field of PLAYER_AWARD_FIELDS) {
+      const ids = incomingAwards[field];
+      awardedParticipantIds[field] = Array.isArray(ids)
+        ? [...new Set(ids.filter((id): id is string => typeof id === "string" && validParticipantIds.has(id)))]
+        : [];
+    }
+  }
+
+  data.specialActuals = {
+    ...data.specialActuals,
+    ...actuals,
+    ...(awardedParticipantIds ? { awardedParticipantIds } : {}),
+  };
   await writeData(data);
 }
 

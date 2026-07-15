@@ -31,7 +31,8 @@ export const RULES_NOTES = {
     "Selecció revelació: qualsevol selecció excepte el top 10 FIFA. Només compta si classifica com a mínim als quarts de final.",
   disappointmentTeam:
     "Selecció decepció: tria entre el top 10 FIFA. Només compta si queda eliminada abans d'arribar als vuitens de final.",
-  topScorerTie: "Màxim golejador i assistent: en cas d'empat, es dona per vàlid.",
+  topScorerTie:
+    "Màxim golejador i assistent: en cas d'empat, es dona per vàlid. L'admin valida manualment les respostes equivalents encara que el nom s'hagi escrit diferent.",
   groupGoalsTie:
     "Més GF / més GC a grups: si hi ha empat, sumen punts tots els que hagin encertat qualsevol selecció empatada.",
 } as const;

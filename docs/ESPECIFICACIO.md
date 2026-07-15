@@ -111,6 +111,8 @@ Valors numèrics: `SCORING_RULES` a `world-cup-2026.ts` + text a `/regles`.
 - Revelació (fora top 10 FIFA, arriba com a mínim a quarts): 15 pts.
 - Decepció (dins top 10, eliminada abans dels 16ens): 20 pts.
 - Empat golejador/assistent: vàlid si l’admin posa diversos noms separats per comes.
+- L’admin marca manualment, per cada premi de jugador, quins participants sumen els punts. Això permet
+  validar variants del mateix nom encara que no coincideixin exactament els caràcters.
 
 ### Eliminatories — quadre
 
@@ -133,6 +135,8 @@ Valors numèrics: `SCORING_RULES` a `world-cup-2026.ts` + text a `/regles`.
 ### Especials reals
 
 - Jugadors: text lliure.
+- Per golejador, assistent, MVP, MVP jove i porter, es mostra la resposta de cada participant amb un
+  checkbox. Els participants marcats són els que sumen els punts del camp.
 - Revelació / decepció: codis separats per comes (`COL, JPN`).
 - **Campió i 3r**: NO es posen manualment — es deriven de la final i del partit del 3r.
 

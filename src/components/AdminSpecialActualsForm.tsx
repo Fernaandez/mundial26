@@ -1,13 +1,27 @@
 "use client";
 
 import { useState } from "react";
-import type { SpecialActualsInput } from "@/lib/scoring";
+import type { Participant } from "@/types";
+import {
+  PLAYER_AWARD_FIELDS,
+  type PlayerAwardField,
+  type SpecialActualsInput,
+} from "@/lib/scoring";
 
 interface AdminSpecialActualsFormProps {
   initial: SpecialActualsInput;
+  participants: Participant[];
   adminPin: string;
   onSaved: () => void;
 }
+
+const PLAYER_AWARD_LABELS: Record<PlayerAwardField, string> = {
+  topScorer: "Màxim golejador",
+  topAssists: "Màxim assistent",
+  mvp: "Millor jugador (MVP)",
+  youngMvp: "Millor jugador jove",
+  goldenGlove: "Millor porter",
+};
 
 function codesToString(v: unknown): string {
   if (Array.isArray(v)) return v.join(", ");
@@ -15,7 +29,12 @@ function codesToString(v: unknown): string {
   return "";
 }
 
-export function AdminSpecialActualsForm({ initial, adminPin, onSaved }: AdminSpecialActualsFormProps) {
+export function AdminSpecialActualsForm({
+  initial,
+  participants,
+  adminPin,
+  onSaved,
+}: AdminSpecialActualsFormProps) {
   const [form, setForm] = useState<SpecialActualsInput>({
     topScorer: initial.topScorer ?? "",
     topAssists: initial.topAssists ?? "",
@@ -24,6 +43,15 @@ export function AdminSpecialActualsForm({ initial, adminPin, onSaved }: AdminSpe
     goldenGlove: initial.goldenGlove ?? "",
     surpriseTeam: initial.surpriseTeam ?? "",
     disappointmentTeam: initial.disappointmentTeam ?? "",
+  });
+  const [awardedParticipantIds, setAwardedParticipantIds] = useState<
+    Record<PlayerAwardField, string[]>
+  >({
+    topScorer: initial.awardedParticipantIds?.topScorer ?? [],
+    topAssists: initial.awardedParticipantIds?.topAssists ?? [],
+    mvp: initial.awardedParticipantIds?.mvp ?? [],
+    youngMvp: initial.awardedParticipantIds?.youngMvp ?? [],
+    goldenGlove: initial.awardedParticipantIds?.goldenGlove ?? [],
   });
   // Camps de grups manuals (codis de selecció, comes per empats)
   const [mostGoals, setMostGoals] = useState(codesToString(initial.mostGroupGoals));
@@ -34,6 +62,15 @@ export function AdminSpecialActualsForm({ initial, adminPin, onSaved }: AdminSpe
 
   function setField<K extends keyof SpecialActualsInput>(key: K, value: SpecialActualsInput[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function toggleAward(field: PlayerAwardField, participantId: string, checked: boolean) {
+    setAwardedParticipantIds((prev) => ({
+      ...prev,
+      [field]: checked
+        ? [...new Set([...prev[field], participantId])]
+        : prev[field].filter((id) => id !== participantId),
+    }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -50,6 +87,7 @@ export function AdminSpecialActualsForm({ initial, adminPin, onSaved }: AdminSpe
     actuals.mostGroupGoals = mostGoals.trim();
     actuals.mostGroupGoalsConceded = mostConceded.trim();
     actuals.nonQualifyingThird = nonQualThirds.trim();
+    actuals.awardedParticipantIds = awardedParticipantIds;
     const res = await fetch("/api/admin", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -85,6 +123,55 @@ export function AdminSpecialActualsForm({ initial, adminPin, onSaved }: AdminSpe
           <TextInput label="Millor jugador (MVP)" value={form.mvp ?? ""} onChange={(v) => setField("mvp", v)} />
           <TextInput label="Millor jugador jove" value={form.youngMvp ?? ""} onChange={(v) => setField("youngMvp", v)} />
           <TextInput label="Millor porter" value={form.goldenGlove ?? ""} onChange={(v) => setField("goldenGlove", v)} />
+        </div>
+        <div className="mt-6 space-y-4">
+          <div>
+            <h4 className="text-sm font-semibold text-pitch-200">Qui suma els punts?</h4>
+            <p className="text-xs text-pitch-500 mt-1">
+              Marca manualment cada resposta vàlida. Aquests checks tenen prioritat sobre com estigui
+              escrit el nom del jugador.
+            </p>
+          </div>
+          {PLAYER_AWARD_FIELDS.map((field) => (
+            <div key={field} className="rounded-xl border border-pitch-700/60 overflow-hidden">
+              <div className="bg-pitch-950/50 px-4 py-3">
+                <p className="text-sm font-semibold text-gold-500">{PLAYER_AWARD_LABELS[field]}</p>
+                {form[field] && (
+                  <p className="text-xs text-pitch-500 mt-1">Resultat real: {form[field]}</p>
+                )}
+              </div>
+              <div className="divide-y divide-pitch-800/70">
+                {participants.map((participant) => {
+                  const prediction = participant.special?.[field]?.trim() || "Sense resposta";
+                  const checked = awardedParticipantIds[field].includes(participant.id);
+                  return (
+                    <label
+                      key={participant.id}
+                      className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-pitch-900/40"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => toggleAward(field, participant.id, e.target.checked)}
+                        className="h-4 w-4 rounded"
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm text-pitch-200">{participant.name}</span>
+                        <span className={`block text-xs truncate ${
+                          prediction === "Sense resposta" ? "text-pitch-600" : "text-pitch-400"
+                        }`}>
+                          Ha posat: {prediction}
+                        </span>
+                      </span>
+                    </label>
+                  );
+                })}
+                {participants.length === 0 && (
+                  <p className="px-4 py-3 text-xs text-pitch-500">No hi ha participants.</p>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 

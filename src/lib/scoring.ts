@@ -61,6 +61,30 @@ function playerMatch(predicted: string, actualRaw?: string): boolean {
   return actuals.includes(pred);
 }
 
+export const PLAYER_AWARD_FIELDS = [
+  "topScorer",
+  "topAssists",
+  "mvp",
+  "youngMvp",
+  "goldenGlove",
+] as const;
+
+export type PlayerAwardField = (typeof PLAYER_AWARD_FIELDS)[number];
+
+function playerAwardMatches(
+  participantId: string,
+  field: PlayerAwardField,
+  predicted: string,
+  actuals: SpecialActualsInput
+): boolean {
+  const manualAwards = actuals.awardedParticipantIds;
+  if (manualAwards && Object.prototype.hasOwnProperty.call(manualAwards, field)) {
+    return manualAwards[field]?.includes(participantId) ?? false;
+  }
+
+  return playerMatch(predicted, actuals[field]);
+}
+
 /** Ordre exacte de grup (7 pts) — es prediu a la pestanya Grups → compta a "Grups" */
 function scoreGroupOrder(
   special: SpecialPredictions,
@@ -123,6 +147,7 @@ function scoreGroupTeamSpecials(
 }
 
 function scoreMundialFields(
+  participantId: string,
   special: SpecialPredictions,
   actuals: SpecialActualsInput,
   matches: Match[]
@@ -130,18 +155,10 @@ function scoreMundialFields(
   let pts = 0;
   const r = SCORING_RULES.special;
 
-  if (actuals.topScorer && special.topScorer && playerMatch(special.topScorer, actuals.topScorer)) {
-    pts += r.topScorer;
-  }
-  if (actuals.topAssists && special.topAssists && playerMatch(special.topAssists, actuals.topAssists)) {
-    pts += r.topAssists;
-  }
-  if (actuals.mvp && special.mvp && playerMatch(special.mvp, actuals.mvp)) pts += r.mvp;
-  if (actuals.youngMvp && special.youngMvp && playerMatch(special.youngMvp, actuals.youngMvp)) {
-    pts += r.youngMvp;
-  }
-  if (actuals.goldenGlove && special.goldenGlove && playerMatch(special.goldenGlove, actuals.goldenGlove)) {
-    pts += r.goldenGlove;
+  for (const field of PLAYER_AWARD_FIELDS) {
+    if (playerAwardMatches(participantId, field, special[field], actuals)) {
+      pts += r[field];
+    }
   }
 
   if (actuals.surpriseTeam) {
@@ -175,6 +192,8 @@ export interface SpecialActualsInput {
   mvp?: string;
   youngMvp?: string;
   goldenGlove?: string;
+  /** Selecció manual de participants que puntuen per cada premi de jugador. */
+  awardedParticipantIds?: Partial<Record<PlayerAwardField, string[]>>;
   surpriseTeam?: string;
   disappointmentTeam?: string;
   surpriseTeamValid?: boolean;
@@ -227,7 +246,7 @@ export function calculateParticipantScore(
     // Ordre exacte de grup → Grups; GF/GC/3r-no-passa i la resta d'especials → Mundial
     breakdown.groups += scoreGroupOrder(special, actuals);
     breakdown.special =
-      scoreMundialFields(special, actuals, matches) +
+      scoreMundialFields(participant.id, special, actuals, matches) +
       scoreGroupTeamSpecials(special, actuals);
   }
 
